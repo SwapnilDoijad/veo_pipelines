@@ -1,0 +1,7 @@
+all_distance <- read.table("results/041_fastANI/all.ANI.tab")
+library(ape)
+library(phangorn)
+treeUPGMA <- upgma(all_distance)
+mytree <- as.phylo(treeUPGMA)
+write.tree(mytree,file = "tree.nwk")
+plot(treeUPGMA, main="UPGMA")

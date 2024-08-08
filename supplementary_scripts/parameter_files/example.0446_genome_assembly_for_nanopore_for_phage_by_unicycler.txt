@@ -1,0 +1,4 @@
+## This is a parameter file for 0446_genome_assembly_for_nanopore_for_phage_by_unicycler pipeline
+## please give a path of an ASSEMBLY folder 
+## example path (change the path according to your data):
+my_fastq_dir	results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/01_pod5_to_fastq/demultiplexed_fastq

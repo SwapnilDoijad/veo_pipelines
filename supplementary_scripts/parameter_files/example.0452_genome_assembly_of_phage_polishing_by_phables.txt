@@ -1,0 +1,7 @@
+## This is a parameter file for 0452_genome_assembly_of_phage_polishing_by_phables pipeline
+## please give a path of an ASSEMBLY folder 
+## example path (change the path according to your data):
+my_assembly_folder	results/0048_genome_assembly_by_flye
+
+## Notes:
+## pipeline 0045_genome_assembly_by_canu DO NOT generate .gfa files

@@ -1,0 +1,16 @@
+## This is a parameter file for 0644_phage_detection_by_jaeger-gpu-parallel pipeline
+## please give a path of every file that you would like to analyse
+## example path given below (change according to your data):
+paths
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-01.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-02.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-03.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-04.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-05.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-06.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-07.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-08.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-09.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-10.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-11.contigs.fasta
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-12.contigs.fasta

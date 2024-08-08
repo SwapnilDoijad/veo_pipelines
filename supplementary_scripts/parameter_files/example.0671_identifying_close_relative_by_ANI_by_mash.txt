@@ -1,0 +1,6 @@
+## This is a parameter file for 0671_identifying_close_relative_by_ANI_by_mash pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_path	data/my_fasta
+ref_fasta_path	data/refseq/fasta

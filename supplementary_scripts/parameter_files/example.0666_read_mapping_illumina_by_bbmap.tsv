@@ -1,0 +1,17 @@
+## This is a parameter file for 0666_read_mapping_illumina_by_bbmap pipeline
+## please give a path of assembly and relevant fastq files (R1 nad R2) in a tab separated file
+## first column: assembly_ids path, second column: forward fastq, third column: reverse fastq
+## example:
+## fasta_path	Forw_fastq_path	Rev_fastq_path
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-01.contigs.fasta	data/zr11465-01_R1.fastq.gz	data/zr11465-01_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-02.contigs.fasta	data/zr11465-02_R1.fastq.gz	data/zr11465-02_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-03.contigs.fasta	data/zr11465-03_R1.fastq.gz	data/zr11465-03_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-04.contigs.fasta	data/zr11465-04_R1.fastq.gz	data/zr11465-04_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-05.contigs.fasta	data/zr11465-05_R1.fastq.gz	data/zr11465-05_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-06.contigs.fasta	data/zr11465-06_R1.fastq.gz	data/zr11465-06_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-07.contigs.fasta	data/zr11465-07_R1.fastq.gz	data/zr11465-07_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-08.contigs.fasta	data/zr11465-08_R1.fastq.gz	data/zr11465-08_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-09.contigs.fasta	data/zr11465-09_R1.fastq.gz	data/zr11465-09_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-10.contigs.fasta	data/zr11465-10_R1.fastq.gz	data/zr11465-10_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-11.contigs.fasta	data/zr11465-11_R1.fastq.gz	data/zr11465-11_R2.fastq.gz
+/home/xa73pav/projects/p_domann/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-12.contigs.fasta	data/zr11465-12_R1.fastq.gz	data/zr11465-12_R2.fastq.gz

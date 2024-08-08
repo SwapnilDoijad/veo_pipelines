@@ -1,0 +1,21 @@
+## change the parameters as per your requirement
+pipelines:
+  - name: "0065_read_mapping_by_minimap2"
+    parameters:
+      list:
+        value: "tmp/lists/list.assembly_fastq.txt"
+        description: "name of the file containing the list of assembly and fastq files (including path)"
+        help: |
+          "--------------------------------------------------------------------------------"
+          "for e.g. (cat list.assembly_fastq.tsv)"
+          "data/fasta/canu.F1.4.3i1p.10.fasta	data/fastq/F1.4.3i1p.10.fastq.gz"
+          "data/fasta/canu.GM0.4i1A.10.fasta	data/fastq/GM0.4i1A.10.fastq.gz"
+          "data/fasta/canu.GM2.2i1p.10.fasta	data/fastq/GM2.2i1p.10.fastq.gz"
+          "note: there should not be any header in the file"
+          "--------------------------------------------------------------------------------"
+      fastq_file_path:
+        value: "data/fastq"
+        description: "fastq file path, e.g., data/fastq"
+      fasta_file_path:
+        value: "data/fasta"
+        description: "fasta file path, e.g., data/fasta"

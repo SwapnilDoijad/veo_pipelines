@@ -1,0 +1,5 @@
+## This is a parameter file for 0672_identifying_close_relative_in_nr_by_blast pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_dir	data/my_fastq_filtered_fasta

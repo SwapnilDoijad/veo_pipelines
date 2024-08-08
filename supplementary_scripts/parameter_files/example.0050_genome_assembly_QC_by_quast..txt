@@ -1,0 +1,4 @@
+## This is a parameter file for 0050_genome_assembly_QC_by_quast pipeline
+## please give a path of a single folder in which all fasta files are stored
+## example path (change the path accordingto your data):
+results/0054_metagenome_assembly_by_metaspades_for_illumina/all_fasta

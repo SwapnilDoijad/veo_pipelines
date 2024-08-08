@@ -1,0 +1,6 @@
+## This is a parameter file for 0135_phylogeny_by_fastANI pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path accordingto your data):
+my_fasta_path	results/0059_metagenome_binning_by_metabat_for_megahit_assemblies/all_fasta
+

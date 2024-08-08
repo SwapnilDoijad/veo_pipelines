@@ -1,0 +1,27 @@
+## This is a parameter file for 0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu pipeline
+## give barcode ids and corresponding sample ids (tab seperated)
+## example is given below (change it according to your data):
+# -----------------------------------------------------------------------------
+barcode01	Sample01
+barcode02	Sample02
+barcode03	Sample03
+barcode04	Sample04
+barcode05	Sample05
+barcode06	Sample06
+barcode07	Sample07
+barcode08	Sample08
+barcode09	Sample09
+barcode10	Sample10
+barcode11	Sample11
+barcode12	Sample12
+barcode13	Sample13
+barcode14	Sample14
+barcode15	Sample15
+barcode16	Sample16
+barcode17	Sample17
+barcode18	Sample18
+barcode19	Sample19
+barcode20	Sample20
+barcode21	Sample21
+barcode22	Sample22
+# -----------------------------------------------------------------------------

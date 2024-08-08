@@ -1,0 +1,5 @@
+## This is a parameter file for 0451_genome_assembly_polishing_for_nanopore_by_medaka pipeline
+## please give a path of a single folder in which all fasta files are stored
+## example path is given below (change the path accordingto your data):
+my_fasta_path	results/0048_genome_assembly_by_flye/all_fasta
+

@@ -1,0 +1,5 @@
+## This is a parameter file for 0021_rawreads_filter_by_trimmomatic pipeline
+## please give a path of a single folder in which all fastq files are stored
+## example path is given below (change the path accordingto your data):
+my_fastqs	results/0025_QC_of_paired-fastq_by_fastp/raw_files
+

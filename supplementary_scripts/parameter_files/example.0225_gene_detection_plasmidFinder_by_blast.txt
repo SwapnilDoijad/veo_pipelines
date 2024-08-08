@@ -1,0 +1,6 @@
+## This is a parameter file for 0225_gene_detection_plasmidFinder_by_blast pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path accordingto your data):
+my_fasta_path	results/0224_plasmid_detection_by_platon/all_fasta
+

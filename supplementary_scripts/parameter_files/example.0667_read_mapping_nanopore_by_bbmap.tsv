@@ -1,0 +1,9 @@
+## This is a parameter file for 0667_read_mapping_nanopore_by_bbmap pipeline
+## please give a path of assembly and relevant fastq files (R1 nad R2) in a tab separated file
+## first column: assembly_ids path, second column: fastq
+## example:
+## fasta_path	fastq_path
+/home/xa73pav/projects/p_natia_phage/results/barcode04/canu.fasta	data/barcode04.10.fastq.gz
+/home/xa73pav/projects/p_natia_phage/results/barcode04/shasta.fasta	data/barcode04.10.fastq.gz
+/home/xa73pav/projects/p_natia_phage/results/barcode04/flye.fasta	data/barcode04.10.fastq.gz
+/home/xa73pav/projects/p_natia_phage/results/barcode04/unicycler.fasta	data/barcode04.10.fastq.gz

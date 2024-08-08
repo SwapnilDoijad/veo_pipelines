@@ -1,0 +1,9 @@
+## This is a parameter file for 0552_genome_assembly_comparison_by_quast pipeline
+## please give identifier and the path of folders containing assemblies (tab seperated)
+## example 
+metaspades	results/0054_metagenome_assembly_by_metaspades_for_illumina/all_fasta
+megahit	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta
+
+## you can also create a folder and copy your fasta to to one folder 
+## for e.g. data/my_assemblies 
+## and provide this folder path

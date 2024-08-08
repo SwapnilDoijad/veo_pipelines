@@ -1,0 +1,9 @@
+## This is a parameter file for 0004_subsample_fastq_reads_by_rasusa pipeline
+## please give a path of a single folder in which all fastq files are stored
+## example path is given below (change the path accordingto your data):
+my_fastqs	results/0025_QC_of_paired-fastq_by_fastp/raw_files
+
+## mention number of reads you would like to subsample
+## the number will be used for forward and reverse reads
+## example is given below (change the number according to your need)
+my_subsample	50000000

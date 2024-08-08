@@ -1,0 +1,6 @@
+## This is a parameter file for 0224_plasmid_detection_by_platon pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_path	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta
+

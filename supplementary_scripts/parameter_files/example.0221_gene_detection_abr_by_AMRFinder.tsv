@@ -1,0 +1,16 @@
+## This is a parameter file for 0221_gene_detection_abr_by_AMRFinder pipeline
+## please give a path of every file that you would like to analyse
+## example sample-ids and their path given below (change according to your data):
+## sample-ids	file_path
+zr11465-01.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-01.contigs.fasta
+zr11465-02.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-02.contigs.fasta
+zr11465-03.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-03.contigs.fasta
+zr11465-04.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-04.contigs.fasta
+zr11465-05.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-05.contigs.fasta
+zr11465-06.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-06.contigs.fasta
+zr11465-07.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-07.contigs.fasta
+zr11465-08.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-08.contigs.fasta
+zr11465-09.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-09.contigs.fasta
+zr11465-10.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-10.contigs.fasta
+zr11465-11.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-11.contigs.fasta
+zr11465-12.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-12.contigs.fasta

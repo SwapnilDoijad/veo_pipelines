@@ -1,0 +1,5 @@
+## This is a parameter file for 0072_QC_of_contigs_by_checkV pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_dir	results/0041_genome_assembly_by_shovill/all_fasta

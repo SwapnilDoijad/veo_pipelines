@@ -1,0 +1,28 @@
+## This is a parameter file for 0771_amplicon_sequence_analysis_by_qiime2 pipeline
+## please privde sample-id, forward-absolute-filepath and reverse-absolute-filepath path in a tab separated file
+## columns: sample-id	forward-absolute-filepath	reverse-absolute-filepath
+## note that, there should be a line empty after the last sample (and before metadata details)
+## example:
+sample-id	forward-absolute-filepath	reverse-absolute-filepath
+S1	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/1_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/1_R2.fq.gz
+S2	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/2_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/2_R2.fq.gz
+S3	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/3_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/3_R2.fq.gz
+S4	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/4_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/4_R2.fq.gz
+S5	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/5_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/5_R2.fq.gz
+S6	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/6_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/6_R2.fq.gz
+S7	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/7_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/7_R2.fq.gz
+S8	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/8_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/8_R2.fq.gz
+S9	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/9_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/9_R2.fq.gz
+
+## metadata details (start with "#sample-id" including hash)
+## note that, there should be a line empty after the last sample
+sample-id	group
+S1	1
+S2	2
+S3	3
+S4	4
+S5	5
+S6	6
+S7	7
+S8	8
+S9	9

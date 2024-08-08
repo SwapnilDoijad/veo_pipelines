@@ -1,0 +1,26 @@
+## This is a parameter file for 0138_phylogeny_by_kSNP4 pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_gff_dir	data/top5_close_relatives
+
+
+
+## change the parameters as per your requirement
+pipelines:
+  - name: "0171_phage_contigs_to_comparative"
+    parameters:
+      sequence_identity_threshold:
+        value: 0.70
+        description: "Sequence identity threshold (number between 0.01 to 1.00)"
+        usage: "-c sequence identity threshold"
+      length_difference_cutoff:
+        value: 0.70
+        description: "Length difference cutoff (number between 0.01 to 1.00)"
+        usage: "-len_dif_percent length difference cutoff"
+      alignment_type:
+        value: "core"
+        description: "Alignment type (core or pan)"
+        usage: "-a alignment type"
+
+

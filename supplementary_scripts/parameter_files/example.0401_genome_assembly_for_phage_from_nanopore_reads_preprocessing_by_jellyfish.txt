@@ -1,0 +1,4 @@
+## This is a parameter file for 0401_genome_assembly_for_phage_from_nanopore_reads_preprocessing_by_jellyfish pipeline
+## please give a path of a single folder in which all fastq files are stored
+## example path is given below (change the path accordingto your data):
+my_fastqs	results/0025_QC_of_paired-fastq_by_fastp/raw_files

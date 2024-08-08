@@ -1,0 +1,66 @@
+# Snakefile for kmer counting
+
+# Define the rule to create necessary directories
+rule make_directories:
+    output:
+        directory("results/0881_kmer_counting/tmp/slurm"),
+        directory("results/0881_kmer_counting/tmp/sbatch"),
+        directory("results/0881_kmer_counting/tmp/lists")
+    shell:
+        """
+        mkdir -p {output[0]} > /dev/null 2>&1
+        mkdir -p {output[1]} > /dev/null 2>&1
+        mkdir -p {output[2]} > /dev/null 2>&1
+        """
+
+# Define the rule to extract fastq_path from result_summary.read_me.txt
+rule extract_fastq_path:
+    output:
+        "list.fastq_with_path.txt"
+    shell:
+        """
+        fastq_path=$(grep fastq result_summary.read_me.txt | awk '{print $NF}')
+        find $fastq_path -maxdepth 1 -type f > {output}
+        """
+
+# Define the rule to split the list.fastq_with_path.txt if there are more than 1 ids
+rule split_list:
+    input:
+        "list.fastq_with_path.txt"
+    output:
+        directory("results/0881_kmer_counting/tmp/lists/list.fastq_with_path.txt.out")
+    shell:
+        """
+        total_ids=$(nl {input} | wc -l)
+        echo "$total_ids ids found in the {input} file"
+
+        if [ $total_ids -gt 1 ]; then
+            split -a 3 --numeric-suffixes -l 1 {input} {output}
+        fi
+        """
+
+# Define the rule to remove temporary list.fastq_with_path.txt.out
+rule remove_temp_list:
+    shell:
+        "(rm /home/xa73pav/projects/p_gerbil_demo/results/0881_kmer_counting/tmp/lists/list.fastq_with_path.txt.out) > /dev/null 2>&1"
+
+# Define the rule to list all split files and create corresponding sbatch scripts
+rule create_sbatch_scripts:
+    input:
+        list_files = expand("results/0881_kmer_counting/tmp/lists/list.fastq_with_path.txt.out{suffix}", suffix=[""])
+    output:
+        sbatch_scripts = "results/0881_kmer_counting/tmp/sbatch/{split_list_id}.sbatch"
+    shell:
+        """
+        for split_list in {input.list_files}; do
+            echo "creating sbatch script $split_list"
+            split_list_id=$(echo $split_list | awk -F'/' '{{ print $NF}}' )
+            sed 's/tmp_list/'"$split_list_id"'/g' /home/groups/VEO/scripts_for_users/supplementary_scripts/0881_kmer_counting_by_gerbil.sbatch > {output.sbatch_scripts}
+            sbatch {output.sbatch_scripts}
+        done
+        """
+
+# Define the main target rule
+rule all:
+    input:
+        "results/0881_kmer_counting/tmp/sbatch/{split_list_id}.sbatch"
