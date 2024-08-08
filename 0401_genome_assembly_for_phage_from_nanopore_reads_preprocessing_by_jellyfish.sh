@@ -20,8 +20,8 @@
 
     create_directories_structure_1 $wd
     split_list $wd $list
-    submit_jobs $wd $pipeline
-    exit 
+    submit_jobs $wd $pipeline ## scripts_for_users/supplementary_scripts/0401_genome_assembly_for_phage_from_nanopore_reads_preprocessing_by_jellyfish.sbatch
+
 ###############################################################################
 ## footer
     log "FINISHED : $pipeline ---------------------------------"
