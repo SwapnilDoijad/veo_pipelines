@@ -32,3 +32,16 @@ S9	9
 ## p-min-frequency = number of features to be present in a sample to be retained. higher number will retain common species, lower number will retain rare species 
 my_p-min-samples	9
 my_p-min-frequency	10
+
+## parameter for filteing reads at DADA2 denoising step (V3-V4 region used in many sequencing studies is approximately 400–500, make sure there will be enough overlap)
+my_p-trim-left-f	20	# will trim first $ bases of the F read
+my_p-trim-left-r	20	# will trim first $ bases of the R read # will not consider for single end 
+my_p-trunc-len-f	240	# will trim everything at $ and onwards
+my_p-trunc-len-r	240	# will trim everything at $ and onwards # will not consider for single end 
+
+## database for taxonomic classification, choose one of the following 
+## Greengenes /veodata/02/databases/qiime2/v2024.5/2022.10.backbone.full-length.nb.sklearn-1.4.2.qza
+## gtdb /veodata/02/databases/qiime2/v2024.5/gtdb_classifier_r220.qza
+## silva /veodata/02/databases/qiime2/v2024.5/silva-138-99-nb-classifier.qza ## NOT RECOMMENDED DUE TO OLD classification SYSYEM
+my_database	/veodata/02/databases/qiime2/v2024.5/2022.10.backbone.full-length.nb.sklearn-1.4.2.qza
+

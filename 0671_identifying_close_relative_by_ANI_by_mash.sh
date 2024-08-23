@@ -52,7 +52,7 @@
 			fi
 		done
 		cat $raw_files/msh/distance/close_relatives/*.top5_close_relatives.tab | sed 's/.fasta//g' | sort -u > $raw_files/list.top5_close_relatives.txt
-		log "FINISHED: $pipeline : parsing"
+		log "FINISHED: $fpipeline : parsing"
 		else 
 		log "ALREADY FINISHED : $pipeline : parsing"
 	fi
