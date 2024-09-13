@@ -34,7 +34,7 @@
 	my_p_trim_left_r=$(cat $parameters | grep "my_p-trim-left-r" | awk '{print $2}')
 	my_p_trunc_len_f=$(cat $parameters | grep "my_p-trunc-len-f" | awk '{print $2}')
 	my_p_trunc_len_r=$(cat $parameters | grep "my_p-trunc-len-r" | awk '{print $2}')
-	classifier=$(cat $parameters | grep "my_database" | awk '{print $2}')
+	classifier=$(cat $parameters | grep -v "##" | grep "my_database" | awk '{print $2}')
 	paired=$(sed -n '2p' $manifest | awk -F'\t' '{print $3}' )
 
 	# sampling_depth=12000
@@ -80,7 +80,6 @@
 			--input-path $manifest \
 			--output-path $raw_files/01_imported_data/demux.qza \
 			--input-format PairedEndFastqManifestPhred33V2
-			log "ENDED  : step-01a : Importing data by qiime2"
 			else
 			log "ALREADY FINISHED : step-01a : Importing data by qiime2"
 		fi
@@ -102,13 +101,17 @@
 		fi 
 	fi
 
-
 ## step-01b: Checking the quality of the reads
 	if [ ! -f $raw_files/01_imported_data/demux.qza.qzv ] ; then
 		log "STARTED : step-01b : Checking the quality of the reads by qiime2"
 		qiime demux summarize \
 		--i-data $raw_files/01_imported_data/demux.qza \
 		--o-visualization $raw_files/01_imported_data/demux.qza.qzv ## will show you the quality of the reads
+
+		qiime tools export \
+		--input-path $raw_files/01_imported_data/demux.qza.qzv \
+		--output-path $raw_files/01_imported_data/stat
+
 		log "ENDED : step-01b : Summarize the demultiplexed data by qiime2"
 		else
 		log "ALREADY FINISHED : step-01b : Checking the quality of the reads by qiime2"
@@ -146,6 +149,15 @@
 			--o-representative-sequences $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
 			--o-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
 			--o-denoising-stats $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza
+
+			qiime metadata tabulate \
+			--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
+			--o-visualization $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv
+
+			qiime tools export \
+			--input-path $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv \
+			--output-path $raw_files/02_QC_denoising/stats
+
 			log "ENDED : step-02a : Quality control and denoising by qiime2"
 			else
 			log "ALREADY FINISHED : step-02a : Quality control and denoising by qiime2"
@@ -163,6 +175,20 @@
 			--o-representative-sequences $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
 			--o-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
 			--o-denoising-stats $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza
+
+			qiime metadata tabulate \
+			--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
+			--o-visualization $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv
+
+			qiime tools export \
+			--input-path $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv \
+			--output-path $raw_files/02_QC_denoising/stats
+
+			awk 'NR!=2' $raw_files/02_QC_denoising/stats/metadata.tsv > $raw_files/02_QC_denoising/stats/metadata.tsv.tmp
+			truncate -s -1 $raw_files/02_QC_denoising/stats/metadata.tsv.tmp 
+			sed 's/\r$//' $raw_files/02_QC_denoising/stats/metadata.tsv.tmp > $raw_files/02_QC_denoising/stats/metadata.tsv
+			rm $raw_files/02_QC_denoising/stats/metadata.tsv.tmp
+
 			log "ENDED : step-02a : Quality control and denoising by qiime2"
 			else
 			log "ALREADY FINISHED : step-02a : Quality control and denoising by qiime2"
@@ -183,9 +209,17 @@
 		--i-data $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
 		--o-visualization $raw_files/03_FeatureTable/demux.qza.rep-seqs-dada2.qza.qzv
 
+		qiime tools export \
+		--input-path $raw_files/03_FeatureTable/demux.qza.rep-seqs-dada2.qza.qzv \
+		--output-path $raw_files/03_FeatureTable/stats
+
 		qiime metadata tabulate \
 		--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
 		--o-visualization $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv ## important statistics to view
+
+		qiime tools export \
+		--input-path $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv \
+		--output-path $raw_files/03_FeatureTable/stats
 
 		log "FINISHED : step-03 : FeatureTable and FeatureData summarize by qiime2"
 		else
@@ -194,7 +228,7 @@
 	## Visuliase $raw_files/demux.qza.stats-dada2.qza.qzv on https://view.qiime2.org/
 	## and then decide the cutoff for next step. 
 
-	## control step-2
+	# ## control step-2
 	# exit 
 ###############################################################################
 ## step-04 : Taxonomic classification
@@ -222,7 +256,7 @@
 		## this will give you the taxonomy (assignment of each id to taxonomic lineage) info in a tsv file
 		qiime tools export \
 		--input-path $raw_files/04_TaxClassif/demux.qza.rep-seqs-dada2.qza.taxonomy.qza \
-		--output-path $raw_files/04_TaxClassif
+		--output-path $raw_files/04_TaxClassif/stat
 
 		log "ENDED : step-04 : Taxonomic classification by qiime2"
 		else
@@ -316,6 +350,10 @@
 		--output-path $raw_files/06_FeatureTable/unfiltered
 
 		biom convert -i $raw_files/06_FeatureTable/unfiltered/feature-table.biom -o $raw_files/06_FeatureTable/feature-table-unfiltered.tsv --to-tsv
+
+		awk 'NR > 2 { for (i = 2; i <= NF; i++) sum[i] += $i } END { for (i = 2; i <= length(sum) + 1; i++) print sum[i] }' \
+		$raw_files/06_FeatureTable/feature-table-unfiltered.tsv  | sed '1i\feature-table-unfiltered' > $raw_files/06_FeatureTable/feature-table-unfiltered.tsv.tmp
+
 	fi 
 
 	## filtered
@@ -327,7 +365,18 @@
 		--output-path $raw_files/06_FeatureTable/filtered
 
 		biom convert -i $raw_files/06_FeatureTable/filtered/feature-table.biom -o $raw_files/06_FeatureTable/feature-table-filtered.tsv --to-tsv
-	fi 
+
+		awk 'NR > 2 { for (i = 2; i <= NF; i++) sum[i] += $i } END { for (i = 2; i <= length(sum) + 1; i++) print sum[i] }' \
+		$raw_files/06_FeatureTable/feature-table-filtered.tsv | sed '1i\feature-table-filtered' > $raw_files/06_FeatureTable/feature-table-filtered.tsv.tmp
+
+		paste $raw_files/02_QC_denoising/stats/metadata.tsv \
+		$raw_files/06_FeatureTable/feature-table-unfiltered.tsv.tmp \
+		$raw_files/06_FeatureTable/feature-table-filtered.tsv.tmp \
+		> $raw_files/06_FeatureTable/stats.tsv
+
+		rm $raw_files/06_FeatureTable/feature-table-unfiltered.tsv.tmp
+		rm $raw_files/06_FeatureTable/feature-table-filtered.tsv.tmp
+	fi
 
 	## collapsed
 	## collpasing combines all the features that have the same taxonomic assignment at a given rank into a single feature
@@ -345,8 +394,6 @@
 		biom convert -i $raw_files/06_FeatureTable/collapsed_level6/feature-table.biom -o $raw_files/06_FeatureTable/feature-table-filtered-collapsed.tsv --to-tsv
 	fi
 
-###############################################################################
-## rarefy sequences ?????????????????
 ###############################################################################
 ## step-07: Phylogenetic reconstruction (optional but recommended):
 	mkdir $raw_files/07_Phylogenetic > /dev/null 2>&1
@@ -395,6 +442,21 @@
 		qiime tools export \
 		--input-path $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.shannon-alpha.qza \
 		--output-path $raw_files/08_Alpha_Beta_Diversity
+
+		## alpha diversity simpson
+		qiime diversity alpha \
+		--i-table $raw_files/05_Filt_NonBacterial_Singletons/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza \
+		--p-metric simpson \
+		--o-alpha-diversity $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.simpson-alpha.qza
+
+		qiime metadata tabulate \
+		--m-input-file $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.simpson-alpha.qza \
+		--o-visualization $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.simpson-alpha.qza.qzv
+
+		qiime tools export \
+		--input-path $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.simpson-alpha.qza \
+		--output-path $raw_files/08_Alpha_Beta_Diversity/simpson-alpha
+
 
 		## beta diversity
 		qiime diversity beta \
@@ -454,12 +516,6 @@
 	if [ ! -f $raw_files/10_pcoa_output/pca_plot.qzv ] ; then
 		mkdir $raw_files/10_pcoa_output > /dev/null 2>&1
 
-		# Import Feature Table
-		qiime tools import \
-		--type 'FeatureTable[Frequency]' \
-		--input-path $raw_files/06_FeatureTable/filtered/feature-table.biom \
-		--output-path $raw_files/10_pcoa_output/feature-table.qza
-
 		# Import Metadata
 		qiime metadata tabulate \
 		--m-input-file $metadata \
@@ -491,6 +547,8 @@
 ## step-11: picrust2
 	if [ ! -d $raw_files/11_picrust2 ] ; then
 		echo "STARTED : step-11 : picrust2"
+		
+		export TMPDIR=./
 
 		qiime picrust2 full-pipeline \
 		--i-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
@@ -563,52 +621,59 @@
 	fi
 
 ###############################################################################
+## step-12: rarefraction
+	if [ ! -d $raw_files/12_rarefraction ] ; then
 
-	## step-09 : core-metrics-phylogenetic (optional)
-		# if [ ! -f $wd/core_metrics_results/bray_curtis_distance_matrix/distance-matrix.tsv ] ; then
-		# 	log "STARTED : step-09 : core-metrics-phylogenetic by qiime2"
-		# 	mkdir $wd/core_metrics_results
+		log "STARTED : step-12 : rarefraction"
 
-		# 	qiime diversity core-metrics-phylogenetic \
-		# 	--i-phylogeny $raw_files/demux.qza.rep-seqs-dada2.qza.bacteria_only.qza.singleton_filtered_seq.qza.rooted-tree.qza \
-		# 	--i-table $raw_files/05_Filt_NonBacterial_Singletons/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza \
-		# 	--p-sampling-depth $sampling_depth \
-		# 	--m-metadata-file $metadata \
-		# 	--output-dir $wd/core_metrics_results
+		mkdir $raw_files/12_rarefraction
 
-		# 	qiime tools export \
-		# 	--input-path $wd/core_metrics_results/bray_curtis_distance_matrix.qza \
-		# 	--output-path $wd/core_metrics_results/bray_curtis_distance_matrix/
+		qiime tools import \
+		--type 'FeatureTable[Frequency]' \
+		--input-path $raw_files/06_FeatureTable/filtered/feature-table.biom \
+		--output-path $raw_files/12_rarefraction//feature-table.qza
 
-		# 	qiime diversity alpha-group-significance \
-		# 	--i-alpha-diversity $wd/core_metrics_results/shannon_vector.qza \
-		# 	--m-metadata-file $metadata \
-		# 	--o-visualization $wd/core_metrics_results/shannon-group-significance.qzv
+		qiime diversity alpha-rarefaction \
+		--i-table $raw_files/06_FeatureTable/feature-table.qza \
+		--i-phylogeny $raw_files/07_Phylogenetic/demux.qza.rep-seqs-dada2.qza.bacteria_only.qza.singleton_filtered_seq.qza.rooted-tree.qza \
+		--p-max-depth 1000 \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/12_rarefraction/alpha-rarefaction.1000.qzv
 
-			# qiime diversity adonis \
-			# --i-distance-matrix $wd/core_metrics_results/weighted_unifrac_distance_matrix.qza \
-			# --m-metadata-file $metadata \
-			# --p-formula "group" \
-			# --o-visualization $wd/core_metrics_results/weighted_unifrac_distance_matrix.qza.qzv
+		qiime diversity alpha-rarefaction \
+		--i-table $raw_files/06_FeatureTable/feature-table.qza \
+		--i-phylogeny $raw_files/07_Phylogenetic/demux.qza.rep-seqs-dada2.qza.bacteria_only.qza.singleton_filtered_seq.qza.rooted-tree.qza \
+		--p-max-depth 5000 \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/12_rarefraction/alpha-rarefaction.5000.qzv
 
-		# 	log "ENDED : step-09 : core-metrics-phylogenetic by qiime2"
-		# 	else
-		# 	log "ALREADY FINISHED : step-09 : core-metrics-phylogenetic by qiime2"
-		# fi
+		qiime diversity alpha-rarefaction \
+		--i-table $raw_files/06_FeatureTable/feature-table.qza \
+		--i-phylogeny $raw_files/07_Phylogenetic/demux.qza.rep-seqs-dada2.qza.bacteria_only.qza.singleton_filtered_seq.qza.rooted-tree.qza \
+		--p-max-depth 10000 \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/12_rarefraction/alpha-rarefaction.10000.qzv
 
+		qiime diversity alpha-rarefaction \
+		--i-table $raw_files/06_FeatureTable/feature-table.qza \
+		--i-phylogeny $raw_files/07_Phylogenetic/demux.qza.rep-seqs-dada2.qza.bacteria_only.qza.singleton_filtered_seq.qza.rooted-tree.qza \
+		--p-max-depth 15000 \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/12_rarefraction/alpha-rarefaction.15000.qzv
 
-	## OPTIONAL : pcoa plot 
-	## need specific metadata file for this step
-		# if [ ! -f $wd/core_metrics_results/bray_curtis_distance_matrix/distance-matrix.tsv.png ] ; then 
-		# 	log "RUNNING : step-11 : customised pcoa plot by a custom-python script"
-		# 	python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0771_amplicon_sequence_analysis_by_qiime2.pcoa.py \
-		# 	--matrix_file $wd/core_metrics_results/bray_curtis_distance_matrix/distance-matrix.tsv \
-		# 	--metadata_file $metadata \
-		# 	--output $wd/core_metrics_results/bray_curtis_distance_matrix/distance-matrix.tsv.png
-		# 	log "ENDED : step-11 : customised pcoa plot by a custom-python script"
-		# 	else
-		# 	log "ALREADY FINISHED : step-11 : customised pcoa plot by a custom-python script"
-		# fi 
+		qiime diversity alpha-rarefaction \
+		--i-table $raw_files/06_FeatureTable/feature-table.qza \
+		--i-phylogeny $raw_files/07_Phylogenetic/demux.qza.rep-seqs-dada2.qza.bacteria_only.qza.singleton_filtered_seq.qza.rooted-tree.qza \
+		--p-max-depth 20000 \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/12_rarefraction/alpha-rarefaction.20000.qzv
+
+		log "ENDED : step-12 : rarefraction"
+		else
+		log "ALREADY FINISHED : step-12 : rarefraction"
+	fi
+
+###############################################################################
 
 	## incomplete barplot script /home/groups/VEO/scripts_for_users/supplementary_scripts/0771_amplicon_sequence_analysis_by_qiime2.barplot.py
 

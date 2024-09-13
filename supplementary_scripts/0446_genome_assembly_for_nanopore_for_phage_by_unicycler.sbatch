@@ -3,7 +3,7 @@
 #SBATCH --partition=short
 #SBATCH --output results/0446_genome_assembly_for_nanopore_for_phage_by_unicycler/tmp/slurm/%j.out
 #SBATCH --error results/0446_genome_assembly_for_nanopore_for_phage_by_unicycler/tmp/slurm/%j.err
-#SBATCH --mem=100G
+#SBATCH --mem=200G
 #SBATCH --cpus-per-task=20
 ###############################################################################
 ## header 
@@ -11,11 +11,9 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     log "STARTED: $pipeline -----------------------"
 	sublist=results/$pipeline/tmp/lists/ABC
-
-	if [ -z "$data_directory_fastq_path" ]; then
-		data_directory_fastq_path=$( grep my_fastq_dir $parameters | awk '{print $2}')
-	fi
-	echo "data_directory_fastq_path: $data_directory_fastq_path"
+	fastq_path=$( grep my_fastq $parameters | awk '{print $2}' )
+	
+	echo "data_directory_fastq_path: $fastq_path"
 
 ###############################################################################
 ## step-01: unicycler assembly
@@ -25,11 +23,13 @@
 
 			log "STARTED : long-read assembly for $i"
 
+			# -l $fastq_path/"$i".fastq.gz \
 			python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
-			-l $data_directory_fastq_path/"$i".fastq.gz \
+			-s $fastq_path/"$i".fastq.gz \
 			-o $raw_files/$i \
 			-t $SLURM_CPUS_PER_TASK \
 			--spades_path /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
+			--spades_options "-k 27, 53, 71, 87" \
 			--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
 			--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
 			--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
@@ -47,8 +47,9 @@
 
 			log "STARTED : without miniasm long-read assembly for $i"
 
+			# -l $fastq_path/"$i".fastq.gz \
 			python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
-			-l $data_directory_fastq_path/"$i".fastq.gz \
+			-s $fastq_path/"$i".fastq.gz \
 			-o $raw_files/$i \
 			--no_miniasm \
 			--no_long_read_alignment \

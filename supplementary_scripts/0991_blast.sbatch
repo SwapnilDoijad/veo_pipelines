@@ -15,7 +15,7 @@
 	barcode_RC=JKL
 	subsample=XYZ
 	QC=DEF
-	database_parameter=$( grep my_database $parameters | awk '{print $2}' )
+	database_parameter=$( grep my_database $parameters | awk -F'=' '{print $2}' )
 
 	# blast each read against each query seqeunce 
 

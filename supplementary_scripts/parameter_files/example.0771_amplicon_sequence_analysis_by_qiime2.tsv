@@ -1,5 +1,5 @@
 ## This is a parameter file for 0771_amplicon_sequence_analysis_by_qiime2 pipeline
-## please privde sample-id, forward-absolute-filepath and reverse-absolute-filepath path in a tab separated file
+## please provide sample-id, forward-absolute-filepath and reverse-absolute-filepath path in a tab separated file
 ## columns: sample-id	forward-absolute-filepath	reverse-absolute-filepath
 ## note that, there should be a line empty after the last sample (and before metadata details)
 ## example:
@@ -14,34 +14,34 @@ S7	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/7_R1.fq.gz	/home/xa73pa
 S8	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/8_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/8_R2.fq.gz
 S9	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/9_R1.fq.gz	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/9_R2.fq.gz
 
-## metadata details (start with "#sample-id" including hash)
+## metadata details (one of the column must be labelled as "group")
 ## note that, there should be a line empty after the last sample
-sample-id	group
-S1	1
-S2	2
-S3	3
-S4	4
-S5	5
-S6	6
-S7	7
-S8	8
-S9	9
+sample-id	group	organ
+S1	3day	crop
+S2	3day	small_intestine
+S3	3day	ceca
+S4	4wk	crop
+S5	4wk	small_intestine
+S6	4wk	ceca
+S7	5wk	crop
+S8	5wk	small_intestine
+S9	5wk	ceca
 
-## parameters for filtering taxonomic features
-## the p-min-samples = number of samples in which a feature must be present to be retained. higher number will retain common species, lower number will retain rare species
-## p-min-frequency = number of features to be present in a sample to be retained. higher number will retain common species, lower number will retain rare species 
-my_p-min-samples	9
-my_p-min-frequency	10
-
-## parameter for filteing reads at DADA2 denoising step (V3-V4 region used in many sequencing studies is approximately 400–500, make sure there will be enough overlap)
+## parameter for filtering reads at DADA2 denoising step (V3-V4 region used in many sequencing studies is approximately 400–500, make sure there will be enough overlap)
 my_p-trim-left-f	20	# will trim first $ bases of the F read
 my_p-trim-left-r	20	# will trim first $ bases of the R read # will not consider for single end 
 my_p-trunc-len-f	240	# will trim everything at $ and onwards
 my_p-trunc-len-r	240	# will trim everything at $ and onwards # will not consider for single end 
 
-## database for taxonomic classification, choose one of the following 
+## database for taxonomic classification, choose (remove ##) one of the following 
 ## Greengenes /veodata/02/databases/qiime2/v2024.5/2022.10.backbone.full-length.nb.sklearn-1.4.2.qza
-## gtdb /veodata/02/databases/qiime2/v2024.5/gtdb_classifier_r220.qza
-## silva /veodata/02/databases/qiime2/v2024.5/silva-138-99-nb-classifier.qza ## NOT RECOMMENDED DUE TO OLD classification SYSYEM
+## GTDB /veodata/02/databases/qiime2/v2024.5/gtdb_classifier_r220.qza
+## silva ## NOT RECOMMENDED DUE TO OLD classification SYSTEM /veodata/02/databases/qiime2/v2024.5/silva-138-99-nb-classifier.qza
 my_database	/veodata/02/databases/qiime2/v2024.5/2022.10.backbone.full-length.nb.sklearn-1.4.2.qza
 
+##### FOR ADVANCED USERS ##### DONT CHANGE IF YOU DONT KNOW HAVE IDEA ABOUT THESE PARAMETERS ####
+## parameters for filtering taxonomic features
+## the p-min-samples = number of samples in which a feature must be present to be retained. The higher number will retain common species, lower number will retain all (including rare) species
+## p-min-frequency = number of features to be present in a sample to be retained. The higher number will retain common species, lower number will retain all (including rare) species 
+my_p-min-samples	1
+my_p-min-frequency	1

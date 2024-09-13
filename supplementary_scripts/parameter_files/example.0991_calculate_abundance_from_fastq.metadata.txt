@@ -2,14 +2,14 @@
 ## please give a path of a single fastq file path
 ## note that all files should end with .fastq (unzipped format)
 ## example path is given below (change the path according to your data):
-my_fastq_file	data/all_combined.fastq
+my_fastq_file=data/all_combined.fastq
 
 ## which database you want to use? custom or silva? 
 ## custom = query_sequences ( your own sequences in paramter file example.0991_calculate_abundance_from_fastq.query_sequence )
 ## silva =  silva ( /work/groups/VEO/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db )
 ## example is given below (change as per your need)
-my_database	silva
+my_database=silva
 
 ## what is your amplicon size (excluding primer barcodes)
 ## example is given below (change as per your need) tab seperated
-my_anticipated_read_length	965
+my_anticipated_read_length=965

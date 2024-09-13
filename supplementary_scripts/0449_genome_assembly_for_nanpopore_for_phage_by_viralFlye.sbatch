@@ -23,9 +23,9 @@ log "STARTED SBATCH : $pipeline : $sublist"
 
             /home/groups/VEO/tools/viralFlye/v0.2/viralFlye.py \
             --threads $SLURM_CPUS_PER_TASK \
-            --dir /home/xa73pav/projects/p_natia_phage/results/0048_genome_assembly_by_flye/raw_files/$i \
+            --dir results/0448_genome_assembly_for_nanpopore_for_phage_by_flye/raw_files/$i \
             --hmm /work/groups/VEO/databases/pfam/v34.0/Pfam-A.hmm.gz \
-            --reads data/my_fastq_filtered_Q10_2000_75000_based_on_kmers_5K/$i.fastq.gz \
+            --reads results/0401_genome_assembly_for_phage_from_nanopore_reads_preprocessing_by_jellyfish/raw_files/my_fastq_filtered_Q_subsampled/$i.fastq.gz \
             --outdir $raw_files/$i 
             log "FINISHED : $i : viralFlye"
             else
