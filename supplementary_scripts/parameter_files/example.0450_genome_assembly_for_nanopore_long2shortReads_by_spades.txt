@@ -1,0 +1,4 @@
+## This is a parameter file for 0450_genome_assembly_for_nanopore_long2shortReads_by_spades pipeline
+## please give a path of fastq folder 
+## example path (change the path according to your data):
+my_fastq	results/0401_genome_assembly_for_phage_from_nanopore_reads_preprocessing_by_jellyfish/raw_files/jelly_fish_matrix_filtered_100

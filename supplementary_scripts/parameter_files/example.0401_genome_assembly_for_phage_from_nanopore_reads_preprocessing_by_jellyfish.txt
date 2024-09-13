@@ -2,3 +2,19 @@
 ## please give a path of a single folder in which all fastq files are stored
 ## example path is given below (change the path accordingto your data):
 my_fastqs	results/0025_QC_of_paired-fastq_by_fastp/raw_files
+
+## minimum length of the read
+my_minimum_lenght	200
+
+## maximum length of the read
+my_maximum_lenght	6500
+
+## reads with less than phred score will be filtered out
+my_phred	10
+
+## Cutting long reads to short read length 
+my_final_read_length	500
+
+## subsampling	
+## can give value for e.g. "1000" or "no_subsample" (if you dont want to subsampling)
+my_subsampling	1000
