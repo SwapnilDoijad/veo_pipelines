@@ -1,0 +1,12 @@
+## This is a parameter file for 0131_phylogeny_by_snippy pipeline
+## use tab seperated values
+
+## please give a path of a single folder in which all fastq.gz files are stored
+## example path is given below (change the path according to your data):
+my_fastq_path	data/raw_reads
+
+## give type of sequencing (single or paired)
+my_seq_type	single
+
+## give a single reference fasta or gbk sequence file including path 
+my_ref_seq	data/MN988491_1_Rhizobium_phage_RHph_Y3_36.gbk

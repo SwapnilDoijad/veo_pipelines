@@ -1,57 +1,88 @@
 #!/bin/bash
-echo "Hi Swapnil, transpose step needs higher memory, runs well on log-in node but doesnt run on working node"
-###############################################################################
+#SBATCH --job-name=0137_phylogeny_ANI_by_mash
+#SBATCH --partition=long
+#SBATCH --output=results/0137_phylogeny_ANI_by_mash/tmp/slurm/%j.out
+#SBATCH --error=results/0137_phylogeny_ANI_by_mash/tmp/slurm/%j.err
+#SBATCH --cpus-per-task=80
+#SBATCH --mem=200G
+#SBATCH --mail-type=END
+#SBATCH --mail-user=your_email@example.com
+###############################################################################  
 ## header
-    pipeline=0137_phylongey_ANI_by_mash
+    pipeline=0137_phylogeny_ANI_by_mash
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh 
     echo "STARTED : $pipeline started --------------------------------------"
 ############################################################################### 
 ## 00 preparations 
-    fasta_path=$(grep "my_fasta_path" $parameters | awk '{print $NF}')
-    ls $fasta_path/ | sed 's/.fasta//g' > list.fasta.txt
-    list=list.fasta.txt
+    fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
 
-    (mkdir -p $raw_files/tmp)> /dev/null 2>&1
-    (mkdir -p $raw_files/msh/distance)> /dev/null 2>&1
-    (mkdir -p $raw_files/msh/distance/tmp)> /dev/null 2>&1
- 
-    # Specify the number of CPU cores you want to use
-    num_cores=80 
-###############################################################################
-## step-03: sketching
+    log "fasta_directory: $fasta_directory"
+############################################################################### 
+## step-00: check if the fasta files are OK
+
+    if [ ! -f $wd/fasta_error.txt ] ; then 
+        grep -L "^>" $fasta_directory/*.*  > $wd/fasta_error.txt
+    fi
+
+    if [ -f $wd/fasta_error.txt ] ; then 
+        for fasta_with_error in $(cat $wd/fasta_error.txt); do
+            rm -rf $fasta_with_error
+        done
+    fi
+
+############################################################################### 
+## step-01: sketching
     if [ ! -f $raw_files/msh/mash_sketch.msh ] ; then 
         log "STARTED : $pipeline : sketching"
-        ( /home/groups/VEO/tools/mash/v2.3/mash sketch -p 80 -s 100 -o $raw_files/msh/mash_sketch.msh $fasta_path/*.fasta )> /dev/null 2>&1
+            /home/groups/VEO/tools/mash/v2.3/mash sketch \
+            -p $SLURM_CPUS_PER_TASK \
+            -s 1000 \
+            -o $raw_files/msh/mash_sketch.msh \
+            $fasta_directory/*.* #)> /dev/null 2>&1
         log "FINISHED: $pipeline : sketching"
         else
         log "ALREADY FINISHED : $pipeline : sketching"
     fi 
+
 ###############################################################################
-## step-04: mashing
+## step-02: mashing
     if [ ! -f $raw_files/tmp/all.distance.for_R.tab ] ; then 
         log "STARTED : $pipeline : mashing"
-        /home/groups/VEO/tools/mash/v2.3/mash triangle -p 80 $raw_files/msh/mash_sketch.msh > $raw_files/tmp/all.distance.for_R.tab
+
+        /home/groups/VEO/tools/mash/v2.3/mash triangle \
+        -p $SLURM_CPUS_PER_TASK \
+        $raw_files/msh/mash_sketch.msh \
+        > $raw_files/tmp/all.distance.for_R.tab
+
         log "FINISHED: $pipeline : mashing"
         else 
         log "ALREADY FINISHED : $pipeline : mashing"
     fi
+    
 ###############################################################################
 ## step-05: post-calculations 
-    log "STARTED : $pipeline :  running post-calculations"  
-    cat $raw_files/tmp/all.distance.for_R.tab | sed '1d' | sed 's/\.fasta//g' > $raw_files/tmp/all.distance.for_R.out.tab
-    cat $raw_files/tmp/all.distance.for_R.out.tab | sed "s|$fasta_path/||g" > $raw_files/tmp/all.distance.for_R.out.2.tab
-    
-    cp $raw_files/tmp/all.distance.for_R.out.2.tab results/out.tab
-    bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/transpose.mash.sh
-    mv results/out.t.tab $raw_files/tmp/all.distance.for_R.out.t.tab
-    awk 'NR==FNR{ a[NR+1]=$0 FS 0; next }{ sub(/^ +/,""); print (FNR==1)? 0:a[FNR],$0 } END{ print a[FNR+1] }' $raw_files/tmp/all.distance.for_R.out.2.tab $raw_files/tmp/all.distance.for_R.out.t.tab > $raw_files/tmp/all.distance.for_R.matrix.tab
-    sed -i 's/ /\t/g' $raw_files/tmp/all.distance.for_R.matrix.tab
-    # sed -e "1,/0/s/0//" $raw_files/tmp/all.distance.for_R.matrix.tab > $raw_files/tmp/all.distance.for_R.matrix.tab
+    log "STARTED : $pipeline :  running post-calculations"
 
-    R1_rows=$(wc -l $raw_files/tmp/all.distance.for_R.matrix.tab | awk '{print $1}' )
-    R2_columns=$(head -1 $raw_files/tmp/all.distance.for_R.matrix.tab |  sed 's/\t/\n/g' | wc -l ) 
-    echo "rows:$R1_rows columns:$R2_columns"
+    if [ ! -f $raw_files/tmp/all.distance.for_R.matrix.tab ] ; then   
+        cat $raw_files/tmp/all.distance.for_R.tab | sed '1d' | sed 's/\.fasta//g' > $raw_files/tmp/all.distance.for_R.out.tab
+        cat $raw_files/tmp/all.distance.for_R.out.tab | sed "s|$fasta_directory/||g" > $raw_files/tmp/all.distance.for_R.out.2.tab
+        
+        cp $raw_files/tmp/all.distance.for_R.out.2.tab $wd/out.tab
+        bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/transpose.mash.sh # out: results/0137_phylogeny_ANI_by_mash/out.t.tab
+        #  python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/transpose_lower_triangle_by_itertools.py
+        mv $wd/out.t.tab $raw_files/tmp/all.distance.for_R.out.t.tab
 
+        awk 'NR==FNR{ a[NR+1]=$0 FS 0; next }{ sub(/^ +/,""); print (FNR==1)? 0:a[FNR],$0 } END{ print a[FNR+1] }' \
+        $raw_files/tmp/all.distance.for_R.out.2.tab \
+        $raw_files/tmp/all.distance.for_R.out.t.tab \
+        > $raw_files/tmp/all.distance.for_R.matrix.tab
+
+        sed -i 's/ /\t/g' $raw_files/tmp/all.distance.for_R.matrix.tab
+        # sed -e "1,/0/s/0//" $raw_files/tmp/all.distance.for_R.matrix.tab > $raw_files/tmp/all.distance.for_R.matrix.tab
+    fi
+        R1_rows=$(wc -l $raw_files/tmp/all.distance.for_R.matrix.tab | awk '{print $1}' )
+        R2_columns=$(head -1 $raw_files/tmp/all.distance.for_R.matrix.tab |  sed 's/\t/\n/g' | wc -l ) 
+        echo "rows:$R1_rows columns:$R2_columns"
     #------------------------------------------------------------------------------
     # for_R
     if [ ! "$R1_rows" == "$R2_columns" ] ; then
@@ -59,22 +90,21 @@ echo "Hi Swapnil, transpose step needs higher memory, runs well on log-in node b
         else
         echo "running R"
         source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate R
-        cp $raw_files/tmp/all.distance.for_R.matrix.tab $wd/matrix.tab
+        cp $raw_files/tmp/all.distance.for_R.matrix.tab $raw_files/matrix.tab
         Rscript /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/plot_and_tree.mash-distance.r
     fi
 
     source /home/groups/VEO/tools/biopython/myenv/bin/activate 
-    if [ -f results/0137_phylongey_ANI_by_mash/raw_files/matrix.tab.tree.phangorn.nwk ] ; then 
-        python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/export_phylogenomic_tip_labels.py \
-        -i results/0137_phylongey_ANI_by_mash/matrix.tab.tree.phangorn.nwk \
-        -o results/0137_phylongey_ANI_by_mash/matrix.tab.tree.phangorn.nwk.tip_labels
-    fi
+        if [ -f $wd/raw_files/matrix.tab.tree.phangorn.nwk ] ; then 
+            python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/export_phylogenomic_tip_labels.py \
+            -i $wd/matrix.tab.tree.phangorn.nwk \
+            -o $wd/matrix.tab.tree.phangorn.nwk.tip_labels
+        fi
     deactivate
 
-    # rm results/out.tab
+    # rm -rf $raw_files/tmp 
     echo "post-calculations finished"
-
-exit
+exit 
 ###############################################################################
 ## Mash with GGRaSP package 
     echo "running GGRaSP package"
@@ -183,5 +213,5 @@ exit
 
     fi
 ###############################################################################
-echo "script 0137_phylongey_ANI_by_mash ended ----------------------------------------"
+echo "script 0137_phylogeny_ANI_by_mash ended ----------------------------------------"
 ###############################################################################

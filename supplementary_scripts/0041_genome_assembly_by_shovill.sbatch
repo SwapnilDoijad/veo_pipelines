@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name 0041_genome_assembly_by_shovill
-#SBATCH --partition=fat
-#SBATCH --output results/0041_genome_assembly_by_shovill/tmp/slurm/%j.out
-#SBATCH --error results/0041_genome_assembly_by_shovill/tmp/slurm/%j.err
-#SBATCH --mem=1000G
+#SBATCH --job-name=0041_genome_assembly_by_shovill
+#SBATCH --partition=interactive
+#SBATCH --output=results/0041_genome_assembly_by_shovill/tmp/slurm/%j.out
+#SBATCH --error=results/0041_genome_assembly_by_shovill/tmp/slurm/%j.err
+#SBATCH --mem=300G
 #SBATCH --cpus-per-task=10 
 ###############################################################################
     pipeline=0041_genome_assembly_by_shovill
@@ -11,33 +11,36 @@
 	log "STARTED: $pipeline -------------------------------------"
     
     sublist=$wd/tmp/lists/ABC
-
-    source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate shovill_v1.1.0
+    fastq_path=$(grep my_fastq_path $parameter_file | awk '{print $2}')
 ###############################################################################
 ## step-01: run shovill assembler
+    source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate shovill_v1.1.0
 
-   echo "--------------------------------------------------------------------------------"
-    for i in $(cat $sublist) ; do
-        if [ ! -d $raw_files/$i ] ; then 
-            if [ -f $data_directory_fastq_path/"$i"_*R1*.fastq.gz ] && [ -f $data_directory_fastq_path/"$i"_*R2*.fastq.gz ]; then 
-                if [ ! -d $raw_files/$i ] ; then 
-                    echo "running: shovill assembly for $i"
-                    shovill --trim --outdir $raw_files/$i \
-                    --R1  $data_directory_fastq_path/"$i"_*R1*.fastq.gz \
-                    --R2  $data_directory_fastq_path/"$i"_*R2*.fastq.gz \
-                    --cpus 10 --ram 1000 --opts --isolate \
-                    --minlen 200 --mincov 10 --keepfiles
-                    echo "finished: shovill assembly for $i" 
-                    else
+    echo "--------------------------------------------------------------------------------"
+        for i in $(cat $sublist) ; do
+            if [ ! -d $raw_files/$i ] ; then 
+                if [ -f $fastq_path/"$i"_1.fastq.gz ] && [ -f $fastq_path/"$i"_2.fastq.gz ]; then 
+                    if [ ! -d $raw_files/$i ] ; then 
+                        echo "running: shovill assembly for $i"
+                        shovill --trim --outdir $raw_files/$i \
+                        --R1 $fastq_path/"$i"_1.fastq.gz \
+                        --R2 $fastq_path/"$i"_2.fastq.gz \
+                        --cpus $SLURM_CPUS_PER_TASK --ram 300 --opts --isolate \
+                        --minlen 200 --mincov 10 --keepfiles
+                        echo "finished: shovill assembly for $i" 
+                        else
+                        echo "fastq not found for $i"
+                    fi
+                else
                     echo "fastq not found for $i"
                 fi
-            fi
 
-        else
-        echo $i already finished  
-        fi
-    done 
-    echo "--------------------------------------------------------------------------------"
+            else
+            echo $i already finished  
+            fi
+        done 
+        echo "--------------------------------------------------------------------------------"
+        conda deactivate
 
 ###############################################################################
 ## step-02: post-assembly statistics and coverting fasta files

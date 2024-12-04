@@ -1,5 +1,4 @@
 #!/bin/bash
-
 source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
 wd=results/$pipeline
 raw_files=$wd/raw_files
@@ -9,7 +8,7 @@ yq=/home/groups/VEO/tools/yq/v4.42.1/yq
 suppl_scripts="/home/groups/VEO/scripts_for_users/supplementary_scripts"
 my_tool_path="/home/groups/VEO/tools"
 scripts_for_users_path="/home/groups/VEO/scripts_for_users"
-parameters="tmp/parameters/$pipeline.*"
+parameters=tmp/parameters/$pipeline.*
 files_in_data_directory="tmp/parameters/files_in_data_directory.txt"
 
 if [ -f tmp/parameters/$pipeline.txt ]; then 
@@ -240,7 +239,6 @@ wait_until_written() {
     echo "File '$file' is completely written"
 }
 
-
 ## wait_till_all_job_finished my_job_name
 wait_till_all_job_finished() {
     local job_name=$1
@@ -264,3 +262,16 @@ wait_till_all_job_finished() {
     done
 }
 
+
+# Function to check the exit status of the last command
+check_status() {
+    local status=$?   # Capture the exit status of the last command
+    local message="$1" # Accept a custom message as a parameter
+    
+    if [ $status -eq 0 ]; then
+        log "SUCCESS: $message"
+    else
+        log "ERROR: $message (Exit status: $status)"
+        exit $status # Exit the script with the error status
+    fi
+}

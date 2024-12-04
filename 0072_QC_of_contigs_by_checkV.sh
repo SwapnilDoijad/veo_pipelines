@@ -6,7 +6,7 @@
     echo "STARTED : $pipeline -----------------------------------"
 ###############################################################################
 ## step-01: preparation
-
+    
     ls $fasta_dir_path/*.fasta | awk -F'/' '{print $NF}' | sed 's/.fasta//g' > list.$pipeline.txt
     list=list.$pipeline.txt
 

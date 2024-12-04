@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 ## header 
-	pipeline=0450_genome_assembly_for_nanopore_long2shortReads_by_spades
+	pipeline=0450_genome_assembly_for_nanopore_for_phage_long2shortReads_by_spades
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     log "STARTED: $pipeline -----------------------"
 ###############################################################################

@@ -34,7 +34,7 @@ def find_longest_prefix_suffix(seq):
 def main(input_file, output_file):
     try:
         # Derive the info file name from the output file name
-        info_file = output_file + ".info"
+        info_file = output_file + ".overlap_info"
         
         # Read all DNA sequences from the input FASTA file
         with open(input_file, "r") as infile:

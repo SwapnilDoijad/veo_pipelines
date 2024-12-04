@@ -10,7 +10,6 @@
     pipeline=0071_QC_of_contigs_by_checkM
     wd=results/$pipeline
 
-    parameter_file=tmp/parameters/$pipeline.*
     fasta_path=$(grep my_fasta_path $parameter_file | awk '{print $2}')
     sublist=$wd/tmp/lists/ABC
 

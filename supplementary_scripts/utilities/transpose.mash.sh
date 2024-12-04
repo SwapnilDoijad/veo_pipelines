@@ -13,4 +13,6 @@ END {
         }
         print str
     }
-}' results/out.tab > results/out.t.tab
+}' results/0137_phylogeny_ANI_by_mash/out.tab > results/0137_phylogeny_ANI_by_mash/out.t.tab
+
+## 2024-12-02 11:42:50 works for 20K genomes 

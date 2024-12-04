@@ -23,13 +23,12 @@
 
 			log "STARTED : long-read assembly for $i"
 
-			# -l $fastq_path/"$i".fastq.gz \
+			# -s $fastq_path/"$i".fastq.gz \
 			python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
-			-s $fastq_path/"$i".fastq.gz \
+			-l $fastq_path/"$i".fastq.gz \
 			-o $raw_files/$i \
 			-t $SLURM_CPUS_PER_TASK \
 			--spades_path /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
-			--spades_options "-k 27, 53, 71, 87" \
 			--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
 			--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
 			--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
@@ -42,28 +41,28 @@
 	done
 ###############################################################################
 ## if assembly fail due to miniasm (low coverage), then run without miniasm
-    for i in $(cat $sublist); do
-		if grep -q "Error: miniasm assembly failed" $raw_files/$i/unicycler.log ; then 
+    # for i in $(cat $sublist); do
+	# 	if grep -q "Error: miniasm assembly failed" $raw_files/$i/unicycler.log ; then 
 
-			log "STARTED : without miniasm long-read assembly for $i"
+	# 		log "STARTED : without miniasm long-read assembly for $i"
 
-			# -l $fastq_path/"$i".fastq.gz \
-			python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
-			-s $fastq_path/"$i".fastq.gz \
-			-o $raw_files/$i \
-			--no_miniasm \
-			--no_long_read_alignment \
-			-t $SLURM_CPUS_PER_TASK \
-			--spades_path /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
-			--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
-			--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
-			--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
-			--keep 0
+	# 		# -l $fastq_path/"$i".fastq.gz \
+	# 		python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
+	# 		-s $fastq_path/"$i".fastq.gz \
+	# 		-o $raw_files/$i \
+	# 		--no_miniasm \
+	# 		--no_long_read_alignment \
+	# 		-t $SLURM_CPUS_PER_TASK \
+	# 		--spades_path /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
+	# 		--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
+	# 		--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
+	# 		--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
+	# 		--keep 0
 
-			log "FINISHED : without miniasm long-read assembly for $i"
+	# 		log "FINISHED : without miniasm long-read assembly for $i"
 
-		fi 
-	done
+	# 	fi 
+	# done
 ###############################################################################
 ## step-02: post-assembly statistics and coverting fasta files
 

@@ -2,10 +2,10 @@
 ## simple tree plot
 	library(ape)
 	library(phangorn)
-	all_distance <- as.matrix(read.table("results/0137_phylongey_ANI_by_mash/matrix.tab", header = TRUE, row.names = 1))
+	all_distance <- as.matrix(read.table("results/0137_phylogeny_ANI_by_mash/raw_files/matrix.tab", header = TRUE, row.names = 1))
 	treeUPGMA <- upgma(all_distance)
 	mytree <- as.phylo(treeUPGMA)
-	write.tree(mytree,file = "results/0137_phylongey_ANI_by_mash/matrix.tab.tree.phangorn.nwk")
+	write.tree(mytree,file = "results/0137_phylogeny_ANI_by_mash/matrix.tab.tree.phangorn.nwk")
 ###############################################################################
 ## bootstrap tree plot
 	# library(pvclust)

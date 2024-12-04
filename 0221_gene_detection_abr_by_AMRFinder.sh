@@ -1,13 +1,13 @@
 #!/bin/bash
 ###############################################################################
 ## header
+    pipeline=0221_gene_detection_abr_by_AMRFinder
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-    echo "started.... AMRFinder --------------------------------------------------"
+    log "STARTED: $pipeline "
 ###############################################################################
 ## step-01: file and directory preparation
-
-    pipeline=0221_gene_detection_abr_by_AMRFinder
-    wd=results/$pipeline
+    fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
+    ls $fasta_directory > list.fasta.txt
 
     if [ -f list.fasta.txt ]; then 
         list=list.fasta.txt
@@ -20,9 +20,16 @@
         list=$(echo "list.$l.txt")
     fi
 
-    # create_directories_structure_1 $wd
-    # split_list $wd $list
-    # submit_jobs $wd $pipeline
+    mkdir -p $raw_files/tmp > /dev/null 2>&1
+
+    create_directories_structure_1 $wd
+    split_list $wd $list
+    submit_jobs $wd $pipeline
+
+###############################################################################
+## footer
+    log "ENDED: $pipeline "
+###############################################################################
 
 ###############################################################################
 ## step-02: waiting for the completion of the jobs
@@ -34,31 +41,31 @@
 ###############################################################################
 ## step-03: post-processing : calculate Abr-gene frequency
 
-    (sed -i '/symbol/d' $wd/tmp/all.txt)> /dev/null 2>&1
-                    # heading_list=$(head -1 $list)
-                    # heading=$( cat $wd/results/$heading_list.csv | head -1  )
-                    # ex -sc "1i|$heading" -cx $wd/tmp/all.txt
+    # (sed -i '/symbol/d' $wd/tmp/all.txt)> /dev/null 2>&1
+    #                 # heading_list=$(head -1 $list)
+    #                 # heading=$( cat $wd/results/$heading_list.csv | head -1  )
+    #                 # ex -sc "1i|$heading" -cx $wd/tmp/all.txt
 
-    cp $wd/tmp/all.txt $wd/tmp/all.csv # create all.csv earlier and remove this step  
-                    ## ssconvert $wd/tmp/all.csv $wd/tmp/all.csv.xlsx
-                    #------
-    sed 's/ /_/g' $wd/tmp/all.txt > $wd/tmp/all.txt.1.tmp
-    cut -f6,7,8,9,10,11,12 -d$'\t' $wd/tmp/all.txt.1.tmp | awk '{if(NR>1)print}' > $wd/tmp/all.txt.2.tmp
-    sed -i 's/\t/===/g' $wd/tmp/all.txt.2.tmp
-    cat $wd/tmp/all.txt.2.tmp | sed 's/===/=/g' | sort -t '=' -k3,3 -k4,4 -k5,5 -k6,6 -k7,7 | sed 's/=/===/g' | uniq > $wd/tmp/all.txt.3.tmp 
+    # cp $wd/tmp/all.txt $wd/tmp/all.csv # create all.csv earlier and remove this step  
+    #                 ## ssconvert $wd/tmp/all.csv $wd/tmp/all.csv.xlsx
+    #                 #------
+    # sed 's/ /_/g' $wd/tmp/all.txt > $wd/tmp/all.txt.1.tmp
+    # cut -f6,7,8,9,10,11,12 -d$'\t' $wd/tmp/all.txt.1.tmp | awk '{if(NR>1)print}' > $wd/tmp/all.txt.2.tmp
+    # sed -i 's/\t/===/g' $wd/tmp/all.txt.2.tmp
+    # cat $wd/tmp/all.txt.2.tmp | sed 's/===/=/g' | sort -t '=' -k3,3 -k4,4 -k5,5 -k6,6 -k7,7 | sed 's/=/===/g' | uniq > $wd/tmp/all.txt.3.tmp 
 
-    (rm $wd/tmp/Abr_gene_frequency.csv.tmp)> /dev/null 2>&1
-    for F2 in $(cat $wd/tmp/all.txt.3.tmp); do
-        V1=$(grep -c "$F2" $wd/tmp/all.txt.2.tmp)
-        echo $V1 $F2 >> $wd/tmp/Abr_gene_frequency.csv.tmp
-    done
+    # (rm $wd/tmp/Abr_gene_frequency.csv.tmp)> /dev/null 2>&1
+    # for F2 in $(cat $wd/tmp/all.txt.3.tmp); do
+    #     V1=$(grep -c "$F2" $wd/tmp/all.txt.2.tmp)
+    #     echo $V1 $F2 >> $wd/tmp/Abr_gene_frequency.csv.tmp
+    # done
 
-    cat $wd/tmp/Abr_gene_frequency.csv.tmp | sort -k 1,1rn > $wd/Abr_gene_frequency.tsv
+    # cat $wd/tmp/Abr_gene_frequency.csv.tmp | sort -k 1,1rn > $wd/Abr_gene_frequency.tsv
 
-    ex -sc '1i|frequency Abr-gene description Scope Element_type Element_subtype Class Subclass' -cx $wd/Abr_gene_frequency.tsv
+    # ex -sc '1i|frequency Abr-gene description Scope Element_type Element_subtype Class Subclass' -cx $wd/Abr_gene_frequency.tsv
 
-    sed -i 's/===/\t/g' $wd/Abr_gene_frequency.tsv
-    sed -i 's/ /\t/g' $wd/Abr_gene_frequency.tsv
+    # sed -i 's/===/\t/g' $wd/Abr_gene_frequency.tsv
+    # sed -i 's/ /\t/g' $wd/Abr_gene_frequency.tsv
     ##ssconvert $wd/tmp/Abr_gene_frequency.csv $wd/Abr_gene_frequency.csv.xlsx
     #rm $wd/tmp/Abr_gene_frequency.csv.tmp
 
@@ -145,8 +152,5 @@
 #     echo "finished matrix for ABR-DB"
 ###############################################################################
 ## create plots
-    source /home/groups/VEO/tools/python/biopython/bin/activate
-
-###############################################################################
-echo "Finished.... AMRFinder  ------------------------------------------------"
-###############################################################################
+    # source /home/groups/VEO/tools/python/biopython/bin/activate
+##############################################################################

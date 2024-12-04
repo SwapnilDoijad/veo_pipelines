@@ -15,10 +15,10 @@
     subsampling=no
     QC=10
     my_blast_mismatches=( 100 ) ## 10 15 100
-    anticipated_read_length=$( grep my_anticipated_read_length $parameters | awk -F'=' '{print $2}' )
+    anticipated_read_length=$( grep my_anticipated_read_length $parameters | awk '{print $2}' )
     minlength=$(( $anticipated_read_length - 50 ))
     maxlength=$(( $anticipated_read_length + 200 ))
-    rawFastqFile=$(grep my_fastq_file $parameters | awk -F'=' '{print $2}')
+    rawFastqFile=$(grep my_fastq_file $parameters | awk $fastq_path '{print $2}')
     filteredFastqFile=$raw_files/all_combined.$QC.fastq
     # mismatches=( 0 1 2 3 4)
     # subsamples_list=( 1000000 2000000 3000000 4000000 )
@@ -26,7 +26,7 @@
     threads=20
     run_id=$( pwd | awk -F'/' '{print $NF}' | awk -F'_' '{print $NF}') ## only for some analysis
     
-    database_parameter=$( grep my_database $parameters | awk -F'=' '{print $2}' )
+    database_parameter=$( grep my_database $parameters | awk $fastq_path '{print $2}' )
     log "database_parameter : $database_parameter"
     if [[ $database_parameter == "silva" ]] ; then 
         log "database : using silva"

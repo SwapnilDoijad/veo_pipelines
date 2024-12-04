@@ -1,0 +1,4 @@
+## This is a parameter file for 0043_genome_assembly_by_unicycler pipeline
+## please give a path of a single folder in which all fasta files are stored
+## example path (change the path according to your data):
+my_fastq_path projects/p_angela_rabia_genome/data/fastq

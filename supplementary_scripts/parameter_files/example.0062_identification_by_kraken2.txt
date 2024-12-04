@@ -1,0 +1,8 @@
+## This is a parameter file for 0062_identification_by_kraken2 pipeline
+## please give a path of a single folder in which all fasta (or fastq) files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_data_dir	results/0041_genome_assembly_by_shovill/all_fasta
+
+## Classification based on fasta (f) or raw reads (r) or filted-reads (s), type f or r or s
+my_input_file_type	f
