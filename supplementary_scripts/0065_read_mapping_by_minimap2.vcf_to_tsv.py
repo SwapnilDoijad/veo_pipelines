@@ -3,7 +3,7 @@ import argparse
 
 # Dictionary of descriptions for each VCF field
 field_descriptions = {
-    '#CHROM': "Chromosome or contig name where the variant is located",
+    'CHROM': "reference Chromosome or contig",
     'POS': "Position of the variant in the reference genome",
     'ID': "Variant identifier (can be a '.' if not known)",
     'REF': "Reference allele (the nucleotide in the reference genome)",

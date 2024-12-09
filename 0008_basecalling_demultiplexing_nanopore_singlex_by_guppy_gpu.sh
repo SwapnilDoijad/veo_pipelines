@@ -6,9 +6,15 @@
     log "STARTED : $pipeline -------------------"
 ###############################################################################
 ## step-00: preparation
+    echo "2024-12-08 16:20:35 @Swapnil, at step 03, the reads get written two times. Dont know why. Need to check"
+    
     guppy_basecaller=/home/groups/VEO/tools/ont-guppy/v6.5.7_gpu/bin/guppy_basecaller
-    pod5_file_path=$(grep pod5 tmp/parameters/files_in_data_directory.txt | awk '{print $NF}')
-    parameter_file_data=$(grep -Ev '^\s*#|^\s*$' tmp/parameters/$pipeline.txt | wc -l)
+    pod5_file_path=$( grep my_pod5_file_path $parameters | awk -F'\t' '{print $2}' )
+    barcode_sample_data=$( awk '/# ----------/{flag=!flag; next} flag' $parameters | wc -l )
+    type_of_sequencing=$( grep my_type_of_sequencing $parameters | awk -F'\t' '{print $2}' )
+
+    echo "pod5_file_path: $pod5_file_path"
+    echo "barcode_sample_data: $barcode_sample_data"
 
     ls $pod5_file_path | sed 's/\.pod5//g' > list.pod5.txt
     list=list.pod5.txt
@@ -35,17 +41,7 @@
             log "SBATCH SUBMITTED : $pipeline.pod5_to_fast5 : $sublist"
         done
 
-
-        log "CHECKING : the status for step-01: converting pod5 to fast5 (will take 1 min)"
-        sleep 60
-        number_of_files=$( ls $pod5_file_path | wc -l )
-        number_of_files_finished=$(grep "Conversion complete" $wd/tmp/slurm/*.out.01_pod5_fast5 | wc -l )
-        while [ "$number_of_files" -ne "$number_of_files_finished" ]; do
-            number_of_files_finished=$(grep "Conversion complete" $wd/tmp/slurm/*.out.01_pod5_fast5 | wc -l )
-            number_of_files_remained=$(( $number_of_files - $number_of_files_finished ))
-            log "$number_of_files_finished/$number_of_files finished, still $number_of_files_remained to be processed, ... waiting for 3 min"
-        sleep 60
-        done
+        wait_till_all_job_finished 0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu
 
         log "FINISHED : step-01 : converting pod5 to fast5 ----------------------------------"
         else 
@@ -58,22 +54,8 @@
 
     log "STARTED : 02_fast5_to_basecall -------------------------------------------"
     if [ ! -d $raw_files/02_fast5_to_basecall ] ; then
-        ( rm $wd/tmp/slurm/*.out.02_fast5_to_basecall ) > /dev/null 2>&1    ## old slurm files may cause confusion for checking the status
-        ( rm $wd/tmp/slurm/*.err.02_fast5_to_basecall ) > /dev/null 2>&1    ## old slurm files may cause confusion for checking the status
-
-        sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.02_fast5_to_basecall.sbatch > /dev/null 2>&1 
-
-        log " CHECKING : the status for step-02: basecalling (will take 1 min)"
-        sleep 60 
-        number_of_files=$( ls $pod5_file_path | wc -l )
-        number_of_files_finished=$(grep "basecalling finished" $wd/tmp/slurm/*.out.02_fast5_to_basecall | wc -l )
-        while [ "$number_of_files" -ne "$number_of_files_finished" ]; do
-            number_of_files_finished=$(grep "basecalling finished" $wd/tmp/slurm/*.out.02_fast5_to_basecall | wc -l )
-            number_of_files_remained=$(( $number_of_files - $number_of_files_finished ))
-            log "$number_of_files_finished/$number_of_files finished for basecalling, still $number_of_files_remained to be processed, ... waiting for 3 min"
-        sleep 60
-        done
-
+        log "SUBMITTING : sbatch "
+        submit_sbatch_and_wait_till_run_is_complete "$suppl_scripts/$pipeline.02_fast5_to_basecall.sbatch"
         else
         log "ALREADY FINISHED : step-02 : basecalling step ----------------------------------"
     fi
@@ -91,10 +73,15 @@
         log "ALREADY FINISHED : step-02 : combining step "
     fi
     log "FINISHED : 02_fast5_to_basecall -------------------------------------------"
-exit 
+
+    if [ "$type_of_sequencing" = "amplicon" ] ; then 
+        exit
+    fi
+
 ###############################################################################
 ## step-03: demultiplexing : demultiplexed_files
-    if [ $parameter_file_data -ne 0 ] ; then 
+
+    if [ $barcode_sample_data -ne 0 ] ; then 
         if [ ! -d $raw_files/03_basecall_to_demultiplex ] ; then
             log "STARTED : step-03: demultiplexing step -------------------------------------------"
             ( mkdir $raw_files/03_basecall_to_demultiplex  ) > /dev/null 2>&1 
@@ -114,25 +101,17 @@ exit
                 log "SUBMITTED : step-03 : sbatch for demultiplexing $sublist"
             done 
 
+            wait_till_all_job_finished 0008_demultiplexing_nanopore_basecalling_by_guppy_gpu
 
-            log "CHECKING : the status for step-03: demultiplexing (will take 1 min)"
-            sleep 60 
-            number_of_files_finished=0
-            while [ "$number_of_files" -ne "$number_of_files_finished" ]; do
-                number_of_files_finished=$(grep "demultiplexing finished" $wd/tmp/slurm/*.out.03_basecall_to_demultiplex | wc -l )
-                number_of_files_remained=$(( $number_of_files - $number_of_files_finished ))
-                log "$number_of_files_finished/$number_of_files finished for demultiplexing, still $number_of_files_remained to be processed, ... waiting for 3 min"
-                sleep 60
-            done
             log "step-03: demultiplexing finished -----------------------------------------------"
             else
             log "step-03: demultiplexing step already finished ----------------------------------"
         fi
     fi 
-    exit 
+
 ###############################################################################
 ## step-04: collect data coming from different files to single file ## $raw_files/04_demultiplex_to_combinedBarcodeFastq
-    if [ $parameter_file_data -ne 0 ] ; then 
+    if [ $barcode_sample_data -ne 0 ] ; then 
     log "step-04: fastq combining step: running: ---------------------------------------------"
 
     if [ ! -d $raw_files/04_demultiplex_to_combinedBarcodeFastq/raw ] ; then 
@@ -193,9 +172,10 @@ exit
 
     log "step-04: fastq combining step: finished --------------------------------------------"
     fi
+
 ###############################################################################
 ## step-05: renaming
-    if [ $parameter_file_data -ne 0 ] ; then 
+    if [ $barcode_sample_data -ne 0 ] ; then 
     if  [ ! -d data/fastq ] ; then 
         if [ -f tmp/parameters/$pipeline.txt ] ; then 
             log "renaming files"
@@ -224,8 +204,8 @@ exit
     if [ ! -f $wd/summary.tsv ]; then 
         log "RUNNING : STEP-06 : creating stat file"
         echo -e "TRUE\tFALSE" > $raw_files/02_fast5_to_basecall/stat.reads_pass_sequencing_summary.tsv
-        true=$(grep -c -w "TRUE" $raw_files/02_fast5_to_basecall/sequencing_summary.txt)
-        false=$(grep -c -w "FALSE" $raw_files/02_fast5_to_basecall/sequencing_summary.txt)
+        true=$(grep -c -w "TRUE" $raw_files/02_fast5_to_basecall/all_files/sequencing_summary.txt)
+        false=$(grep -c -w "FALSE" $raw_files/02_fast5_to_basecall/all_files/sequencing_summary.txt)
         echo -e "$true\t$false" >> $raw_files/02_fast5_to_basecall/stat.reads_pass_sequencing_summary.tsv
         reads_after_basecalling_passed=$(awk 'NR>1 { sum += $1 } END { print sum }' $raw_files/02_fast5_to_basecall/stat.reads_pass_sequencing_summary.tsv) #true
         reads_after_basecalling_failed=$(awk 'NR>1 { sum += $2 } END { print sum }' $raw_files/02_fast5_to_basecall/stat.reads_pass_sequencing_summary.tsv) #false
@@ -255,7 +235,7 @@ exit
     fi 
 ###############################################################################
 ## step-08: run nanoplot
-    if [ $parameter_file_data -ne 0 ] ; then 
+    if [ $barcode_sample_data -ne 0 ] ; then 
     if [ -d data/fastq ] ; then 
     if [ -f tmp/parameters/$pipeline.txt ] ; then
         source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh

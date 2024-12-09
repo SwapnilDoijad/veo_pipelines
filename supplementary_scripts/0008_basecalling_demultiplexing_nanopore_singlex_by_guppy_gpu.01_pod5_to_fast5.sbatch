@@ -7,12 +7,10 @@
 #SBATCH --mem=200G
 ###############################################################################
 ## step-00: preparation
-	source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 	pipeline=0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu
-	wd=results/$pipeline
-	raw_files=$wd/raw_files
+	source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
-    pod5_file_path=$(grep pod5 tmp/parameters/files_in_data_directory.txt | awk '{print $NF}')
+    pod5_file_path=$(grep my_pod5_file_path $parameters | awk -F'\t' '{print $2}' )
 ###############################################################################
 ## step-01: run pod5 converter
 	source /home/groups/VEO/tools/pod5/v0.2.2/bin/activate

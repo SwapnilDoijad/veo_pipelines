@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name 0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu-test
 #SBATCH --output results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.out
 #SBATCH --error results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.err
 #SBATCH --gres=gpu:1
@@ -12,9 +12,10 @@
     log "STARTED SBATCH: $pipeline --------------------"
     module load nvidia/cuda/11.7
 
-    kit_name=$( grep my_kit_name $parameters | awk '{print $2}' )
+    kit_name=$( grep my_kit $parameters | awk '{print $2}' )
     type_of_sequencing=$( grep my_type_of_sequencing $parameters | awk '{print $2}' )
     duplex=$( grep my_duplex_choise $parameters | awk '{print $2}' )
+    barcode_sample_data=$( cat $wd/tmp/barcode_sample.txt | wc -l )
 
     log "kit_name: $kit_name type_of_sequencing: $type_of_sequencing duplex: $duplex"
     log "data_directory_pod5_path: $data_directory_pod5_path"
@@ -107,33 +108,32 @@
     
     if [[ $type_of_sequencing == "genome" ]] ; then 
         ## basecalling + in line demultiplexing
-        # if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ] ; then
-        #     log "STARTED: 02_pod5_to_demux : basecalling + in line demultiplexing"
+        if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ] ; then
+            log "STARTED: 02_pod5_to_demux : basecalling + in line demultiplexing"
 
             ( mkdir -p $raw_files/02_pod5_to_demultiplex ) > /dev/null 2>&1
             ( mkdir -p $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq ) > /dev/null 2>&1
             ( mkdir -p $raw_files/02_pod5_to_demultiplex/demultiplexed_bam ) > /dev/null 2>&1
 
-            ## 240706 Swapnil: I think direct demultiplexing is not possible with dorado
-            ## 1 create basecalled .bam file 
-            ## 2 demultiplex bam 
-            ## 3 convert individual bam to fastq
+                    ## 240706 Swapnil: I think direct demultiplexing is not possible with dorado
+                    ## 1 create basecalled .bam file 
+                    ## 2 demultiplex bam 
+                    ## 3 convert individual bam to fastq
 
+            /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado \
+            basecaller sup \
+            $data_directory_pod5_path/ \
+            > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
 
-            # /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado \
-            # basecaller sup \
-            # $data_directory_pod5_path/ \
-            # > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+            /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
+            --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
+            --kit-name $kit_name \
+            $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
 
-            # /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
-            # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
-            # --kit-name $kit_name \
-            # $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
-
-            # /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
-            # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
-            # --emit-fastq --kit-name $kit_name \
-            # $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+            /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
+            --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
+            --emit-fastq --kit-name $kit_name \
+            $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
 
             ## 240706 Swapnil: add stept to compress $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq and change below steps accordinly 
             ## QC filtering
@@ -153,10 +153,10 @@
                 echo $i $raw_reads $QC_filtered_reads | tee -a $wd/reads_count.txt
             done 
 
-        #     log "FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
-        #     else
-        #     log "ALREADY FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
-        # fi 
+            log "FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
+            else
+            log "ALREADY FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
+        fi 
     fi 
 
     ## 240725: Swapnil : need to update below script for the stat
@@ -219,6 +219,33 @@
         fi
     fi
     fi 
+###############################################################################
+## step-04: renaming
+    if [ $barcode_sample_data -ne 0 ] ; then 
+    if  [ ! -d $raw_files/fastq ] ; then 
+        if [ -f tmp/parameters/$pipeline.txt ] ; then 
+            mkdir $raw_files/fastq > /dev/null 2>&1
+            log "renaming files"
+            awk '{print $1}' $wd/tmp/barcode_sample.txt > $wd/tmp/$pipeline.barcode.txt
+            awk '{print $2}' $wd/tmp/barcode_sample.txt > $wd/tmp/$pipeline.samples.txt
+
+            ( mkdir -p $raw_files/fastq ) > /dev/null 2>&1
+            exec 3<$wd/tmp/$pipeline.barcode.txt
+            exec 4<$wd/tmp/$pipeline.samples.txt
+            while read barcode <&3; read ids <&4 ; do 
+                echo "$barcode.fastq.gz renamed as $ids.fastq.gz"
+                cp $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/"$kit_name"_"$barcode".fastq.gz \
+                $raw_files/fastq/$ids.fastq.gz
+            done
+
+            else
+            log "$wd/tmp/$pipeline.barcode.txt and $wd/tmp/$pipeline.barcode_corresponding_ids.txt not found, skipping"
+        fi
+        else
+        log "$raw_files/fastq already exists"
+    fi
+    fi
+
 ###############################################################################
     log "FINISHED SBATCH: $pipeline --------------------"
 ###############################################################################

@@ -24,4 +24,93 @@ barcode19	Sample19
 barcode20	Sample20
 barcode21	Sample21
 barcode22	Sample22
+barcode23	Sample23
+barcode24	Sample24
+barcode25	Sample25
+barcode26	Sample26
+barcode27	Sample27
+barcode28	Sample28
+barcode29	Sample29
+barcode30	Sample30
+barcode31	Sample31
+barcode32	Sample32
+barcode33	Sample33
+barcode34	Sample34
+barcode35	Sample35
+barcode36	Sample36
+barcode37	Sample37
+barcode38	Sample38
+barcode39	Sample39
+barcode40	Sample40
+barcode41	Sample41
+barcode42	Sample42
+barcode43	Sample43
+barcode44	Sample44
+barcode45	Sample45
+barcode46	Sample46
+barcode47	Sample47
+barcode48	Sample48
+barcode49	Sample49
+barcode50	Sample50
+barcode51	Sample51
+barcode52	Sample52
+barcode53	Sample53
+barcode54	Sample54
+barcode55	Sample55
+barcode56	Sample56
+barcode57	Sample57
+barcode58	Sample58
+barcode59	Sample59
+barcode60	Sample60
+barcode61	Sample61
+barcode62	Sample62
+barcode63	Sample63
+barcode64	Sample64
+barcode65	Sample65
+barcode66	Sample66
+barcode67	Sample67
+barcode68	Sample68
+barcode69	Sample69
+barcode70	Sample70
+barcode71	Sample71
+barcode72	Sample72
+barcode73	Sample73
+barcode74	Sample74
+barcode75	Sample75
+barcode76	Sample76
+barcode77	Sample77
+barcode78	Sample78
+barcode79	Sample79
+barcode80	Sample80
+barcode81	Sample81
+barcode82	Sample82
+barcode83	Sample83
+barcode84	Sample84
+barcode85	Sample85
+barcode86	Sample86
+barcode87	Sample87
+barcode88	Sample88
+barcode89	Sample89
+barcode90	Sample90
+barcode91	Sample91
+barcode92	Sample92
+barcode93	Sample93
+barcode94	Sample94
+barcode95	Sample95
+barcode96	Sample96
 # -----------------------------------------------------------------------------
+
+## pod5 file path
+my_pod5_file_path	data/pod5
+
+## Kit name #options: SQK-NBD114-24 or SQK-NBD114-96
+my_kit	SQK-NBD114-96
+
+## flowcell #options: FLO-MIN114 or 
+my_flowcell	FLO-MIN114
+
+## type of seperated	#options: genome or amplicon
+my_type_of_sequencing	genome
+
+## Need duplex reads? #options: yes
+my_duplex_choise	no

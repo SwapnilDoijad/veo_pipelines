@@ -27,9 +27,18 @@ barcode21	Sample21
 barcode22	Sample22
 # -----------------------------------------------------------------------------
 
-## other parameters (note the tab seperators)
-my_kit_name	SQK-NBD114-96		#other_options: SQK-NBD114-24
-my_flowcell	FLO-MIN114			#other_options: 
-my_type_of_sequencing	genome		#other_options: amplicon
-my_duplex_choise	no		#other_options: yes
+## pod5 file path
+my_pod5_file_path	data/pod5
+
+## Kit name #options: SQK-NBD114-24 or SQK-NBD114-96
+my_kit	SQK-NBD114-96
+
+## flowcell #options: FLO-MIN114 or 
+my_flowcell	FLO-MIN114
+
+## type of seperated	#options: genome or amplicon
+my_type_of_sequencing	genome
+
+## Need duplex reads? #options: yes
+my_duplex_choise	no
 

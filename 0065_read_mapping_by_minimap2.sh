@@ -1,5 +1,5 @@
 #!/bin/bash
-############################################################################### 
+###############################################################################  
 ## header
     pipeline=0065_read_mapping_by_minimap2
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
@@ -19,30 +19,10 @@
     (mkdir -p $raw_files/mpileup ) > /dev/null 2>&1
     (mkdir -p $raw_files/vcf ) > /dev/null 2>&1
     (mkdir -p $raw_files/InsDel ) > /dev/null 2>&1
+    (mkdir -p $raw_files/tmp ) > /dev/null 2>&1
+
     echo -e "#ID\tCHROM\tPOS\tREF\tALT\tQUAL\tTotal_Reads_Mapped\tReads_Supporting_ALT\tReads_Supporting_REF\tSNP_Type\tAllele_Frequency\tRead_Depth_per_Base\tQualRef\tQualAllel\tSNP_Annotation" > $raw_files/summary.InsDel.tsv
     echo "#ID	CHROM	POS	ID	REF	ALT	QUAL	FILTER	AB	ABP	AC	AF	AN	AO	CIGAR	DP	DPB	DPRA	EPP	EPPR	GTI	LEN	MEANALT	MQM	MQMR	NS	NUMALT	ODDS	PAIRED	PAIREDR	PAO	PQA	PQR	PRO	QA	QR	RO	RPL	RPP	RPPR	RPR	RUN	SAF	SAP	SAR	SRF	SRP	SRR	TYPE	AD	AO	DP	GT	PL	QA	QR	RO" | tr ' ' '\t' > $raw_files/summary.InsDel.unfiltered.tsv
-
-    ## @Swapnil need to update to use the parameter file  
-    ## convert_GenBank_to_GFF3_and_FASTA
-    ## the names should be genes.gff and sequence.fa for snpEff to work, DON'T change 
-    mkdir -p results/0065_read_mapping_by_minimap2/tmp/ref_tmp > /dev/null 2>&1
-    source /home/groups/VEO/tools/biopython/myenv/bin/activate
-        python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_GenBank_to_GFF3_and_FASTA.py \
-        -i data/MN988491_1_Rhizobium_phage_RHph_Y3_36.gb \
-        -g results/0065_read_mapping_by_minimap2/tmp/ref_tmp/genes.gff \
-        -f results/0065_read_mapping_by_minimap2/tmp/ref_tmp/sequences.fa
-    deactivate
-    sed -i 's/MN988491.1 Rhizobium phage RHph_Y3_36, complete genome/MN988491_1_Rhizobium_phage_RHph_Y3_36_complete_genome/' results/0065_read_mapping_by_minimap2/tmp/ref_tmp/sequences.fa
-    sed -i 's/MN988491\.1/MN988491_1_Rhizobium_phage_RHph_Y3_36_complete_genome/g' results/0065_read_mapping_by_minimap2/tmp/ref_tmp/genes.gff
-
-    ## @Swapnil /home/xa73pav/projects/p_wallapat_phage/results/0065_read_mapping_by_minimap2/tmp/snpEff.config copy file from old
-    cp snpEff.config results/0065_read_mapping_by_minimap2/tmp/
-    ## need to update the codes 
-    java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
-    -gff3 -v \
-    -dataDir /home/xa73pav/projects/p_wallapat_phage/results/0065_read_mapping_by_minimap2/tmp/ \
-    -c /home/xa73pav/projects/p_wallapat_phage/results/0065_read_mapping_by_minimap2/tmp/snpEff.config \
-    ref_tmp
 
     create_directories_structure_1 $wd
 
@@ -53,6 +33,11 @@
         elif [ $data_type == "single" ]; then
         awk '/single_fastq_filepath/ {flag=1; next} flag && /^$/ {flag=0} flag' $parameters > $wd/tmp/single.txt
         list=$wd/tmp/single.txt
+    fi
+
+    snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
+    if [ $snp_annotation == "Yes" ]; then
+        awk '/genBank_filepath/ {flag=1; next} flag && /^$/ {flag=0} flag' $parameters > $wd/tmp/genBank_filepath.txt
     fi
 
     split_list $wd $list

@@ -11,6 +11,10 @@
     list=list.pod5.txt
 
     create_directories_structure_1 $wd
+    
+    awk '/# ----------/{flag=!flag; next} flag' $parameters > $wd/tmp/barcode_sample.txt
+
+
     sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu.sbatch
 #######################################################################
 ## footer

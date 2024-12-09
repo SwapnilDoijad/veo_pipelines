@@ -10,6 +10,9 @@
 	pipeline=0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     module load nvidia/cuda/11.7 
+
+    flowcell=$(grep my_flowcell $parameters | awk '{print $2}' )
+    kit=$(grep my_kit $parameters | awk '{print $2}' )
 ###############################################################################
 ## basecalling
 
@@ -17,20 +20,20 @@
         ( mkdir -p $raw_files/02_fast5_to_basecall/all_files ) > /dev/null 2>&1
         ( mkdir -p $raw_files/02_fast5_to_basecall/tmp ) > /dev/null 2>&1
         ( mkdir -p $raw_files/02_fast5_to_basecall/all_fastqs ) > /dev/null 2>&1
+        ( mkdir -p $raw_files/02_fast5_to_basecall/all_files/log ) > /dev/null 2>&1
 
         ## run guppy gpu/gpu-based basecaller
             /home/groups/VEO/tools/ont-guppy/v6.5.7_gpu/bin/guppy_basecaller \
             -i $raw_files/01_pod5_fast5 \
             -s $raw_files/02_fast5_to_basecall/all_files \
-            --flowcell FLO-MIN114 \
-            --kit SQK-NBD114-96 \
+            --flowcell $flowcell \
+            --kit $kit \
             -x 'cuda:0'
             # -c $my_tool_path/data/dna_r10.4.1_450bps_fast.cfg
 
-        # (cp $raw_files/02_fast5_to_basecall/all_files/$file/pass/*.fastq $raw_files/02_fast5_to_basecall/all_fastqs/ ) > /dev/null 2>&1
-        # (mkdir $raw_files/02_fast5_to_basecall/all_fastqs/guppy_log ) > /dev/null 2>&1
-        # (mv $raw_files/02_fast5_to_basecall/all_files/$file/*.log $raw_files/02_fast5_to_basecall/all_fastqs/guppy_log) > /dev/null 2>&1
-    
+        mv $raw_files/02_fast5_to_basecall/*.log $raw_files/02_fast5_to_basecall/all_files/log > /dev/null 2>&1
+        stat.reads_pass_sequencing_summary.tsv
+
     log "FINISHED SBATCH : 02_fast5_to_basecall"
 ###############################################################################
  

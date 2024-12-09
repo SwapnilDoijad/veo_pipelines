@@ -37,254 +37,287 @@
 	log	"final_read_length: $final_read_length"
 	log	"subsample: $subsample"
 	log	"subsample_final: $subsample_final"
-# ###############################################################################
-# ## 01 filter fastq for quality and length (min + max)
+###############################################################################
+## 01 filter fastq for quality and length (min + max)
 
-# 		mkdir $raw_files/my_fastq_filtered_Q > /dev/null 2>&1
+		mkdir $raw_files/my_fastq_masked_filtered_Q > /dev/null 2>&1
 
-# 		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate chopper_v0.5.0 
+		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate chopper_v0.5.0 
 
-# 		if [ ! -f $raw_files/fastq_count_before_after_filter.tsv ] ; then 
-# 			echo "#id original_count filtered_count reads_less_than_desired_QC reads_more_than_anticipated_length" \
-# 			| tr ' ' '\t' > $raw_files/fastq_count_before_after_filter.tsv
-# 		fi
+		if [ ! -f $raw_files/fastq_count_before_after_filter.tsv ] ; then 
+			echo "#id reads_in_orignal_fastq reads_after_masking reads_after_filtering" \
+			| tr ' ' '\t' > $raw_files/fastq_count_before_after_filter.tsv
+		fi
 
-# 		for i in $( cat $sublist ); do 
-# 			if [ ! -f $raw_files/my_fastq_filtered_Q/$i.fastq.gz ] ; then
-# 				log  "STARTED : filtering for $i"
+		for i in $( cat $sublist ); do 
+			if [ ! -f $raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz ] ; then
+				log  "STARTED : filtering for $i"
+	
+				## masking of bases with read quality less than 10
+				/home/groups/VEO/tools/seqtk/v1.4/seqtk/seqtk seq -q 10 -n N \
+				$fastq_path/$i.fastq.gz \
+				| gzip > $raw_files/my_fastq_masked_filtered_Q/$i.masked.fastq.gz
 
-# 				zcat $fastq_path/$i.fastq.gz \
-# 				| chopper -q $phred --threads $SLURM_CPUS_PER_TASK --minlength $minimum_length --maxlength $maximum_length \
-# 				| gzip > $raw_files/my_fastq_filtered_Q/$i.fastq.gz
+				## filter out masked reads if carries 'N' more than p (percentage of masked bases)
+				python3 $suppl_scripts/0401_filter_masked_reads.py \
+				-i $raw_files/my_fastq_masked_filtered_Q/$i.masked.fastq.gz \
+				-o $raw_files/my_fastq_masked_filtered_Q/$i.masked.filtered.fastq.gz \
+				-p 10 
 
-# 				python3 $scripts_for_users_path/supplementary_scripts/0401_count_reads_more_than_anticipated.py \
-# 				-i $fastq_path/$i.fastq.gz \
-# 				-o $wd/tmp/tmp/$i.fastq.gz.tsv \
-# 				-l $maximum_length
+				## filtering for quality and length (min + max)
+				zcat $raw_files/my_fastq_masked_filtered_Q/$i.masked.filtered.fastq.gz \
+				| chopper -q $phred --threads $SLURM_CPUS_PER_TASK --minlength $minimum_length --maxlength $maximum_length \
+				| gzip > $raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz
 
-# 				original_fastq_count=$( count_reads_from_fastq $fastq_path/$i.fastq.gz )
-# 				filtered_fastq_count=$( count_reads_from_fastq $raw_files/my_fastq_filtered_Q/$i.fastq.gz )
-# 				reads_more_than_anticipated_length=$( awk -F' ' '{print $NF}' $wd/tmp/tmp/$i.fastq.gz.tsv )
-# 				reads_less_than_desired_QC=$(( $original_fastq_count - $filtered_fastq_count - $reads_more_than_anticipated_length ))
-# 				echo "$i $original_fastq_count $filtered_fastq_count $reads_less_than_desired_QC $reads_more_than_anticipated_length" | tr ' ' '\t' | tee -a  $raw_files/fastq_count_before_after_filter.tsv
+				## count reads more than anticipated length
+				python3 $scripts_for_users_path/supplementary_scripts/0401_count_reads_more_than_anticipated.py \
+				-i $raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz \
+				-o $wd/tmp/tmp/$i.fastq.gz.tsv \
+				-l $maximum_length
 
-# 				log  "FINISHED : filtering for $i"
-# 				else 
-# 				log "ALREADY FINISHED : filtering for $i"
-# 			fi
-# 		done
-# 		conda deactivate
+				reads_in_orignal_fastq=$( count_reads_from_fastq $fastq_path/$i.fastq.gz )
+				reads_after_masking=$( count_reads_from_fastq $raw_files/my_fastq_masked_filtered_Q/$i.masked.filtered.fastq.gz )
+				reads_after_filtering=$( count_reads_from_fastq $raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz )
+				# reads_more_than_anticipated_length=$( awk -F' ' '{print $NF}' $wd/tmp/tmp/$i.fastq.gz.tsv )
+				# reads_less_than_desired_QC=$(( $reads_in_orignal_fastq - $reads_after_masking - $reads_after_filtering - $reads_more_than_anticipated_length ))
+				echo "$i $reads_in_orignal_fastq $reads_after_masking $reads_after_filtering" | tr ' ' '\t' | tee -a  $raw_files/fastq_count_before_after_filter.tsv
 
-# ###############################################################################
-# ## 02 subsample fastq
+				log  "FINISHED : filtering for $i"
+				else 
+				log "ALREADY FINISHED : filtering for $i"
+			fi
+		done
+		conda deactivate
 
-# 		mkdir -p $raw_files/my_fastq_filtered_Q_subsampled"$subsample" > /dev/null 2>&1
-# 		if [ $subsample != "no_subsample" ] ; then
-# 			source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate rasusa_v0.7.1 
+###############################################################################
+## 02 subsample fastq
 
-# 			for i in $(cat $sublist); do 
-# 				if [ ! -f $raw_files/my_fastq_filtered_Q_subsampled"$subsample"/$i.fastq.gz ] ; then 
-# 					log "STARTED : subsampling for $i"
-# 					rasusa -i $raw_files/my_fastq_filtered_Q/$i.fastq.gz \
-# 					-n $subsample \
-# 					-o $raw_files/my_fastq_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
-# 					-O g
+		mkdir -p $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample" > /dev/null 2>&1
+		if [ $subsample != "no_subsample" ] ; then
+			source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate rasusa_v0.7.1 
 
-# 					log "FINISHED : subsampling for $i"
-# 					else
-# 					log "ALREADY FINISHED : subsampling for $i"
-# 				fi
-# 			done
+			for i in $(cat $sublist); do 
+				if [ ! -f $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz ] ; then 
+					log "STARTED : subsampling for $i"
+					rasusa -i $raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz \
+					-n $subsample \
+					-o $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
+					-O g
 
-# 			else
-# 			cp $raw_files/my_fastq_filtered_Q/$i.fastq.gz $raw_files/my_fastq_filtered_Q_subsampled"$subsample"/$i.fastq.gz
-# 		fi
+					log "FINISHED : subsampling for $i"
+					else
+					log "ALREADY FINISHED : subsampling for $i"
+				fi
+			done
 
-# ###############################################################################
-# ## 03 fastq to fasta
-# 		mkdir $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta > /dev/null 2>&1
-# 		for i in $(cat $sublist); do
-# 			if [ ! -f $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta/$i.fasta ] ; then 
-# 				log "STARTED : fastq to fasta for $i"
+			else
+			cp $raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz
+		fi
 
-# 				python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/fastq2fasta.py \
-# 				-i $raw_files/my_fastq_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
-# 				-o $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta/$i.fasta
+###############################################################################
+## 03 fastq to fasta
+		mkdir $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta > /dev/null 2>&1
+		for i in $(cat $sublist); do
+			if [ ! -f $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta/$i.fasta ] ; then 
+				log "STARTED : fastq to fasta for $i"
 
-# 				sed -i 's/ .*//g' $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta/$i.fasta
-# 				sed -i 's/\t.*//g' $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta/$i.fasta
+				python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/fastq2fasta.py \
+				-i $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
+				-o $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta/$i.fasta
+
+				sed -i 's/ .*//g' $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta/$i.fasta
+				sed -i 's/\t.*//g' $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta/$i.fasta
 				
-# 				log "FINISHED : fastq to fasta for $i"
-# 				else
-# 				log "ALREADY FINISHED : fastq to fasta for $i"
-# 			fi
-# 		done
+				log "FINISHED : fastq to fasta for $i"
+				else
+				log "ALREADY FINISHED : fastq to fasta for $i"
+			fi
+		done
 
-# ###############################################################################
-# ## 04 split fasta of every barcode to single file 
+###############################################################################
+## 04 split fasta of every barcode to single file 
 
-# 		mkdir $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual > /dev/null 2>&1
-# 		for i in $(cat $sublist); do 
-# 			if [ ! -d $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual/$i ] ; then 
-# 				log "STARTED : spliting fasta to individual reads for $i"
+		mkdir $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual > /dev/null 2>&1
+		for i in $(cat $sublist); do 
+			if [ ! -d $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual/$i ] ; then 
+				log "STARTED : spliting fasta to individual reads for $i"
 
-# 				mkdir $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual/$i > /dev/null 2>&1
+				mkdir $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual/$i > /dev/null 2>&1
 
-# 				bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_multifasta.sh \
-# 				-i $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta/$i.fasta \
-# 				-o $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual/$i/
+				bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_multifasta.sh \
+				-i $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta/$i.fasta \
+				-o $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual/$i/
 
-# 				log "FINISHED : spliting fasta to individual reads for $i"
-# 				else
-# 				log "ALREADY FINISHED : spliting fasta to individual reads for $i"
-# 			fi 
-# 		done
+				log "FINISHED : spliting fasta to individual reads for $i"
+				else
+				log "ALREADY FINISHED : spliting fasta to individual reads for $i"
+			fi 
+		done
 
-# ############################################################################### 
-# ## 05 k-mer count by JellyFish
-# 		jellyFish="$raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish"
-# 		for i in $( cat $sublist ); do 
-# 			mkdir -p $jellyFish/$i > /dev/null 2>&1
-# 			log "checking k-mer count by JellyFish for $i"
-# 			for sequence in $(ls $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual/$i/ ); do 
-# 				if [ ! -f $jellyFish/$i/$sequence.jf.dump ] ; then 
-# 					log "STARTED : k-mer count by JellyFish for $i : $sequence "
+############################################################################### 
+## 05 k-mer count by JellyFish
+		jellyFish="$raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish"
+		for i in $( cat $sublist ); do 
+			mkdir -p $jellyFish/$i > /dev/null 2>&1
+			log "checking k-mer count by JellyFish for $i"
+			for sequence in $(ls $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual/$i/ ); do 
+				if [ ! -f $jellyFish/$i/$sequence.jf.dump ] ; then 
+					log "STARTED : k-mer count by JellyFish for $i : $sequence "
 
-# 					## -s 1M : using a hash with 1 million elements
-# 					## -m 4 : k-mer size 4
-# 					/home/groups/VEO/tools/jellyfish/v2.3.0/jellyfish \
-# 					count -m 4 -s 1M -t $SLURM_CPUS_PER_TASK \
-# 					-o $jellyFish/$i/$sequence.jf \
-# 					$raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual/$i/$sequence 
+					## -s 1M : using a hash with 1 million elements
+					## -m 4 : k-mer size 4
+					/home/groups/VEO/tools/jellyfish/v2.3.0/jellyfish \
+					count -m 4 -s 1M -t $SLURM_CPUS_PER_TASK \
+					-o $jellyFish/$i/$sequence.jf \
+					$raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual/$i/$sequence 
 
-# 					/home/groups/VEO/tools/jellyfish/v2.3.0/jellyfish dump \
-# 					-c $jellyFish/$i/$sequence.jf \
-# 					> $jellyFish/$i/$sequence.jf.dump
+					/home/groups/VEO/tools/jellyfish/v2.3.0/jellyfish dump \
+					-c $jellyFish/$i/$sequence.jf \
+					> $jellyFish/$i/$sequence.jf.dump
 
-# 					log "FINISHED : k-mer count by JellyFish for $i : $sequence "
-# 				fi
-# 			done 
-# 		done 
-# ###############################################################################
-# ## 06 matrix from kmer counts + tsne plot stat
-# 	## $raw_files/jelly_fish_matrix/$i/matrix.tsv take long time 
+					log "FINISHED : k-mer count by JellyFish for $i : $sequence "
+				fi
+			done 
+		done 
+###############################################################################
+## 06 matrix from kmer counts + tsne plot stat
+	## $raw_files/jelly_fish_matrix/$i/matrix.tsv take long time 
 
-# 	matrix=$raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix
-# 	mkdir $matrix > /dev/null 2>&1
-# 	source /home/groups/VEO/tools/biopython/myenv/bin/activate
-# 	for i in $( cat $sublist ); do 
-# 		if [ ! -f $matrix/$i/matrix.tsv ] ; then 
-# 			mkdir $matrix/$i > /dev/null 2>&1
+	matrix=$raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix
+	mkdir $matrix > /dev/null 2>&1
+	source /home/groups/VEO/tools/biopython/myenv/bin/activate
+	for i in $( cat $sublist ); do 
+		if [ ! -f $matrix/$i/matrix.tsv ] ; then 
+			mkdir $matrix/$i > /dev/null 2>&1
 
-# 			log "STARTED: creating matrix from kmer counts for $i"
-# 			# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_merge_data_by_dask.faster.py \
-# 			python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_merge_data_by_dask.py \
-# 			-i $jellyFish/$i \
-# 			-o $matrix/$i/matrix.tsv
+			log "STARTED: creating matrix from kmer counts for $i"
+			# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_merge_data_by_dask.faster.py \
+			python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_merge_data_by_dask.py \
+			-i $jellyFish/$i \
+			-o $matrix/$i/matrix.tsv
 
-# 			log "STARTED: creating tSNE plot for $i"
-# 			## output is $wd/out/$i/inlier.tsv
-# 			python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_create_a_tsne_plot.py \
-# 			-i $matrix/$i/matrix.tsv \
-# 			-o $matrix/$i
+			sed -i 's/@//g' $matrix/$i/matrix.tsv
 
-# 			awk '{print $1}' $matrix/$i/inlier.tsv | sed 's/@//g' > $matrix/$i/inlier.tsv.read_ids
+			 python $suppl_scripts/0401_create_a_tsne_plot_by_Zscore_and_GC.py \
+			 -g $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
+			 -m $matrix/$i/matrix.tsv \
+			 -o $matrix/$i
 
-# 			log "FINISHED: creating matrix from kmer counts for $i"
-# 			else
-# 			log "ALREADY FINISHED: creating matrix from kmer counts for $i"
-# 		fi
-# 	done 
-# 	deactivate
+								## depreciated 
+									# log "STARTED: creating tSNE plot for $i"
+									# ## output is $wd/out/$i/inlier.tsv
+									# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_create_a_tsne_plot.py \
+									# -i $matrix/$i/matrix.tsv \
+									# -o $matrix/$i
 
-# ###############################################################################
-# ## 07 write $wd/out/$i/inlier.tsv.read_ids
+									# awk '{print $1}' $matrix/$i/inlier.tsv | sed 's/@//g' > $matrix/$i/inlier.tsv.read_ids_tmp
 
-# 	reads=$raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads
-# 	mkdir $reads > /dev/null 2>&1
-# 	source /home/groups/VEO/tools/biopython/myenv/bin/activate
-# 	for i in $( cat $sublist ); do
-# 		if [ ! -f $reads/$i.fastq.gz ] ; then 
-# 			log "STARTED: writing inlier reads for $i"
+									# log "STARTED: idenifying outlier based on GC content for $i"
+									# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0401_filter_reads_based_on_GC.py \
+									# -i $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
+									# -o $matrix/$i 
 
-# 			awk '{print $1}' $matrix/$i/inlier.tsv | sed 's/@//g' > $matrix/$i/inlier.tsv.read_ids
+									# ## remove outliers identified by GC content
+									# grep -vFf $matrix/$i/iqr_gc_content_outliers.txt $matrix/$i/inlier.tsv.read_ids_tmp | sort | uniq > $matrix/$i/inlier.tsv.read_ids
 
-# 			python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/extract_reads_from_fastq.py \
-# 			-i $raw_files/my_fastq_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
-# 			-o $reads/$i.fastq.gz \
-# 			-l $matrix/$i/inlier.tsv.read_ids
+									# rm $matrix/$i/inlier.tsv.read_ids_tmp
 
-# 			log "FINISHED: writing inlier reads for $i"
-# 			else
-# 			log "ALREADY FINISHED: writing inlier reads for $i"
-# 		fi 
-# 	done
-# 	deactivate
+			log "FINISHED: creating matrix from kmer counts for $i"
+			else
+			log "ALREADY FINISHED: creating matrix from kmer counts for $i"
+		fi
+	done 
+	deactivate
 
-# ###############################################################################
-# ## 08 long reads to short reads
-# 	ReadLength=$raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"
-# 	mkdir $ReadLength > /dev/null 2>&1
-# 	for i in $(cat $sublist ); do
-# 		if [ ! -f $ReadLength/$i.fastq.gz ] ; then 
-# 			log "STARTED: converting long reads to short reads for $i"
+###############################################################################
+## 07 write $wd/out/$i/inlier.tsv.read_ids
 
-# 			python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/long_reads_to_short_reads.py \
-# 			-i $reads/$i.fastq.gz \
-# 			-o $ReadLength/$i.fastq.gz \
-# 			-l $final_read_length
+	reads=$raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads
+	mkdir $reads > /dev/null 2>&1
+	source /home/groups/VEO/tools/biopython/myenv/bin/activate
+	for i in $( cat $sublist ); do
+		if [ ! -f $reads/$i.fastq.gz ] ; then 
+			log "STARTED: writing inlier reads for $i"
 
-# 			log "FINISHED: converting long reads to short reads for $i"
-# 			else
-# 			log "ALREADY FINISHED: converting long reads to short reads for $i"
-# 		fi 
-# 	done
-# ###############################################################################
-# ## 09 subsampel to $subsample_final
+			python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/extract_reads_from_fastq.py \
+			-i $raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"/$i.fastq.gz \
+			-o $reads/$i.fastq.gz \
+			-l $matrix/$i/inlier.tsv.read_ids
 
-# 	subsampled_final_reads=$raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"_subsampled"$subsample_final"reads
-# 	mkdir $subsampled_final_reads > /dev/null 2>&1
-# 	source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate rasusa_v0.7.1 
-# 	for i in $(cat $sublist ); do
-# 		if [ ! -f $subsampled_final_reads/$i.fastq.gz ] ; then 
-# 			log "STARTED: subsampling to $subsample_final for $i"
+			log "FINISHED: writing inlier reads for $i"
+			else
+			log "ALREADY FINISHED: writing inlier reads for $i"
+		fi 
+	done
+	deactivate
 
-# 			rasusa \
-# 			-i $ReadLength/$i.fastq.gz \
-# 			-n $subsample_final \
-# 			-o $subsampled_final_reads/$i.fastq.gz \
-# 			-O g
+###############################################################################
+## 08 long reads to short reads
+	ReadLength=$raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"
+	mkdir $ReadLength > /dev/null 2>&1
+	for i in $(cat $sublist ); do
+		if [ ! -f $ReadLength/$i.fastq.gz ] ; then 
+			log "STARTED: converting long reads to short reads for $i"
 
-# 			log "FINISHED: subsampling to $subsample_final for $i"
-# 			else
-# 			log "ALREADY FINISHED: subsampling to $subsample_final for $i"
-# 		fi 
-# 	done
-# 	deactivate
+			python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/long_reads_to_short_reads.py \
+			-i $reads/$i.fastq.gz \
+			-o $ReadLength/$i.fastq.gz \
+			-l $final_read_length
+
+			log "FINISHED: converting long reads to short reads for $i"
+			else
+			log "ALREADY FINISHED: converting long reads to short reads for $i"
+		fi 
+	done
+###############################################################################
+## 09 subsampel to $subsample_final
+
+	subsampled_final_reads=$raw_files/my_fastq_masked_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"_subsampled"$subsample_final"reads
+	mkdir $subsampled_final_reads > /dev/null 2>&1
+	source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate rasusa_v0.7.1 
+	for i in $(cat $sublist ); do
+		if [ ! -f $subsampled_final_reads/$i.fastq.gz ] ; then 
+			log "STARTED: subsampling to $subsample_final for $i"
+
+			rasusa \
+			-i $ReadLength/$i.fastq.gz \
+			-n $subsample_final \
+			-o $subsampled_final_reads/$i.fastq.gz \
+			-O g
+
+			log "FINISHED: subsampling to $subsample_final for $i"
+			else
+			log "ALREADY FINISHED: subsampling to $subsample_final for $i"
+		fi 
+	done
+	deactivate
+
+###############################################################################
+## 10 masking of bases with read quality less than 20
+	# subsampled_final_reads_masked="$subsampled_final_reads"_masked
+	# mkdir $subsampled_final_reads_masked > /dev/null 2>&1
+	# for i in $(cat "$sublist"); do 
+	# 	/home/groups/VEO/tools/seqtk/v1.4/seqtk/seqtk seq -q 20 -n N \
+	# 	$subsampled_final_reads/$i.fastq.gz \
+	# 	| gzip > $subsampled_final_reads_masked/$i.fastq.gz
+	# done 
 
 ###############################################################################
 ## 10 create final stat
-	# for i in $(cat $sublist); do 
-	# 	my_fastq_filtered_Q_reads=$( count_reads_from_fastq $raw_files/my_fastq_filtered_Q/$i.fastq.gz)
-	# 	my_fastq_filtered_Q_subsampled"$subsample"=$( count_reads_from_fastq  $raw_files/my_fastq_filtered_Q_subsampled"$subsample"/$i.fastq.gz )
-	# 	my_fastq_filtered_Q_subsampled"$subsample"_fasta=$(count_number_of_sequences_in_fasta $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta/$i.fasta )
-	# 	my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads=$( count_reads_from_fastq $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads/$i.fastq.gz )
-	# 	my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"=$( count_reads_from_fastq $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"/$i.fastq.gz )
-	# 	my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"_subsampled"$subsample_final"reads=$( count_reads_from_fastq $raw_files/my_fastq_filtered_Q_subsampled"$subsample"_fasta_individual_jellyFish_matrix_reads_filtered"$final_read_length"_subsampled"$subsample_final"reads/$i.fastq.gz )
-	# 	echo "$i $my_fastq_filtered_Q_reads $my_fastq_filtered_Q_subsampled$subsample $my_fastq_filtered_Q_subsampled${subsample}_fasta $my_fastq_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads $my_fastq_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads_filtered${final_read_length} $my_fastq_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads_filtered${final_read_length}_subsampled${subsample_final}reads" | tee -a $raw_files/summary.$final_read_length.tsv
-	# done 
+	for i in $(cat "$sublist"); do 
+		# Calculate counts
+		my_fastq_masked_filtered_Q_reads=$(count_reads_from_fastq "$raw_files/my_fastq_masked_filtered_Q/$i.fastq.gz")
+		my_fastq_masked_filtered_Q_subsampled=$(count_reads_from_fastq "$raw_files/my_fastq_masked_filtered_Q_subsampled${subsample}/$i.fastq.gz")
+		my_fastq_masked_filtered_Q_subsampled_fasta=$(count_number_of_sequences_in_fasta "$raw_files/my_fastq_masked_filtered_Q_subsampled${subsample}_fasta/$i.fasta")
+		my_fastq_masked_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads=$(count_reads_from_fastq "$raw_files/my_fastq_masked_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads/$i.fastq.gz")
+		my_fastq_masked_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered=$(count_reads_from_fastq "$raw_files/my_fastq_masked_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads_filtered${final_read_length}/$i.fastq.gz")
+		my_fastq_masked_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered_subsampled=$(count_reads_from_fastq "$raw_files/my_fastq_masked_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads_filtered${final_read_length}_subsampled${subsample_final}reads/$i.fastq.gz")
 
-for i in $(cat "$sublist"); do 
-    # Calculate counts
-    my_fastq_filtered_Q_reads=$(count_reads_from_fastq "$raw_files/my_fastq_filtered_Q/$i.fastq.gz")
-    my_fastq_filtered_Q_subsampled=$(count_reads_from_fastq "$raw_files/my_fastq_filtered_Q_subsampled${subsample}/$i.fastq.gz")
-    my_fastq_filtered_Q_subsampled_fasta=$(count_number_of_sequences_in_fasta "$raw_files/my_fastq_filtered_Q_subsampled${subsample}_fasta/$i.fasta")
-    my_fastq_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads=$(count_reads_from_fastq "$raw_files/my_fastq_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads/$i.fastq.gz")
-    my_fastq_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered=$(count_reads_from_fastq "$raw_files/my_fastq_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads_filtered${final_read_length}/$i.fastq.gz")
-    my_fastq_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered_subsampled=$(count_reads_from_fastq "$raw_files/my_fastq_filtered_Q_subsampled${subsample}_fasta_individual_jellyFish_matrix_reads_filtered${final_read_length}_subsampled${subsample_final}reads/$i.fastq.gz")
-
-    # Append results to summary file
-    echo "$i $my_fastq_filtered_Q_reads $my_fastq_filtered_Q_subsampled $my_fastq_filtered_Q_subsampled_fasta $my_fastq_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads $my_fastq_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered $my_fastq_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered_subsampled" | tr ' ' '\t' | tee -a "$raw_files/summary.${final_read_length}.tsv"
-done
+		# Append results to summary file
+		echo "$i $my_fastq_masked_filtered_Q_reads $my_fastq_masked_filtered_Q_subsampled $my_fastq_masked_filtered_Q_subsampled_fasta $my_fastq_masked_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads $my_fastq_masked_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered $my_fastq_masked_filtered_Q_subsampled_fasta_individual_jellyFish_matrix_reads_filtered_subsampled" | tr ' ' '\t' | tee -a "$raw_files/summary.${final_read_length}.tsv"
+	done
 
 ###############################################################################
+
+
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0065_read_mapping_by_minimap2
-#SBATCH --partition=short,interactive,standard
+#SBATCH --partition=long,interactive,standard
 #SBATCH --output=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.out.txt
 #SBATCH --error=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.err.txt
 #SBATCH --mem=40G
@@ -10,13 +10,19 @@ pipeline=0065_read_mapping_by_minimap2
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 sublist=$wd/tmp/lists/ABC
 data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
+snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
 
     while IFS= read -r line; do
 
         assembly_id_path=$( echo $line | awk '{print $1}' | xargs -I{} dirname {} | sort | uniq )
         assembly_id=$( echo $line | awk '{print $1}' | awk -F'/' '{print $NF}' | sed 's/\.fasta//g' | sort | uniq )
-        fastq_id_path=$( echo $line | awk '{print $2}' | xargs -I{} dirname {} | sort | uniq )
-        fastq_id=$( echo $line | awk '{print $2}'| awk -F'/' '{print $NF}' | sed 's/\.fastq\.gz//g' | sort | uniq )
+        fastq_id_path=$( echo $line | awk '{print $2}' | xargs -I{} dirname {} | tr ' ' '\n' | sort | uniq )
+        fastq_id=$( echo $line | awk '{print $2}'| awk -F'/' '{print $NF}' | sed 's/\.fastq\.gz//g' | tr ' ' '\n' |  sort | uniq )
+
+        log "assembly_id_path: $assembly_id_path"
+        log "assembly_id: $assembly_id"
+        log "fastq_id_path: $fastq_id_path"
+        log "fastq_id: $fastq_id"
 
         if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt ] ; then 
 
@@ -48,8 +54,8 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
                 else
                 echo "ALREADY FINISHED : Samtool index for $assembly_id"
             fi
-0
-            if [ $data_type == "paired" ]; then
+
+            if [ $data_type == "single" ]; then
                 ## map files ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads
                 if [ ! -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
@@ -63,7 +69,7 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
                     log "ALREADY FINISHED : mapping for $fastq_id on $assembly_id"
                 fi 
 
-                elif [ $data_type == "single" ]; then
+                elif [ $data_type == "paired" ]; then
             
                 # Check if the SAM file already exists
                 if [ ! -f "$raw_files/sam_files/$assembly_id.$fastq_id.sam" ]; then
@@ -73,8 +79,8 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
                     /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x sr -a \
                     $raw_files/index_files/$assembly_id.fasta.mmi \
                     -t $SLURM_CPUS_PER_TASK \
-                    $fastq_id_path/$fastq_id"_R1_001.fastq.gz \
-                    $fastq_id_path/$fastq_id"_R2_001.fastq.gz \
+                    $fastq_id_path/"$fastq_id"_R1_001.fastq.gz \
+                    $fastq_id_path/"$fastq_id"_R2_001.fastq.gz \
                     > "$raw_files/sam_files/$assembly_id.$fastq_id.sam"
 
                     check_status "Mapping $fastq_id on $assembly_id"
@@ -181,7 +187,6 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
                     -m -any $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz \
                     -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf
 
-
                     /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
                     -m -both -c w $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf \
                     -f $assembly_id_path/"$assembly_id".fasta \
@@ -196,7 +201,7 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
                     conda deactivate  
 
 
-                                        ## 2024-11-08 16:17:53 : NOT GIVING GOOD RESULTS (some SNOs are skipped)
+                                        ## 2024-11-08 16:17:53 : NOT GIVING GOOD RESULTS (some SNPs are skipped)
                                         # conda activate vcflib_v1.0.10
 
                                         #     vcfbreakmulti $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf | \
@@ -241,23 +246,54 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
 
         ## snpEff 
         ## 2024-11-09 07:44:29 need to give the full path? Don't know. Need to check  
-        java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
-        -c /home/xa73pav/projects/p_wallapat_phage/results/0065_read_mapping_by_minimap2/tmp/snpEff.config \
-        -dataDir /home/xa73pav/projects/p_wallapat_phage/results/0065_read_mapping_by_minimap2/tmp/ \
-        ref_tmp \
-        $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
-        > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf
+        if [ $snp_annotation == "Yes" ]; then
+            if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv ]; then  
+                log "STARTED : snpEff annotation for $assembly_id.$fastq_id" 
 
-        log "STARTED : generating final summary file for $assembly_id.$fastq_id"
-        bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.filter.sh \
-        -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf \
-        -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+                genBankFile=$( grep $assembly_id $wd/tmp/genBank_filepath.txt | awk -F'\t' '{print $2}' )
+                ## convert_GenBank_to_GFF3_and_FASTA
+                ## the names should be genes.gff and sequence.fa for snpEff to work, DON'T change  
+                mkdir -p $raw_files/tmp/genome_data/$assembly_id > /dev/null 2>&1
+                source /home/groups/VEO/tools/biopython/myenv/bin/activate
+                    python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_GenBank_to_GFF3_and_FASTA.py \
+                    -i $genBankFile \
+                    -g $raw_files/tmp/genome_data/$assembly_id/genes.gff \
+                    -f $raw_files/tmp/genome_data/$assembly_id/sequences.fa
+                deactivate
 
-        sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+                cat /home/groups/VEO/scripts_for_users/supplementary_scripts/parameter_files/snpEff.config \
+                | sed "s/genome_id/$assembly_id/g" \
+                > $raw_files/tmp/genome_data/$assembly_id/snpEff.config
 
-        awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
-        grep -v "#" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv | sed "s/^/$fastq_id\t/" >> $raw_files/summary.InsDel.unfiltered.tsv
- 
+                ## need to update the codes   
+                java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
+                -gff3 -v \
+                -dataDir $raw_files/tmp/genome_data/ \
+                -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                $assembly_id
+
+                java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
+                -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                -dataDir $raw_files/tmp/genome_data/ \
+                $assembly_id \
+                $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
+                > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf
+
+                log "STARTED : generating final summary file for $assembly_id.$fastq_id"
+                bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.filter.sh \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+
+                sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+
+                awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
+                grep -v "#" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv | sed "s/^/$fastq_id\t/" >> $raw_files/summary.InsDel.unfiltered.tsv
+            fi
+
+            elif [ $snp_annotation == "No" ]; then
+            log "NOT RUNNING : snpEff annotation for $assembly_id.$fastq_id"
+        fi
+
         source /home/groups/VEO/tools/biopython/myenv/bin/activate
         python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
         -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv \
@@ -282,3 +318,8 @@ data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
 # java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
 # -c results/0065_read_mapping_by_minimap2/tmp/snpeff.config \
 # build -genbank -v MN988491_1_Rhizobium_phage_RHph_Y3_36
+java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
+-c results/0065_read_mapping_by_minimap2/raw_files/tmp/genome_data/MN988491_1_Rhizobium_phage_RHph_Y3_36/snpEff.config \
+-dataDir results/0065_read_mapping_by_minimap2/raw_files/tmp/genome_data/ \
+MN988491_1_Rhizobium_phage_RHph_Y3_36 \
+results/0065_read_mapping_by_minimap2/raw_files/vcf/MN988491_1_Rhizobium_phage_RHph_Y3_36.P1L1barcode47.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf > out.vcf

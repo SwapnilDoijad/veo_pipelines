@@ -249,6 +249,7 @@ wait_till_all_job_finished() {
     fi
 
     while true; do
+        sleep 10
         # Using squeue with the --user option to filter jobs by the current user
         job_exists=$(squeue --user "$(whoami)" | grep "$job_name")
         
@@ -257,7 +258,6 @@ wait_till_all_job_finished() {
             break
         else
             echo "Waiting for jobs with name $job_name to finish..."
-            sleep 5  # Wait for 5 seconds before checking again
         fi
     done
 }
@@ -275,3 +275,46 @@ check_status() {
         exit $status # Exit the script with the error status
     fi
 }
+
+# Example usage:
+# Replace 'your_job_script.sbatch' with your actual SLURM job script
+# submit_sbatch_and_wait_till_run_is_complete "your_job_script.sbatch"
+submit_sbatch_and_wait_till_run_is_complete() {
+    local job_script="$1"
+
+    # Validate input
+    if [[ -z "$job_script" ]]; then
+        echo "Error: Please provide the SLURM job script."
+        return 1
+    fi
+
+    # Submit the job and capture the Job ID
+    local job_id
+    job_id=$(sbatch "$job_script" | awk '{print $NF}')
+
+    if [[ -z "$job_id" ]]; then
+        echo "Error: Failed to submit the job."
+        return 1
+    fi
+
+    echo "Job submitted with ID: $job_id"
+
+    # Check job status in a loop
+    while true; do
+        # Query the job's status
+        local job_status
+        job_status=$(squeue --job "$job_id" 2>/dev/null | tail -n +2)
+
+        if [[ -z "$job_status" ]]; then
+            # If no output, the job is completed or no longer in the queue
+            echo "Job $job_id has completed."
+            break
+        else
+            # Job is still running or pending
+            echo "Job $job_id is still running. Waiting 60 seconds..."
+            sleep 60
+        fi
+    done
+}
+
+
