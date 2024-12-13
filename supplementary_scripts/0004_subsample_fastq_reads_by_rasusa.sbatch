@@ -6,9 +6,8 @@
 #SBATCH --cpus-per-task=10
 ###############################################################################
 ## step-01: preparation
-    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     pipeline=0004_subsample_fastq_reads_by_rasusa
-    wd=results/$pipeline
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
     sublist=$wd/tmp/lists/ABC
     parameters=tmp/parameters/$pipeline.*

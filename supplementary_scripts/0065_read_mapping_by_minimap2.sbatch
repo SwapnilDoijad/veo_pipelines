@@ -26,6 +26,9 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
 
         if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt ] ; then 
 
+            ## Minimap2 is designed to work with both interleaved paired reads and split paired reads for short or long reads.
+            ## For paired-end data provided as a single interleaved FASTQ file, minimap2 can properly parse and process the paired reads without requiring any additional steps.
+            ## use The -x map-pb preset is optimized for long-read mapping (e.g., PacBio or ONT reads), which typically are not in paired-end format. If you're using paired-end reads with this preset, minimap2 will still handle them correctly, as it expects reads to be continuous and will ignore pairing information by default.
             ## create index ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads 
             if [ ! -f $assembly_id_path/"$assembly_id".fasta.mmi ]; then
                 log "STARTED : creating index for $assembly_id"

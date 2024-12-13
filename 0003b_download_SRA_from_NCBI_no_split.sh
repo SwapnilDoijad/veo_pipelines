@@ -1,6 +1,8 @@
 #!/bin/bash
 ###############################################################################
 ## step-00: tools, databases, paths, inputs and outputs
+    pipeline=0003_download_SRA_from_NCBI_no_split
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
     tool_path=/home/groups/VEO/tools/sratoolkit/v3.0.1/bin
 
@@ -50,16 +52,15 @@
 
 ###############################################################################
 ## step-01: preparations
-    (mkdir -p /work/groups/VEO/databases/fastqs/raw_files) > /dev/null 2>&1 ;
-    (mkdir -p tmp/lists) > /dev/null 2>&1 ;
-    (mkdir -p tmp/slurm) > /dev/null 2>&1 ;
-    (mkdir -p tmp/sbatch) > /dev/null 2>&1 ;
+    # total_lines=$(wc -l < "$list")
+    # lines_per_part=$(( $total_lines / 1 ))
+    # split -l "$lines_per_part" -a 3 -d "$list" list.0003b_download_SRA_from_NCBI_no_split_
+    # mv list.0003b_download_SRA_from_NCBI_no_split_* tmp/lists/
 
-    (rm tmp/lists/*.* ) > /dev/null 2>&1 ;
-    total_lines=$(wc -l < "$list")
-    lines_per_part=$(( $total_lines / 1 ))
-    split -l "$lines_per_part" -a 3 -d "$list" list.0003b_download_SRA_from_NCBI_no_split_
-    mv list.0003b_download_SRA_from_NCBI_no_split_* tmp/lists/
+
+    create_directories_structure_1 $wd
+    split_list $wd $list
+    submit_jobs $wd $pipeline
 
 ###############################################################################
 echo "script 0003_download_SRA_from_NCBI has started ---------------------------------"
@@ -67,20 +68,20 @@ echo "script 0003_download_SRA_from_NCBI has started ---------------------------
 ## step-02: running the script
     ## faster download is possible through parallel-fastq-dump
 
-    for sublists in $( ls tmp/lists/ ) ; do
-        sublist=$(echo $sublists | awk -F'/' '{print $NF}')
-        sed "s#ABC#$sublist#g" /home/groups/VEO/scripts_for_users/supplementary_scripts/0003b_download_SRA_from_NCBI_no_split.sbatch \
-        > tmp/sbatch/0003b_download_SRA_from_NCBI_no_split.$sublist.sbatch
-        sbatch tmp/sbatch/0003b_download_SRA_from_NCBI_no_split.$sublist.sbatch
-    done 
+    # for sublists in $( ls tmp/lists/ ) ; do
+    #     sublist=$(echo $sublists | awk -F'/' '{print $NF}')
+    #     sed "s#ABC#$sublist#g" /home/groups/VEO/scripts_for_users/supplementary_scripts/0003b_download_SRA_from_NCBI_no_split.sbatch \
+    #     > tmp/sbatch/0003b_download_SRA_from_NCBI_no_split.$sublist.sbatch
+    #     sbatch tmp/sbatch/0003b_download_SRA_from_NCBI_no_split.$sublist.sbatch
+    # done 
 
     # for SRA_id in $(cat $list); do
-    #     if [ ! -f /work/groups/VEO/databases/fastqs/raw_files/$SRA_id/"$SRA_id".sra ] ; then
+    #     if [ ! -f /veodata/02/databases/fastqs/raw_files/$SRA_id/"$SRA_id".sra ] ; then
     #         ## Download
     #         echo "downloading $SRA_id"
 
         ## by NCBI sratoolkit (slow)
-        # ( $tool_path/prefetch $SRA_id --output-directory /work/groups/VEO/databases/fastqs/raw_files ) > /dev/null 2>&1 ;
+        # ( $tool_path/prefetch $SRA_id --output-directory /veodata/02/databases/fastqs/raw_files ) > /dev/null 2>&1 ;
 
         # ## Conversion
         # echo "converting SRA to fastq $SRA_id"
@@ -88,11 +89,11 @@ echo "script 0003_download_SRA_from_NCBI has started ---------------------------
 
         # ## Check for fastq pair
         # if [ -f /home/swapnil/ncbi/fastq/"$SRA_id"_1.fastq ] && [ -f /home/swapnil/ncbi/fastq/"$SRA_id"_2.fastq ] ; then
-        #     cp /home/swapnil/ncbi/fastq/"$SRA_id"_1.fastq /work/groups/VEO/databases/fastqs ;
-        #     (gzip /work/groups/VEO/databases/fastqs/"$SRA_id"_1.fastq) > /dev/null 2>&1 ;
+        #     cp /home/swapnil/ncbi/fastq/"$SRA_id"_1.fastq /veodata/02/databases/fastqs ;
+        #     (gzip /veodata/02/databases/fastqs/"$SRA_id"_1.fastq) > /dev/null 2>&1 ;
         #     rm /home/swapnil/ncbi/fastq/"$SRA_id"_1.fastq ;
-        #     cp /home/swapnil/ncbi/fastq/"$SRA_id"_2.fastq /work/groups/VEO/databases/fastqs/ ;
-        #     (gzip /work/groups/VEO/databases/fastqs/"$SRA_id"_2.fastq) > /dev/null 2>&1 ;
+        #     cp /home/swapnil/ncbi/fastq/"$SRA_id"_2.fastq /veodata/02/databases/fastqs/ ;
+        #     (gzip /veodata/02/databases/fastqs/"$SRA_id"_2.fastq) > /dev/null 2>&1 ;
         #     rm /home/swapnil/ncbi/fastq/"$SRA_id"_2.fastq ;
         #     rm /home/swapnil/ncbi/public/sra/$SRA_id.sra ;
         # fi

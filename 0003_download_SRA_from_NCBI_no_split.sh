@@ -1,8 +1,8 @@
 #!/bin/bash
 ###############################################################################
 ## step-00: tools, databases, paths, inputs and outputs
-
-    tool_path=/home/groups/VEO/tools/sratoolkit/v3.0.1/bin
+    pipeline=0003_download_SRA_from_NCBI_no_split
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
         ## Function to display script usage
         usage() {
@@ -48,33 +48,11 @@
 ###############################################################################
 ## step-01: preparations
         (mkdir -p data/ncbi/raw_reads) > /dev/null 2>&1 ;
-###############################################################################
-echo "script 0003_download_SRA_from_NCBI has started ---------------------------------"
-###############################################################################
-## step-02: running the script
-        for F1 in $(cat $list); do
-            if [ ! -f data/ncbi/raw_reads/"$F1"_*.fastq ] ; then
-                ## Download
-                echo "downloding $F1"
-                ( $tool_path/prefetch $F1 ) > /dev/null 2>&1 ;
-                ## Conversion
-                echo "converting SRA to fastq $F1"
-                ( $tool_path/fastq-dump --outdir /home/swapnil/ncbi/fastq/ --split-files /home/swapnil/ncbi/public/sra/$F1.sra ) > /dev/null 2>&1 ;
 
-                ## Check for fastq pair
-                if [ -f /home/swapnil/ncbi/fastq/"$F1"_1.fastq ] && [ -f /home/swapnil/ncbi/fastq/"$F1"_2.fastq ] ; then
-                    cp /home/swapnil/ncbi/fastq/"$F1"_1.fastq data/ncbi/raw_reads ;
-                    (gzip data/ncbi/raw_reads/"$F1"_1.fastq) > /dev/null 2>&1 ;
-                    rm /home/swapnil/ncbi/fastq/"$F1"_1.fastq ;
-                    cp /home/swapnil/ncbi/fastq/"$F1"_2.fastq data/ncbi/raw_reads/ ;
-                    (gzip data/ncbi/raw_reads/"$F1"_2.fastq) > /dev/null 2>&1 ;
-                    rm /home/swapnil/ncbi/fastq/"$F1"_2.fastq ;
-                    rm /home/swapnil/ncbi/public/sra/$F1.sra ;
-                fi
-            else
-                echo "$F1 already dowloaded"
-            fi
-        done
+        create_directories_structure_1 $wd
+        split_list $wd $list
+        submit_jobs $wd $pipeline
+
 ###############################################################################
 echo "script 0003_download_SRA_from_NCBI has ended ---------------------------------"
 ###############################################################################

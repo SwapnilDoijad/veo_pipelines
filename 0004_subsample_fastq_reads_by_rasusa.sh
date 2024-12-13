@@ -1,13 +1,13 @@
 #!/bin/bash
 ###############################################################################
 ## header
+    pipeline=0004_subsample_fastq_reads_by_rasusa
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     echo "STARTED : 0004_subsample_fastq_reads_by_rasusa ---------------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
 
-    pipeline=0004_subsample_fastq_reads_by_rasusa
-    wd=results/$pipeline
+
 
     if [ -f list.fastq.txt ]; then 
         list=list.fastq.txt

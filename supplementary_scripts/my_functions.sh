@@ -28,7 +28,7 @@ if [ ! -f list.fastq.txt ]; then
             ## create list files
             # echo "--------------------------------------------------------------------------------"
             # echo "list.fasta.txt / list.fastq.txt / list.pod5.txt not available"
-            echo "creating list file based on the files in data folder"
+            # echo "creating list file based on the files in data folder"
             if [ -n "$data_directory_fastq_path" ]; then
                 ls $data_directory_fastq_path | awk -F'_' '{print $1}' | sed 's/.fastq.gz//g' | sort -u > list.fastq.txt
                 list=list.fastq.txt

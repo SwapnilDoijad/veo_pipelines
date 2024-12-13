@@ -20,7 +20,7 @@ sample_id_tmp=$(grep $barcode_FR.$barcode_RC $wd/tmp/list_BarcodePrimers/list.ba
 sample_id=$(grep -w $sample_id_tmp tmp/parameters/0991_calculate_abundance_from_fastq.my_barcode.txt | awk '{print $1}' )
 
 	/home/groups/VEO/tools/kraken2/v2.1.2/kraken2 \
-	--db /work/groups/VEO/databases/kraken2/v20180901 \
+	--db /veodata/03/databases/kraken2/v20180901 \
 	--output $raw_files/kraken2/hits/"$run_id"_"$sample_id".$barcode_FR.$barcode_RC.$QC.fastq.$subsample.fasta.out \
 	--report $raw_files/kraken2/hits/"$run_id"_"$sample_id".$barcode_FR.$barcode_RC.$QC.fastq.$subsample.fasta.report \
 	--threads 40 \

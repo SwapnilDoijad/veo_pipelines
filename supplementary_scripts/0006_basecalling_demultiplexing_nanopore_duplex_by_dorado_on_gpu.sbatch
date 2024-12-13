@@ -125,10 +125,10 @@
             $data_directory_pod5_path/ \
             > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
 
-            /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
-            --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
-            --kit-name $kit_name \
-            $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+                        # /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
+                        # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
+                        # --kit-name $kit_name \
+                        # $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
 
             /home/groups/VEO/tools/dorado/v0.6.0/bin/dorado demux \
             --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
@@ -167,8 +167,8 @@
             echo $i $number_of_reads | tee -a $wd/reads_count.bam.txt
 	    done 
 
-    	for i in $(ls results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/01_pod5_to_fastq/demultiplexed_fastq/ ); do 
-            number_of_reads=$( count_reads_from_fastq results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/01_pod5_to_fastq/demultiplexed_fastq/$i )
+    	for i in $(ls $raw_files/01_pod5_to_fastq/demultiplexed_fastq/ ); do 
+            number_of_reads=$( count_reads_from_fastq $raw_files/01_pod5_to_fastq/demultiplexed_fastq/$i )
             echo $i $number_of_reads | tee -a $wd/reads_count.fastq.txt
 	    done 
 ###############################################################################  
