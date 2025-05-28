@@ -1,0 +1,7 @@
+## This is a parameter file for 0321_geneDNAstat_by_variscan pipeline
+## please give a path of a txt file in which all core genes (from panaroo gene_presence_absence_roary.csv) are listed
+## example path is given below (change the path according to your data):
+my_core_gene_list	results/core_gene.list
+
+## panaroo alignment folder path
+my_aligned_gene_sequences	results/0171_comparative_genomics_core_pan_by_panaroo/raw_files/aligned_gene_sequences

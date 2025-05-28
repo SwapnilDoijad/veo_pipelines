@@ -1,18 +1,18 @@
 #!/bin/bash
 #SBATCH --job-name 0224_plasmid_detection_by_platon
-#SBATCH --partition=long
+#SBATCH --partition=standard,long
 #SBATCH --output results/0224_plasmid_detection_by_platon/tmp/slurm/%j.out
 #SBATCH --error results/0224_plasmid_detection_by_platon/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
 #SBATCH --mem=100G
 ###############################################################################
 ## 00: preparation
-    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-
     pipeline=0224_plasmid_detection_by_platon
-    wd=results/$pipeline
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
     fasta_path=$(grep my_fasta_path tmp/parameters/$pipeline* | awk '{print $2}')
+
+	makeblastdb=/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb
 ###############################################################################
 ## 01: run platon
 
@@ -22,7 +22,7 @@
         (mkdir $wd/raw_files/$i) > /dev/null 2>&1 
 
         platon \
-        -d /work/groups/VEO/databases/platon/v20230215/ \
+        -d /veodata/03/databases/platon/v20230215/ \
         -o $wd/raw_files/$i \
         $fasta_path/$i.fasta 
         

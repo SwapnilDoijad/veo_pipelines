@@ -19,4 +19,4 @@
 		gzip --stdout $raw_files/04_demultiplex_to_combinedBarcodeFastq/QC10/my_barcode.10.fastq \
 		> $raw_files/04_demultiplex_to_combinedBarcodeFastq/QC10_gzip/my_barcode.10.fastq.gz
 	fi
-###############################################################################
+############################################################################### 

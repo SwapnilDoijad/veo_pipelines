@@ -7,7 +7,8 @@
 ###############################################################################
 ## step-01: preparation
 
-    ls $data_directory_pod5_path | sed 's/.pod5//g' > list.pod5.txt
+    pod5_file_path=$( grep my_pod5_file_path $parameters | awk -F'\t' '{print $2}' )
+    ls $pod5_file_path | sed 's/.pod5//g' > list.pod5.txt
     list=list.pod5.txt
 
     create_directories_structure_1 $wd
@@ -19,13 +20,7 @@
 #######################################################################
 ## footer
     log "ENDED : $pipeline ----------------------"
-###############################################################################
-
-exit 
-
-
-###############################################################################
-
+exit
 ###############################################################################
 ## step-01b: basecalling by dorado (pod5 to .bam)
     ## redoing step-01 as the output from above step (pod5 to fastq) not able to 

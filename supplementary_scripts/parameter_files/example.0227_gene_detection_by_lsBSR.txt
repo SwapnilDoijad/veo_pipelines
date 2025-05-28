@@ -1,0 +1,8 @@
+## This is a parameter file for 0227_gene_detection_by_lsBSR pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_dir	data/ncbi_datasets/fasta
+
+## provide your gene fasta file path including 
+my_gene_path    data/genes/arn.fasta

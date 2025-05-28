@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
-#SBATCH --job-name 0992_calculate_abundance_from_degenerative_primer
-#SBATCH --partition=interactive
+#SBATCH --job-name=0992_calculate_abundance_from_degenerative_primer
+#SBATCH --partition=interactive,long,standard
 #SBATCH --output results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.out.combine_read_id
 #SBATCH --error results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.err.combine_read_id
 ###############################################################################
@@ -24,16 +24,20 @@ mismatch=DEFGHI
 
         cat $raw_files/read_ids_extracted/$barcode_FR.$mismatch.tsv.tmp \
         $raw_files/read_ids_extracted/$barcode_RC.$mismatch.tsv.tmp \
-        | sort | uniq -d  > $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids_present_in_both_FR_RC.$mismatch.$subsample.txt
+        | sort | uniq -d  \
+        > $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids_present_in_both_FR_RC.$mismatch.$subsample.txt
 
+        ## non_duplicate_final_read_ids == read ids that are present in either FR or RC but not in both
         non_duplicate_final_read_ids=$(cat $raw_files/read_ids_extracted/$barcode_FR.$mismatch.tsv.tmp \
-        $raw_files/read_ids_extracted/$barcode_RC.$mismatch.tsv.tmp | sort | uniq | wc -l )
+        $raw_files/read_ids_extracted/$barcode_RC.$mismatch.tsv.tmp | sort | uniq -u | wc -l )
 
         cat $raw_files/read_ids_extracted/$barcode_FR.$mismatch.tsv.tmp \
         $raw_files/read_ids_extracted/$barcode_RC.$mismatch.tsv.tmp \
-        | sort | uniq > $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids_present_in_either_FR_RC.$mismatch.$subsample.txt
+        | sort | uniq  -u > $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids_present_in_either_FR_RC.$mismatch.$subsample.txt
 
         echo $barcode_FR $barcode_RC $mismatch $num_of_barcode_FR $num_of_barcode_RC $duplicate_read_ids $non_duplicate_final_read_ids \
         | tee -a $wd/tmp/read_ids.$mismatch.$subsample.tsv
 
     # fi
+
+    

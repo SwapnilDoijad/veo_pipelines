@@ -14,7 +14,7 @@
     sublist=$wd/tmp/lists/ABC
     parameter_file=tmp/parameters/$pipeline.*
 
-    annotation_file=/work/groups/VEO/databases/VFDB/v2021/VFDB-annotations.txt
+    annotation_file=/veodata/03/databases/VFDB/v2021/VFDB-annotations.txt
 
 	blastn=/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/blastn
     fasta_path=$(grep my_fasta_path $parameter_file | awk '{print $2}')
@@ -27,7 +27,7 @@
 
 			log "STARTED : $pipeline : $i : blastn step"
 			$blastn \
-            -db /work/groups/VEO/databases/VFDB/v2021/VFDB_setB_nt.fas \
+            -db /veodata/03/databases/VFDB/v2021/VFDB_setB_nt.fas \
 			-query $fasta_path/$i.fasta \
 			-out $wd/raw_files/$i/$i.virulence-gene-blast.tmp \
 			-num_threads $cpus -max_target_seqs 1 -max_hsps 1 -evalue 1e-100 \

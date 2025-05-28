@@ -27,13 +27,13 @@
 exit
 ###############################################################################
 ## step-02: database creation
-	if [ ! -f /work/groups/VEO/databases/VFDB/v2021/VFDB_setB_pro.fas.phr ] ; then
+	if [ ! -f /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas.phr ] ; then
 		echo "creating blast database"
-		$makeblastdb -in /work/groups/VEO/databases/VFDB/v2021/VFDB_setB_pro.fas -parse_seqids -dbtype prot
+		$makeblastdb -in /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas -parse_seqids -dbtype prot
 		else
 		echo "-------------------------------------------------------------------------------"
 		echo "VFDB Database version"
-		stat /work/groups/VEO/databases/VFDB/v2021/VFDB_setB_pro.fas.phr | awk 'NR >= 5 && NR <= 7'
+		stat /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas.phr | awk 'NR >= 5 && NR <= 7'
 		echo "-------------------------------------------------------------------------------"
 	fi
 ###############################################################################
@@ -63,7 +63,7 @@ exit
 
 	cat $wd/Virulence_gene_frequency.csv.1.tmp | sort -k 2,2rn $wd/Virulence_gene_frequency.csv.1.tmp > $wd/Virulence_gene_frequency.csv.2.tmp
 
-	awk -f /home/groups/VEO/scripts_for_users/supplementary_scripts/vlookup-VFDB.2.awk /work/groups/VEO/databases/VFDB/v2021/VFDB-annotations.2.txt $wd/Virulence_gene_frequency.csv.2.tmp > $wd/Virulence_gene_frequency.csv.3.tmp
+	awk -f /home/groups/VEO/scripts_for_users/supplementary_scripts/vlookup-VFDB.2.awk /veodata/03/databases/VFDB/v2021/VFDB-annotations.2.txt $wd/Virulence_gene_frequency.csv.2.tmp > $wd/Virulence_gene_frequency.csv.3.tmp
 
 	paste $wd/Virulence_gene_frequency.csv.2.tmp $wd/Virulence_gene_frequency.csv.3.tmp > $wd/Virulence_gene_frequency.csv
 

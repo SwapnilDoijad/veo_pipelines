@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0991_calculate_abundance_from_fastq
-#SBATCH --partition=interactive,standard,long
+#SBATCH --partition=gpu-veo,interactive,standard,long
 #SBATCH --output=results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.out
 #SBATCH --error=results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
@@ -16,8 +16,8 @@
     QC=10
     my_blast_mismatches=( 100 ) ## 10 15 100
     anticipated_read_length=$( grep my_anticipated_read_length $parameters | awk '{print $2}' )
-    minlength=$(( $anticipated_read_length - 50 ))
-    maxlength=$(( $anticipated_read_length + 200 ))
+    minlength=$(( $anticipated_read_length - 100 ))
+    maxlength=$(( $anticipated_read_length + 300 ))
     rawFastqFile=$(grep my_fastq_file $parameters | awk $fastq_path '{print $2}')
     filteredFastqFile=$raw_files/all_combined.$QC.fastq
     # mismatches=( 0 1 2 3 4)
@@ -30,7 +30,7 @@
     log "database_parameter : $database_parameter"
     if [[ $database_parameter == "silva" ]] ; then 
         log "database : using silva"
-		database="/work/groups/VEO/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db"
+		database="/veodata/03/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db"
 	elif [[ $database_parameter == "query_sequences" ]] ; then 
         log "database : using query_sequences"
 		database="$wd/databases/query_sequence.fasta.db"
@@ -44,9 +44,9 @@
         gunzip -c $rawFastqFile > $wd/all_combined.fastq
         fi
         rawFastqFile=$wd/all_combined.fastq
-    fi 
+    fi
 
-############################################################################### 
+###############################################################################   
 ## step-01: create barcode files 
     if [ ! -f $bp/list.barcodes_all.RC.txt ] ; then 
         ( rm $bp/list.barcodes_F.fasta ) > /dev/null 2>&1
@@ -63,6 +63,9 @@
             echo ">$id"_R >> $bp/list.barcodes_R.fasta
             echo "$R_primer" >> $bp/list.barcodes_R.fasta
         done 
+
+        awk 'NR>1 {print $2}' tmp/parameters/$pipeline.my_barcode.txt \
+        > $bp/list.samples.txt
 
         python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/reverse_complement.py \
         -i $bp/list.barcodes_F.fasta -o $bp/list.barcodes_F_RC.fasta
@@ -87,7 +90,7 @@
         log "ALREADY FINISHED : creating barcode files"
     fi 
  
-###############################################################################
+############################################################################### 
 ## step-02: OPTIONAL : Combine all fastqs and count of number of reads 
 
         # if [ ! -f results/0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu/raw_files/02_fast5_to_basecall/all_fastqs/all_combined.fastq ] ; then 
@@ -214,32 +217,60 @@
     # exit 
 ###############################################################################
 ## step-06: combine read ids from F, R and RC sequences, remove duplicates, also make a count
+    mkdir $raw_files/read_ids_extracted_per_sample > /dev/null 2>&1
 
     for subsample in "${subsamples[@]}"; do
-        if [ ! -f $wd/tmp/number_of_reads.read_ids.$subsample.tsv ] ; then 
+        if [ ! -f $wd/tmp/number_of_reads.read_ids.$subsample.tsv ] ; then
 
+            echo "sample_id barcode_FR barcode_RC num_of_barcode_FR num_of_barcode_RC num_of_new_reads_by_RC non_duplicate_read_ids" \
+            | sed 's/ /\t/g' > $wd/tmp/number_of_reads.read_ids.$subsample.tsv
+
+            ## calculate number of reads FR and RC combination
+            ## there will be two combination of FR and RC for each sample
             log "RUNNING: $subsample combining read ids, removing duplicates and counting "
             while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do
+                sample_id=$(grep "$barcode_FR.$barcode_RC" $bp/list.barcodes.names.txt | awk '{print $2}')
                 num_of_barcode_FR=$( wc -l $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.$subsample.txt | awk '{print $1}' )
                 num_of_barcode_RC=$( wc -l $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.$subsample.txt | awk '{print $1}' )
                 num_of_new_reads_by_RC=$(diff \
-                $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.$subsample.txt \
-                $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.only.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.only.$subsample.txt \
                 | grep "^>" | sed 's/^> //' | wc -l )
 
-                cat $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.$subsample.txt \
-                $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.$subsample.txt | \
-                sort | uniq | sed 's/\@//g'> $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids.$subsample.txt
+                cat $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.only.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.only.$subsample.txt | \
+                sort | uniq | sed 's/\@//g' > $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids.only.$subsample.txt
 
                 non_duplicate_read_ids=$(($num_of_barcode_FR + $num_of_new_reads_by_RC ))
 
-                echo $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC $num_of_new_reads_by_RC $non_duplicate_read_ids
                 echo $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC $num_of_new_reads_by_RC $non_duplicate_read_ids \
                 > $raw_files/read_ids_extracted/number_of_reads.$barcode_FR.$barcode_RC.read_ids.$subsample.txt
 
-                echo $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC $num_of_new_reads_by_RC $non_duplicate_read_ids \
-                >> $wd/tmp/number_of_reads.read_ids.$subsample.tsv
+                echo $sample_id $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC $num_of_new_reads_by_RC $non_duplicate_read_ids \
+                | sed 's/ /\t/g' >> $wd/tmp/number_of_reads.read_ids.$subsample.tsv
+
             done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
+
+            ## calculate total number of reads per sample (combine and remove duplicate reads ids from two combination of FR and RC for each sample)
+            echo "sample_id FR_RC_seqeuence_1_for_sample FR_RC_seqeuence_2_for_sample numberOfNonDuplicateReadsPerSample" \
+            | sed 's/ /\t/g' > $wd/tmp/number_of_reads_per_sample.$subsample.tsv
+
+            for sample_id in $(cat $bp/list.samples.txt); do 
+
+                FR_RC_seqeuence_1_for_sample=$(grep -w "$sample_id" $bp/list.barcodes.names.txt | awk 'NR==1 {print $1}')
+                FR_RC_seqeuence_2_for_sample=$(grep -w "$sample_id" $bp/list.barcodes.names.txt | awk 'NR==2 {print $1}')
+                
+                cat $raw_files/read_ids_extracted/list.$FR_RC_seqeuence_1_for_sample.read_ids.only.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$FR_RC_seqeuence_2_for_sample.read_ids.only.$subsample.txt \
+                | sort | uniq \
+                > $raw_files/read_ids_extracted_per_sample/$sample_id.$subsample.tsv
+
+                number_of_nonDuplicate_reads_for_sample=$( wc -l $raw_files/read_ids_extracted_per_sample/$sample_id.$subsample.tsv | awk '{print $1}')
+
+                echo $sample_id $FR_RC_seqeuence_1_for_sample $FR_RC_seqeuence_2_for_sample $number_of_nonDuplicate_reads_for_sample \
+                | sed 's/ /\t/g' >> $wd/tmp/number_of_reads_per_sample.$subsample.tsv
+                
+            done
 
             else
             log "ALREADY FINISHED : $subsample combining read ids, removing duplicates and counting"
@@ -281,8 +312,7 @@
         number_of_reads=0
         for subsample in "${subsamples[@]}"; do
             while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do
-                lines_in_file=$(wc -l  $raw_files/read_ids_extracted_fastq/$barcode.$barcode_RC.$QC.$subsample.fastq | awk '{print $1}')
-                reads_in_file=$(( $lines_in_file / 4 ))
+                reads_in_file=$( count_reads_from_fastq raw_files/read_ids_extracted_fastq/$barcode.$barcode_RC.$QC.$subsample.fastq )
                 # echo $barcode.$barcode_RC.$subsample : $reads_in_file
                 total_number_of_reads=$(( $number_of_reads + $reads_in_file ))
                 number_of_reads=$total_number_of_reads
@@ -322,6 +352,7 @@
         for subsample in "${subsamples[@]}"; do
             while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do 
 
+                sample_id=$(grep $barcode.$barcode_RC $bp/list.barcodes.names.txt | awk '{print $2}')
                 number_of_reads_ids_in_FR=$( wc -l $raw_files/read_ids_extracted/list.$barcode.read_ids.$subsample.txt | awk '{print $1}' )
                 number_of_reads_ids_in_RC=$( wc -l $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.$subsample.txt | awk '{print $1}' )
                 number_of_total_read_ids=$(( $number_of_reads_ids_in_FR + $number_of_reads_ids_in_RC )) ## here duplicates are not removed
@@ -335,12 +366,13 @@
                 lines_in_fasta10=$(wc -l  $raw_files/read_ids_extracted_fastq/$barcode.$barcode_RC.$QC.fastq.$subsample.fasta | awk '{print $1}')
                 reads_in_fasta10=$(( $lines_in_fasta10 / 2 ))
 
-                echo "$barcode && $barcode_RC : $number_of_total_read_ids $non_duplicate_reads $reads_10 $reads_in_fasta10" 
-                echo "$barcode && $barcode_RC : $number_of_total_read_ids $non_duplicate_reads $reads_10 $reads_in_fasta10" >> $wd/tmp/total_number_of_reads.$QC.txt
+                echo "$sample_id $barcode && $barcode_RC : $number_of_total_read_ids $non_duplicate_reads $reads_10 $reads_in_fasta10" \
+                | tee -a $wd/tmp/total_number_of_reads.$QC.txt
 
             done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
         done
     fi
+
     log "FINISHED : QC: count the number of reads"
 
 ###############################################################################
@@ -592,6 +624,22 @@
     #   -i $wd/final_tables/all.rhizo.$subsample.perc.tsv \
     #   -o $wd/final_tables/all.rhizo.$subsample.perc.tsv.png
     # done 
+###############################################################################
+## create rarefaction curve 
+    ## NEED to work on this 
+
+                # for sample in $(cat $bp/list.barcodes.names.txt); do 
+                #     source /home/groups/VEO/tools/biopython/myenv/bin/activate
+
+                #     python $suppl_scripts/$pipeline.rarefaction.py \
+                #     -d rarefaction_curve_manuscript_231212/data/ \
+                #     -o rarefaction_curve_manuscript_231212/rarefaction.png \
+                #     -t rarefaction_curve_manuscript_231212/rarefaction.tsv \
+                #     --html rarefaction_curve_manuscript_231212/rarefaction.html \
+                #     --plateau_output rarefaction_curve_manuscript_231212/plateau_output.tsv \
+
+                #     deactivate
+                # done 
 ###############################################################################
 # email
 	# echo "sending email"

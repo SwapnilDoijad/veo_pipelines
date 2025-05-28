@@ -37,7 +37,7 @@ echo "started... 0653_phage_clustering_by_mmseq2 -------------------------------
 
     gzip -c $fasta_file_path/*.fasta > results/0653_phage_clustering_by_mmseq2/tmp/fasta.gz 
 
-    echo "running mmseqs with stict cutoffs (-c 0.10 --min-seq-id 0.97)"
+    echo "running mmseqs with strict cutoffs (-c 0.10 --min-seq-id 0.97)"
     mkdir results/0653_phage_clustering_by_mmseq2/10_97
     mmseqs easy-linclust \
     results/0653_phage_clustering_by_mmseq2/tmp/fasta.gz \
@@ -47,7 +47,7 @@ echo "started... 0653_phage_clustering_by_mmseq2 -------------------------------
     number_of_clusters=$(awk '{print $1}' results/0653_phage_clustering_by_mmseq2/10_97/mmseq_out_cluster.tsv | sort -u | wc -l )
     echo "$number_of_clusters clusters found for 10% coverage and 97% nucleotide identity" >> results/0653_phage_clustering_by_mmseq2/summary.tsv
 
-    echo "running mmseqs with stict cutoffs (-c 0.8 --min-seq-id 0.97)"
+    echo "running mmseqs with strict cutoffs (-c 0.8 --min-seq-id 0.97)"
     mkdir results/0653_phage_clustering_by_mmseq2/80_97
     mmseqs easy-linclust \
     results/0653_phage_clustering_by_mmseq2/tmp/fasta.gz \
@@ -57,7 +57,7 @@ echo "started... 0653_phage_clustering_by_mmseq2 -------------------------------
     number_of_clusters=$(awk '{print $1}' results/0653_phage_clustering_by_mmseq2/80_97/mmseq_out_cluster.tsv | sort -u | wc -l )
     echo "$number_of_clusters clusters found for 80% coverage and 97% nucleotide identity" >> results/0653_phage_clustering_by_mmseq2/summary.tsv
 
-    echo "running mmseqs with stict cutoffs (-c 0.65 --min-seq-id 0.80)"
+    echo "running mmseqs with strict cutoffs (-c 0.65 --min-seq-id 0.80)"
     mkdir results/0653_phage_clustering_by_mmseq2/65_80
     mmseqs easy-linclust \
     results/0653_phage_clustering_by_mmseq2/tmp/fasta.gz \
@@ -67,7 +67,7 @@ echo "started... 0653_phage_clustering_by_mmseq2 -------------------------------
     number_of_clusters=$(awk '{print $1}' results/0653_phage_clustering_by_mmseq2/65_80/mmseq_out_cluster.tsv | sort -u | wc -l )
     echo "$number_of_clusters clusters found for 65% coverage and 80% nucleotide identity" >> results/0653_phage_clustering_by_mmseq2/summary.tsv
 
-    echo "running mmseqs with stict cutoffs (-c 0.50 --min-seq-id 0.65)"
+    echo "running mmseqs with strict cutoffs (-c 0.50 --min-seq-id 0.65)"
     mkdir results/0653_phage_clustering_by_mmseq2/50_65
     mmseqs easy-linclust \
     results/0653_phage_clustering_by_mmseq2/tmp/fasta.gz \
@@ -77,7 +77,7 @@ echo "started... 0653_phage_clustering_by_mmseq2 -------------------------------
     number_of_clusters=$(awk '{print $1}' results/0653_phage_clustering_by_mmseq2/50_65/mmseq_out_cluster.tsv | sort -u | wc -l )
     echo "$number_of_clusters clusters found for 50% coverage and 65% nucleotide identity" >> results/0653_phage_clustering_by_mmseq2/summary.tsv
 
-    echo "running mmseqs with stict cutoffs (-c 0.30 --min-seq-id 0.50)"
+    echo "running mmseqs with strict cutoffs (-c 0.30 --min-seq-id 0.50)"
     mkdir results/0653_phage_clustering_by_mmseq2/30_50
     mmseqs easy-linclust \
     results/0653_phage_clustering_by_mmseq2/tmp/fasta.gz \

@@ -1,0 +1,7 @@
+## This is a parameter file for 0044_genome_assembly_for_illumina_by_spades pipeline
+## tab seperated
+## files should end with .fastq.gz 
+## please give a path of a single folder in which all fastq.gz files are stored
+## example path is given below (change the path according to your data):
+my_fastq_path	results/0021_rawreads_filter_by_trimmomatic/fastq_filtered
+

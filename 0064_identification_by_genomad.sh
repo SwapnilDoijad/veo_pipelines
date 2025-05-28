@@ -4,23 +4,12 @@
     log "STARTED : 0064_identification_by_genomad ------------------------------"
 ###############################################################################
 ## step-01: preparations
-    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     pipeline=0064_identification_by_genomad
-    wd=results/$pipeline
-    send_email=send_email_answer
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
-    if [ -f list.fasta.txt ]; then 
-        list=list.fasta.txt
-        elif [ -f list.bacterial_fasta.txt ]; then
-        list=list.bacterial_fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | sed 's/ /\n/g'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
+    fasta_path=$(grep "fasta_path" $parameters | awk '{print $2}')
+    ls $fasta_path/ | sed 's/\.fasta//g' > list.$pipeline.txt
+    list=list.$pipeline.txt
 
     if [ -f result_summary.read_me.txt ]; then
         fasta_file_path=$(grep fasta result_summary.read_me.txt | awk '{print $NF}')

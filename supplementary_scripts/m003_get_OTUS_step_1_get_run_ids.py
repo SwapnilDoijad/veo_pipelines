@@ -4,7 +4,7 @@ import os
 def process_sample(sample_id):
     print(f"getting run_ids for sample {sample_id}")
 
-    with open('/work/groups/VEO/databases/mgnify/mgnify_all_ids_combined.20230127.tab', 'r') as mgnify_file:
+    with open('/veodata/03/databases/mgnify/mgnify_all_ids_combined.20230127.tab', 'r') as mgnify_file:
         lines = mgnify_file.readlines()
 
         for line in lines:

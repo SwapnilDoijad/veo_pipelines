@@ -4,11 +4,17 @@
 ## paired files should end with _R1_001.fastq.gz and _R2_001.fastq.gz
 ## If you mention the 'single' below, the data in the paired will be ignored and vice-versa
 
-## data tpe: single or paired
+## data type: single or paired
 my_data_type	single 
 
+## read type: illumina or nanpore or pacbio 
+my_read_type	nanopore
+
+## SNP_analysis:  "Yes" or "No" ## SNPs will be extracted 
+my_SNP_analysis	No
+
 ## SNP annotation by snpEff needed - "Yes" or "No". If "No", the data in the section "SNP annotation by snpEff" will be ignored
-my_snp_annotation	Yes
+my_snp_annotation	No
 
 ## for paired end sequencing 
 #assembly_or_fasta_ids	forward_fastq_filepath	reverse_fastq_filepath

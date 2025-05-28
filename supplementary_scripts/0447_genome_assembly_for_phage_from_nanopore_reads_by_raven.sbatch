@@ -1,14 +1,16 @@
 #!/bin/bash
 #SBATCH --job-name 0447_genome_assembly_for_phage_from_nanopore_reads_by_raven
-#SBATCH --partition=interactive
+#SBATCH --partition=standard,long,interactive
 #SBATCH --output results/0447_genome_assembly_for_phage_from_nanopore_reads_by_raven/tmp/slurm/%j.out
 #SBATCH --error  results/0447_genome_assembly_for_phage_from_nanopore_reads_by_raven/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=200G
 ###############################################################################
 ## step-00: preparation
     pipeline=0447_genome_assembly_for_phage_from_nanopore_reads_by_raven
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
+    fastq_path=$( grep my_fastq_dir $parameters | awk '{print $2}' )
 ###############################################################################
     log "STARTED SBATCH : $pipeline : $sublist"
 ###############################################################################
@@ -20,9 +22,14 @@
             mkdir $raw_files/$i
 
             raven -t $SLURM_CPUS_PER_TASK \
-             $data_directory_fastq_path/$i.fastq.gz \
-            > $raw_files/$i/$i.fasta
+             $fastq_path/$i.fastq.gz \
+            > $raw_files/$i/$i.fasta \
+			& my_pid=$!
+			get_resource_stat $my_pid $wd/tmp/resource_log/$i.raven.tsv 
 
+            contigs=$( grep -c '>' $raw_files/$i/$i.fasta || echo 0)
+            fasta_length=$( grep -v ">" $raw_files/$i/$i.fasta | tr -d '\n' | wc -c  || echo 0)
+            echo -e "$i\t$contigs\t$fasta_length" >> $wd/summary.tsv
             log "FINISHED: The raven-assembler for $i is finished"
         done
         

@@ -19,3 +19,6 @@ zr11465-12.contigs	results/0055_metagenome_assembly_by_megahit_for_illumina/all_
 ## please provide the path of the binning folder
 ## for e.g. 
 bins results/0059_metagenome_binning_by_metabat_for_megahit_assemblies
+
+## wish to run CAT or BAT or RAT or all
+my_choise RAT

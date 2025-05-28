@@ -1,0 +1,15 @@
+## This is a parameter file for 0171_phage_contigs_to_comparative.parameters pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_gff_dir	results/0085_annotation_bateria_by_bakta/gffs
+
+## sequence_identity_threshold: number between 0.01 to 1.00
+my_sequence_identity_threshold	0.70
+
+## length_difference_cutoff: number between 0.01 to 1.00
+my_length_difference_cutoff	0.70
+
+## alignment_type: core or pan
+my_alignment_type	core
+

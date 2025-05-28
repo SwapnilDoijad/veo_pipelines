@@ -1,17 +1,19 @@
 #!/bin/bash
-###############################################################################
+############################################################################### 
 ## header
     pipeline=0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     log "STARTED : $pipeline -------------------"
 ###############################################################################
-## step-00: preparation
-    echo "2024-12-08 16:20:35 @Swapnil, at step 03, the reads get written two times. Dont know why. Need to check"
+## step-00: preparation 
+    echo "2024-12-08 16:20:35 @Swapnil, at step 03, the reads get written two times. Dont know why. Need to check" 
+    echo "20250108 @Swapnil, updated step-3, if no duplicates found, then remove the comment"
     
     guppy_basecaller=/home/groups/VEO/tools/ont-guppy/v6.5.7_gpu/bin/guppy_basecaller
     pod5_file_path=$( grep my_pod5_file_path $parameters | awk -F'\t' '{print $2}' )
     barcode_sample_data=$( awk '/# ----------/{flag=!flag; next} flag' $parameters | wc -l )
     type_of_sequencing=$( grep my_type_of_sequencing $parameters | awk -F'\t' '{print $2}' )
+    demultiplexing_choise=$(grep my_demultiplexing_choise $parameters | awk -F'\t' '{print $2}' )
 
     echo "pod5_file_path: $pod5_file_path"
     echo "barcode_sample_data: $barcode_sample_data"
@@ -80,37 +82,45 @@
 
 ###############################################################################
 ## step-03: demultiplexing : demultiplexed_files
+    ## 20250108: DONT run the below script parallel or serial, run only once, otherwise it write duplicate reads !!!
 
-    if [ $barcode_sample_data -ne 0 ] ; then 
-        if [ ! -d $raw_files/03_basecall_to_demultiplex ] ; then
-            log "STARTED : step-03: demultiplexing step -------------------------------------------"
-            ( mkdir $raw_files/03_basecall_to_demultiplex  ) > /dev/null 2>&1 
-            ( rm $wd/tmp/slurm/*.out.03_basecall_to_demultiplex ) > /dev/null 2>&1
-            ( rm $wd/tmp/slurm/*.err.03_basecall_to_demultiplex ) > /dev/null 2>&1
+    if [ "$demultiplexing_choise" = "Yes" ]; then 
+        if [ $barcode_sample_data -ne 0 ] ; then 
+            if [ ! -d $raw_files/03_basecall_to_demultiplex ] ; then
+                log "STARTED : step-03: demultiplexing step -------------------------------------------"
+                ( mkdir $raw_files/03_basecall_to_demultiplex  ) > /dev/null 2>&1 
+                ( rm $wd/tmp/slurm/*.out.03_basecall_to_demultiplex ) > /dev/null 2>&1
+                ( rm $wd/tmp/slurm/*.err.03_basecall_to_demultiplex ) > /dev/null 2>&1
 
-            ## if you want to run the demultiplexing in parallel
-            # for sublist in $( ls $wd/tmp/lists/ ) ; do
-            #     sed "s/ABC/$sublist/g" /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.03_basecall_to_demultiplex.sbatch | sed "s|XYZ|$wd|g" > $wd/tmp/sbatch/$sublist.sbatch
-            #     ( sbatch $wd/tmp/sbatch/$sublist.sbatch ) > /dev/null 2>&1 
-            #     log "SUBMITTED : step-03 : sbatch for demultiplexing $sublist"
-            # done 
-
-            ## if you want to run the demultiplexing in serial
-            for sublist in $( ls $wd/tmp/lists/ ) ; do
                 sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.03_basecall_to_demultiplex.sbatch 
-                log "SUBMITTED : step-03 : sbatch for demultiplexing $sublist"
-            done 
 
-            wait_till_all_job_finished 0008_demultiplexing_nanopore_basecalling_by_guppy_gpu
+                ## 20250108 both below steps are depreciated, as it results in writing duplicate reads
+                        ## if you want to run the demultiplexing in parallel
+                        # for sublist in $( ls $wd/tmp/lists/ ) ; do
+                        #     sed "s/ABC/$sublist/g" /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.03_basecall_to_demultiplex.sbatch | sed "s|XYZ|$wd|g" > $wd/tmp/sbatch/$sublist.sbatch
+                        #     ( sbatch $wd/tmp/sbatch/$sublist.sbatch ) > /dev/null 2>&1 
+                        #     log "SUBMITTED : step-03 : sbatch for demultiplexing $sublist"
+                        # done 
 
-            log "step-03: demultiplexing finished -----------------------------------------------"
-            else
-            log "step-03: demultiplexing step already finished ----------------------------------"
+                        ## if you want to run the demultiplexing in serial
+                        # for sublist in $( ls $wd/tmp/lists/ ) ; do
+                        #     sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.03_basecall_to_demultiplex.sbatch 
+                        #     log "SUBMITTED : step-03 : sbatch for demultiplexing $sublist"
+                        # done 
+
+
+                wait_till_all_job_finished 0008_demultiplexing_nanopore_basecalling_by_guppy_gpu
+
+                log "step-03: demultiplexing finished -----------------------------------------------"
+                else
+                log "step-03: demultiplexing step already finished ----------------------------------"
+            fi
         fi
     fi 
 
 ###############################################################################
 ## step-04: collect data coming from different files to single file ## $raw_files/04_demultiplex_to_combinedBarcodeFastq
+    if [ "$demultiplexing_choise" = "Yes" ]; then 
     if [ $barcode_sample_data -ne 0 ] ; then 
     log "step-04: fastq combining step: running: ---------------------------------------------"
 
@@ -172,9 +182,10 @@
 
     log "step-04: fastq combining step: finished --------------------------------------------"
     fi
-
+    fi
 ###############################################################################
 ## step-05: renaming
+    if [ "$demultiplexing_choise" = "Yes" ]; then 
     if [ $barcode_sample_data -ne 0 ] ; then 
     if  [ ! -d data/fastq ] ; then 
         if [ -f tmp/parameters/$pipeline.txt ] ; then 
@@ -197,6 +208,7 @@
         fi
         else
         log "data/fastq already exists"
+    fi
     fi
     fi
 ###############################################################################
@@ -233,8 +245,9 @@
         echo "reads_after_basecalling_passed_demultiplexing_unclassified $reads_after_basecalling_passed_demultiplexing_unclassified ("$percentage_reads_after_basecalling_passed_demultiplexing_unclassified"%)" | tee -a $wd/summary.tsv
         log "FINISHED : STEP-06 : creating stat file"
     fi 
-###############################################################################
+############################################################################### 
 ## step-08: run nanoplot
+
     if [ $barcode_sample_data -ne 0 ] ; then 
     if [ -d data/fastq ] ; then 
     if [ -f tmp/parameters/$pipeline.txt ] ; then

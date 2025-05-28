@@ -125,6 +125,49 @@ def save_combined_outliers(tsne_df, output_dir):
     tsne_df[columns_to_save].to_csv(combined_file, sep='\t', index=False)
     print(f"Combined outliers saved: {combined_file}")
 
+def save_method_outliers(tsne_df, output_dir):
+    """
+    Save inliers and outliers based on each method (GC content and t-SNE) and the combined results.
+    Add the method name as a prefix to the filenames.
+    """
+    # Save GC content-based inliers and outliers
+    gc_inliers = tsne_df.loc[~tsne_df['GC_Outlier'], 'Read_ID']
+    gc_outliers = tsne_df.loc[tsne_df['GC_Outlier'], 'Read_ID']
+
+    gc_inliers_file = os.path.join(output_dir, 'GC_inlier.tsv.read_ids')
+    gc_outliers_file = os.path.join(output_dir, 'GC_outlier.tsv.read_ids')
+
+    gc_inliers.to_csv(gc_inliers_file, sep='\t', index=False, header=False)
+    gc_outliers.to_csv(gc_outliers_file, sep='\t', index=False, header=False)
+
+    print(f"GC content inliers saved: {gc_inliers_file}")
+    print(f"GC content outliers saved: {gc_outliers_file}")
+
+    # Save t-SNE-based inliers and outliers
+    tsne_inliers = tsne_df.loc[~tsne_df['Zscore_Outlier'], 'Read_ID']
+    tsne_outliers = tsne_df.loc[tsne_df['Zscore_Outlier'], 'Read_ID']
+
+    tsne_inliers_file = os.path.join(output_dir, 'tSNE_inlier.tsv.read_ids')
+    tsne_outliers_file = os.path.join(output_dir, 'tSNE_outlier.tsv.read_ids')
+
+    tsne_inliers.to_csv(tsne_inliers_file, sep='\t', index=False, header=False)
+    tsne_outliers.to_csv(tsne_outliers_file, sep='\t', index=False, header=False)
+
+    print(f"t-SNE inliers saved: {tsne_inliers_file}")
+    print(f"t-SNE outliers saved: {tsne_outliers_file}")
+
+    # Save combined inliers and outliers
+    combined_inliers = tsne_df.loc[~tsne_df['Combined_Outlier'], 'Read_ID']
+    combined_outliers = tsne_df.loc[tsne_df['Combined_Outlier'], 'Read_ID']
+
+    combined_inliers_file = os.path.join(output_dir, 'Combined_inlier.tsv.read_ids')
+    combined_outliers_file = os.path.join(output_dir, 'Combined_outlier.tsv.read_ids')
+
+    combined_inliers.to_csv(combined_inliers_file, sep='\t', index=False, header=False)
+    combined_outliers.to_csv(combined_outliers_file, sep='\t', index=False, header=False)
+
+    print(f"Combined inliers saved: {combined_inliers_file}")
+    print(f"Combined outliers saved: {combined_outliers_file}")
 
 def save_tsne_coordinates(tsne_df, output_dir):
     """
@@ -133,7 +176,6 @@ def save_tsne_coordinates(tsne_df, output_dir):
     tsne_file = os.path.join(output_dir, 'tsne_coordinates.tsv')
     tsne_df[['Read_ID', 't-SNE_Component_1', 't-SNE_Component_2', 'Zscore_Outlier']].to_csv(tsne_file, sep='\t', index=False)
     print(f"t-SNE coordinates saved: {tsne_file}")
-
 
 # --- Visualization ---
 def visualize_combined(tsne_df, output_dir):
@@ -172,6 +214,39 @@ def visualize_combined(tsne_df, output_dir):
 
     print("t-SNE visualization saved.")
 
+def plot_gc_content(gc_df, output_dir):
+    """
+    Plot GC content distribution and highlight outliers.
+
+    Parameters:
+    - gc_df: DataFrame containing GC content and outlier information.
+    - output_dir: Directory to save the plot.
+    """
+    plt.figure(figsize=(10, 6))
+
+    # Separate inliers and outliers for visualization
+    inliers = gc_df[~gc_df['GC_Outlier']]
+    outliers = gc_df[gc_df['GC_Outlier']]
+
+    # Plot inliers
+    plt.hist(inliers['GC_Content'], bins=50, alpha=0.7, label='Inliers', color='blue')
+
+    # Plot outliers
+    plt.hist(outliers['GC_Content'], bins=50, alpha=0.7, label='Outliers', color='red')
+
+    # Add labels and legend
+    plt.xlabel('GC Content (%)')
+    plt.ylabel('Frequency')
+    plt.title('GC Content Distribution with Outliers Highlighted')
+    plt.legend()
+    plt.grid(True)
+
+    # Save the plot
+    plot_file = os.path.join(output_dir, 'gc_content_distribution.png')
+    plt.savefig(plot_file)
+    plt.close()
+
+    print(f"GC content plot saved: {plot_file}")
 
 # --- Main Function ---
 def main():
@@ -192,6 +267,13 @@ def main():
     # Save GC content results
     save_gc_content_results(read_ids, gc_content, gc_outliers, args.output_dir)
 
+    # Load GC content results into a DataFrame for plotting
+    gc_file = os.path.join(args.output_dir, 'gc_content_results.tsv')
+    gc_df = pd.read_csv(gc_file, sep='\t')
+
+    # Plot GC content distribution
+    plot_gc_content(gc_df, args.output_dir)
+
     # Perform t-SNE analysis
     print("Performing t-SNE analysis...")
     tsne_df = perform_tsne(args.matrix_input, args.output_dir)
@@ -203,8 +285,6 @@ def main():
     # Add GC outliers to t-SNE DataFrame
     gc_outlier_map = {read_id.split()[0].strip(): outlier for read_id, outlier in zip(read_ids, gc_outliers)}
     tsne_df['GC_Outlier'] = tsne_df['Read_ID'].str.strip().map(gc_outlier_map).fillna(False).astype(bool)
-
-
 
     # Debugging: Check mismatches
     print("Sample Read_IDs in tsne_df:")
@@ -218,12 +298,10 @@ def main():
     print("Missing Read_IDs in mapping (after stripping metadata):")
     print(missing_ids.head())
 
-
     # Identify mismatched IDs
     missing_ids = tsne_df.loc[~tsne_df['Read_ID'].isin(gc_outlier_map.keys()), 'Read_ID']
     print("Missing Read_IDs in mapping:")
     print(missing_ids.head())
-
 
     # Combine Outliers
     tsne_df['Combined_Outlier'] = tsne_df['Zscore_Outlier'] & tsne_df['GC_Outlier']
@@ -232,12 +310,15 @@ def main():
     save_tsne_coordinates(tsne_df, args.output_dir)
     save_combined_outliers(tsne_df, args.output_dir)
 
+    # Save inliers and outliers for each method
+    print("Saving inliers and outliers for each method...")
+    save_method_outliers(tsne_df, args.output_dir)
+
     # Visualize combined outliers
     print("Visualizing combined outliers...")
     visualize_combined(tsne_df, args.output_dir)
 
     print(f"All results saved in {args.output_dir}")
-
 
 if __name__ == "__main__":
     main()

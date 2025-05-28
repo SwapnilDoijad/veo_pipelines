@@ -1,16 +1,33 @@
 #!/bin/bash
 #SBATCH --job-name=0065_read_mapping_by_minimap2
-#SBATCH --partition=long,interactive,standard
+#SBATCH --partition=short,standard,interactive,long
 #SBATCH --output=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.out.txt
 #SBATCH --error=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.err.txt
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=20
-###############################################################################   
+#SBATCH --exclusive
+###############################################################################
 pipeline=0065_read_mapping_by_minimap2
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 sublist=$wd/tmp/lists/ABC
 data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
+SNP_analysis=$(grep -w "my_SNP_analysis" $parameters | awk '{print $2}')
 snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
+read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
+
+    ## read_type_input
+    if [ "$read_type" = "pacbio" ]; then
+        read_type_input="map-pb"
+    elif [ "$read_type" = "nanopore" ]; then
+        read_type_input="map-ont"
+    elif [ "$read_type" = "illumina" ]; then
+        read_type_input="sr"
+    fi
+###############################################################################
+    log "The run for sublist : $sublist is started"
+###############################################################################
+    echo "Swapnil, sometime some files are not processed, check if first vcf file is empty. It should not be empty raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf"
+    exit
 
     while IFS= read -r line; do
 
@@ -23,16 +40,19 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
         log "assembly_id: $assembly_id"
         log "fastq_id_path: $fastq_id_path"
         log "fastq_id: $fastq_id"
+        log "SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
 
         if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt ] ; then 
 
             ## Minimap2 is designed to work with both interleaved paired reads and split paired reads for short or long reads.
             ## For paired-end data provided as a single interleaved FASTQ file, minimap2 can properly parse and process the paired reads without requiring any additional steps.
-            ## use The -x map-pb preset is optimized for long-read mapping (e.g., PacBio or ONT reads), which typically are not in paired-end format. If you're using paired-end reads with this preset, minimap2 will still handle them correctly, as it expects reads to be continuous and will ignore pairing information by default.
+            ## use The -x map-pb preset is optimized for long-read mapping (e.g., PacBio or ONT reads), which typically are not in paired-end format. 
+            ## If you're using paired-end reads with this preset, minimap2 will still handle them correctly, as it expects reads to be continuous and will ignore pairing information by default.
             ## create index ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads 
             if [ ! -f $assembly_id_path/"$assembly_id".fasta.mmi ]; then
                 log "STARTED : creating index for $assembly_id"
-                /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x sr -t 40 \
+                /home/groups/VEO/tools/minimap2/v2.26/minimap2 \
+                -x $read_type_input -t $SLURM_CPUS_PER_TASK \
                 -d $raw_files/index_files/$assembly_id.fasta.mmi \
                 $assembly_id_path/"$assembly_id".fasta
                 log "FINISHED : creating index for $assembly_id"
@@ -41,7 +61,7 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
             fi
 
             ## create index for reference fasta file using samtools, needed in addition to minimap2 index, for other tools
-            if [ ! -f $assembly_id_path/"$assembly_id".samtools.dict ]; then
+            if [ "$SNP_analysis" = "Yes" ] && [ ! -f $assembly_id_path/"$assembly_id".samtools.dict ]; then
                 log "STARTED : creating Samtool index for $assembly_id"
                 cp $assembly_id_path/"$assembly_id".fasta \
                 $assembly_id_path/"$assembly_id".samtools.fasta
@@ -62,7 +82,7 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
                 ## map files ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads
                 if [ ! -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
-                    /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x sr -a \
+                    /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x $read_type_input -a \
                     -t $SLURM_CPUS_PER_TASK \
                     $raw_files/index_files/$assembly_id.fasta.mmi \
                     $fastq_id_path/$fastq_id.fastq.gz \
@@ -78,13 +98,19 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
                 if [ ! -f "$raw_files/sam_files/$assembly_id.$fastq_id.sam" ]; then
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
 
+                    fwd_reads=$(echo $line | awk '{print $2}')
+                    rev_reads=$(grep $line | awk '{print $3}')
+
                     # Run minimap2 for paired-end reads
+                    ## for paired end sequencing, -x sr is used (as long reads are not in paired-end format)
                     /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x sr -a \
                     $raw_files/index_files/$assembly_id.fasta.mmi \
                     -t $SLURM_CPUS_PER_TASK \
-                    $fastq_id_path/"$fastq_id"_R1_001.fastq.gz \
-                    $fastq_id_path/"$fastq_id"_R2_001.fastq.gz \
-                    > "$raw_files/sam_files/$assembly_id.$fastq_id.sam"
+                    $fwd_reads \
+                    $rev_reads \
+                    > "$raw_files/sam_files/$assembly_id.$fastq_id.sam" \
+                    & my_pid=$!
+			        get_resource_stat $my_pid $wd/tmp/resource_log/$id.minimap2.tsv 
 
                     check_status "Mapping $fastq_id on $assembly_id"
                 else
@@ -93,9 +119,11 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
             fi
 
             ## sort file using samtools
-            /home/groups/VEO/tools/samtools/v1.17/bin/samtools sort -@ 10 -l 9 -m 5000M \
+            /home/groups/VEO/tools/samtools/v1.17/bin/samtools sort -@ $SLURM_CPUS_PER_TASK -l 9 -m 5000M \
             -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
             $raw_files/sam_files/$assembly_id.$fastq_id.sam
+
+            rm -rf $raw_files/sam_files/$assembly_id.$fastq_id.sam
 
             ## get summary of sorted .bam file using samtools
             /home/groups/VEO/tools/samtools/v1.17/bin/samtools flagstat \
@@ -109,6 +137,11 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
             $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
             > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt
 
+            ## get per contig converage
+            /home/groups/VEO/tools/samtools/v1.17/bin/samtools idxstats \
+            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt
+
             awk '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig]}' \
             $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt \
             > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage.txt
@@ -118,7 +151,6 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
 
             paste $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage.txt $raw_files/depth_and_coverage/$assembly_id.$fastq_id.lenght.txt | sed "s/^/$assembly_id\t/g" \
             > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.avg_coverage_lenght.txt
-
 
             echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
             echo $assembly_id $fastq_id >> $wd/summary.txt
@@ -155,159 +187,192 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
 
                                         # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools \
                                         # view $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
-                                        # | grep -v "^#" | sed "s/^/$fastq_id\t/" >> $raw_files/InsDel/$assembly_id.$fastq_id.vcf
+                                        # | grep -v "^#" | sed "s/^/$fastq_id\t/" >> $raw_files/InsDel/$assembly_id.$fastq_id.vcf 
 
                                         # awk 'NR > 1' $raw_files/InsDel/$assembly_id.$fastq_id.vcf >> $raw_files/summary.InsDel.tsv 
 
-        if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.filtered.vcf.gz ] ; then 
-            log "STARTED : freebayes variant calling for $assembly_id.$fastq_id"
+        if [ "$SNP_analysis" = "Yes" ] && [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv.split.tsv ] ; then
 
-            /home/groups/VEO/tools/freebayes/v1.3.6/freebayes \
-                --ploidy 1 \
-                --min-alternate-fraction 0.001 \
-                --min-alternate-count 1 \
-                --min-mapping-quality 30 \
-                --min-base-quality 20 \
-                --use-best-n-alleles 3 \
-                -f $assembly_id_path/"$assembly_id".fasta \
-                $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-                > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf
-                ## --ploidy 1 : haploid genome for e.g. phage 
-                ## --min-alternate-fraction 0.01 : minimum fraction of alternate bases to call a variant (at least 1% of the reads need to support the alternate allele)
-                ## --min-alternate-count 2 : minimum number of alternate bases to call a variant (minimum number of reads supporting the alternate allele for it to be considered a variant.)
-                ## --min-mapping-quality 10 : minimum mapping quality to consider a read for variant calling (minimum mapping quality a read must have to be considered in the variant calling process.)
-                ## --min-base-quality 20 : minimum base quality to consider a base for variant calling (the minimum base quality for a base to be considered in variant calling.)
-                ## --use-best-n-alleles 1: Limits the analysis to the best 1 allele per position, which can reduce noise and help in situations where one allele is dominan
-            
-                # 2024-11-08 16:17:53
-                # compress vcf file and get normalised vcf file (complex SNPs are split into multiple lines)    
-                    conda activate gatk_v4.6.1.0
+            if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.tsv ] ; then 
+                log "STARTED : freebayes variant calling for $assembly_id.$fastq_id"
 
-                    bgzip -c $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf \
-                    > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz
-
-                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
-                    -m -any $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz \
-                    -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf
-
-                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
-                    -m -both -c w $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf \
+                /home/groups/VEO/tools/freebayes/v1.3.6/freebayes \
+                    --ploidy 1 \
+                    --min-alternate-fraction 0.001 \
+                    --min-alternate-count 1 \
+                    --min-mapping-quality 30 \
+                    --min-base-quality 20 \
+                    --use-best-n-alleles 3 \
                     -f $assembly_id_path/"$assembly_id".fasta \
-                    -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf
+                    $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                    > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf
 
-                    gatk LeftAlignAndTrimVariants \
-                    -R $assembly_id_path/"$assembly_id".samtools.fasta \
-                    -V $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf \
-                    -O $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
-                    --split-multi-allelics
+                    ## --ploidy 1 : haploid genome for e.g. phage 
+                    ## --min-alternate-fraction 0.001 : minimum fraction of alternate bases to call a variant (at least 0.1% or 1/1000 of the reads need to support the alternate allele)
+                    ## --min-alternate-count 1 : minimum number of alternate bases to call a variant (minimum number of reads supporting the alternate allele for it to be considered a variant.)
+                    ## --min-mapping-quality 10 : minimum mapping quality to consider a read for variant calling (minimum mapping quality a read must have to be considered in the variant calling process.)
+                    ## --min-base-quality 20 : minimum base quality to consider a base for variant calling (the minimum base quality for a base to be considered in variant calling.)
+                    ## --use-best-n-alleles 1: Limits the analysis to the best 1 allele per position, which can reduce noise and help in situations where one allele is dominan
+                
+                    # 2024-11-08 16:17:53
+                    # compress vcf file and get normalised vcf file (complex SNPs are split into multiple lines)    
+                        conda activate gatk_v4.6.1.0
 
-                    conda deactivate  
+                        pigz -p 10 -c "$raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf" \
+                        > "$raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz"
 
+                        /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
+                        -m -any $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz \
+                        -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf
 
-                                        ## 2024-11-08 16:17:53 : NOT GIVING GOOD RESULTS (some SNPs are skipped)
-                                        # conda activate vcflib_v1.0.10
+                        /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
+                        -m -both -c w $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf \
+                        -f $assembly_id_path/"$assembly_id".fasta \
+                        -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf
 
-                                        #     vcfbreakmulti $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf | \
-                                        #     vcfallelicprimitives -k > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.final_decomposed.vcf
+                        gatk LeftAlignAndTrimVariants \
+                        -R $assembly_id_path/"$assembly_id".samtools.fasta \
+                        -V $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf \
+                        -O $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                        --split-multi-allelics
 
-                                        # conda deactivate
+                        conda deactivate  
 
-            ## convert raw vcf to raw tsv 
-            python3 $suppl_scripts/0065_read_mapping_by_minimap2.vcf_to_tsv.py \
-            -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
-            -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv
+                                            ## 2024-11-08 16:17:53 : NOT GIVING GOOD RESULTS (some SNPs are skipped)
+                                            # conda activate vcflib_v1.0.10
 
-            # QUAL>=20: Filters variants to include only those with a quality score (QUAL) greater than or equal to 10. A higher quality score indicates a higher confidence in the variant call.
-            # FORMAT/DP>=10: Filters variants to include only those with a depth of coverage (DP) of 10 or more. Depth of coverage refers to how many reads support the variant at that position.
-            # INFO/NUMALT<=2: To filter out sites with more than one alternate allele (which are more likely to be complex), you can use the INFO/NUMALT field to exclude these multi-allelic calls:
-            # AF>=0.3: Filters variants where the allele frequency (AF) is at least 0.3. Allele frequency represents the proportion of reads supporting the alternate allele versus the total number of reads.
-            log "STARTED : filtering freebayes variants for $assembly_id.$fastq_id" 
-            /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools filter \
-                -i 'QUAL>=20 && FORMAT/DP>=1 && INFO/NUMALT<=2 && AF>=0.00001' \
-                $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
-                -Oz -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+                                            #     vcfbreakmulti $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf | \
+                                            #     vcfallelicprimitives -k > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.final_decomposed.vcf
 
-                /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index \
-                --tbi $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+                                            # conda deactivate
 
-            log "STARTED : generating consensus sequence for $assembly_id.$fastq_id"
-            /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
-            -f $assembly_id_path/"$assembly_id".fasta \
-            -o $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta \
-            $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+                ## convert raw vcf to raw tsv 
+                python3 $suppl_scripts/0065_read_mapping_by_minimap2.vcf_to_tsv.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv
 
-            gunzip -k $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+                # QUAL>=20: Filters variants to include only those with a quality score (QUAL) greater than or equal to 20. A higher quality score indicates a higher confidence in the variant call.
+                # FORMAT/DP>=10: Filters variants to include only those with a depth of coverage (DP) of 10 or more. Depth of coverage refers to how many reads support the variant at that position.
+                # INFO/NUMALT<=2: To filter out sites with more than one alternate allele (which are more likely to be complex), you can use the INFO/NUMALT field to exclude these multi-allelic calls:
+                # AF>=0.00001: frequency of 1 in 100,000 alleles. Filters variants where the allele frequency (AF) is at least 0.00001. Allele frequency represents the proportion of reads supporting the alternate allele versus the total number of reads.
 
-            ## convert raw vcf to raw tsv 
-            python3 $suppl_scripts/0065_read_mapping_by_minimap2.vcf_to_tsv.py \
-            -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
-            -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv
-            
-            rm $raw_files/vcf/*.gz
-            rm $raw_files/vcf/*.gz.tbi
-        fi
+                # 2025-02-12 13:13:25 @Swapnil "for Wallapat P1L1 and P2L1 I have used  -i 'QUAL>=20 && FORMAT/DP>=1 && INFO/NUMALT<=2 && AF>=0.00001'"
+                log "STARTED : filtering freebayes variants for $assembly_id.$fastq_id" 
+                /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools filter \
+                    -i 'QUAL>=20 && FORMAT/DP>=1 && INFO/NUMALT<=2 && AF>=0.00001' \
+                    $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                    -Oz -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
 
-        ## snpEff 
-        ## 2024-11-09 07:44:29 need to give the full path? Don't know. Need to check  
-        if [ $snp_annotation == "Yes" ]; then
-            if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv ]; then  
-                log "STARTED : snpEff annotation for $assembly_id.$fastq_id" 
+                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index \
+                    --tbi $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
 
-                genBankFile=$( grep $assembly_id $wd/tmp/genBank_filepath.txt | awk -F'\t' '{print $2}' )
-                ## convert_GenBank_to_GFF3_and_FASTA
-                ## the names should be genes.gff and sequence.fa for snpEff to work, DON'T change  
-                mkdir -p $raw_files/tmp/genome_data/$assembly_id > /dev/null 2>&1
+                log "STARTED : generating consensus sequence for $assembly_id.$fastq_id"
+                /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
+                -f $assembly_id_path/"$assembly_id".fasta \
+                -o $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta \
+                $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+
+                gunzip -k $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+
+                ## convert raw vcf to raw tsv 
+                python3 $suppl_scripts/0065_read_mapping_by_minimap2.vcf_to_tsv.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv
+
                 source /home/groups/VEO/tools/biopython/myenv/bin/activate
-                    python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_GenBank_to_GFF3_and_FASTA.py \
-                    -i $genBankFile \
-                    -g $raw_files/tmp/genome_data/$assembly_id/genes.gff \
-                    -f $raw_files/tmp/genome_data/$assembly_id/sequences.fa
+                python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.tsv
                 deactivate
-
-                cat /home/groups/VEO/scripts_for_users/supplementary_scripts/parameter_files/snpEff.config \
-                | sed "s/genome_id/$assembly_id/g" \
-                > $raw_files/tmp/genome_data/$assembly_id/snpEff.config
-
-                ## need to update the codes   
-                java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
-                -gff3 -v \
-                -dataDir $raw_files/tmp/genome_data/ \
-                -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
-                $assembly_id
-
-                java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
-                -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
-                -dataDir $raw_files/tmp/genome_data/ \
-                $assembly_id \
-                $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
-                > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf
-
-                log "STARTED : generating final summary file for $assembly_id.$fastq_id"
-                bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.filter.sh \
-                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf \
-                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
-
-                sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
-
-                awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
-                grep -v "#" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv | sed "s/^/$fastq_id\t/" >> $raw_files/summary.InsDel.unfiltered.tsv
+                
+                rm $raw_files/vcf/*.gz
+                rm $raw_files/vcf/*.gz.tbi
             fi
 
-            elif [ $snp_annotation == "No" ]; then
-            log "NOT RUNNING : snpEff annotation for $assembly_id.$fastq_id"
+            ## snpEff 
+            ## 2024-11-09 07:44:29 need to give the full path? Don't know. Need to check  
+            if [ $snp_annotation == "Yes" ]; then
+                if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv ]; then  
+                    genBankFile=$( grep $assembly_id $wd/tmp/genBank_filepath.txt | awk -F'\t' '{print $2}' )
+                    log "STARTED : snpEff annotation for $assembly_id.$fastq_id $genBankFile" 
+
+                    ## convert_GenBank_to_GFF3_and_FASTA
+                    ## the names should be genes.gff and sequence.fa for snpEff to work, DON'T change  
+                    mkdir -p $raw_files/tmp/genome_data/$assembly_id > /dev/null 2>&1
+                    source /home/groups/VEO/tools/biopython/myenv/bin/activate
+                        python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_GenBank_to_GFF3_and_FASTA.py \
+                        -i $genBankFile \
+                        -g $raw_files/tmp/genome_data/$assembly_id/genes.gff \
+                        -f $raw_files/tmp/genome_data/$assembly_id/sequences.fa
+                    deactivate
+
+                    cat /home/groups/VEO/scripts_for_users/supplementary_scripts/parameter_files/snpEff.config \
+                    | sed "s/genome_id/$assembly_id/g" \
+                    > $raw_files/tmp/genome_data/$assembly_id/snpEff.config
+
+                    cur_dir=$(pwd)
+                    java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
+                    -gff3 -v \
+                    -dataDir $cur_dir/$raw_files/tmp/genome_data/ \
+                    -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                    $assembly_id
+
+                    java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
+                    -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                    -dataDir $cur_dir/$raw_files/tmp/genome_data/ \
+                    $assembly_id \
+                    $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
+                    > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf
+
+                    log "STARTED : generating final summary file for $assembly_id.$fastq_id"
+                    bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.filter.sh \
+                    -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf \
+                    -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+
+                    ## suffix product info to ...vcf.snpEff_annotated.vcf.summary.tsv
+                    grep -v "^#" "$raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv" \
+                    | awk -F'|' '{print $NF}' | tr ' ' '_'\
+                    | while read -r cds; do
+                        product=$(grep "$cds" "$raw_files/tmp/genome_data/$assembly_id/genes.gff" | awk -F';' '{print $5}' | awk -F'product=' '{print $2}')
+                        sed -i "s/$cds/$cds|$product/g" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+                    done
+
+                    sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+
+                    awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
+                    grep -v "#" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv | sed "s/^/$fastq_id\t/" >> $raw_files/summary.InsDel.unfiltered.tsv
+                fi
+
+                elif [ $snp_annotation == "No" ]; then
+                log "NOT RUNNING : snpEff annotation for $assembly_id.$fastq_id"
+            fi
+
+            source /home/groups/VEO/tools/biopython/myenv/bin/activate
+            python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
+            -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv \
+            -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv.split.tsv
+            deactivate
+
+                ## Optional: make count of reads mapped and unmapped to SNPs  
+                    # bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.count.sh \
+                    # -v $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                    # -b $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                    # -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.counts.txt
+
         fi
 
-        source /home/groups/VEO/tools/biopython/myenv/bin/activate
-        python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
-        -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv \
-        -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv.split.tsv
-        deactivate
-            ## Optional: make count of reads mapped and unmapped to SNPs  
-                # bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.count.sh \
-                # -v $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
-                # -b $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-                # -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.counts.txt
+        if [ -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam ] ; then 
+            log "COMPRESSING: $assembly_id.$fastq_id.sam.sorted.bam"
+            pigz -9 -c $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.gz ;
+            log "REMOVING: $assembly_id.$fastq_id.sam.sorted.bam"
+            rm -rf $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam
+        fi
 
+        if [ -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
+            log "REMOVING: $assembly_id.$fastq_id.sam"
+            rm -rf raw_files/sam_files/$assembly_id.$fastq_id.sam
+        fi
 
     done <  $wd/tmp/lists/ABC
 
@@ -316,13 +381,6 @@ snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
 
 ############################################################################### 
 ## footer
+    clean_empty_files_and_dirs $wd
+    log "The run for sublist : $sublist is completed"
 ###############################################################################
-
-# java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
-# -c results/0065_read_mapping_by_minimap2/tmp/snpeff.config \
-# build -genbank -v MN988491_1_Rhizobium_phage_RHph_Y3_36
-java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
--c results/0065_read_mapping_by_minimap2/raw_files/tmp/genome_data/MN988491_1_Rhizobium_phage_RHph_Y3_36/snpEff.config \
--dataDir results/0065_read_mapping_by_minimap2/raw_files/tmp/genome_data/ \
-MN988491_1_Rhizobium_phage_RHph_Y3_36 \
-results/0065_read_mapping_by_minimap2/raw_files/vcf/MN988491_1_Rhizobium_phage_RHph_Y3_36.P1L1barcode47.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf > out.vcf

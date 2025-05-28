@@ -1,55 +1,68 @@
 #!/bin/bash
-#SBATCH --job-name 0054_metagenome_assembly_by_metaspades_for_illumina
+#SBATCH --job-name=0054_metagenome_assembly_by_metaspades_for_illumina
 #SBATCH --partition=gpu
-#SBATCH --output results/0054_metagenome_assembly_by_metaspades_for_illumina/tmp/slurm/%j.out
-#SBATCH --error results/0054_metagenome_assembly_by_metaspades_for_illumina/tmp/slurm/%j.err
+#SBATCH --output=results/0054_metagenome_assembly_by_metaspades_for_illumina/tmp/slurm/%j.out
+#SBATCH --error=results/0054_metagenome_assembly_by_metaspades_for_illumina/tmp/slurm/%j.err
 #SBATCH --mem=250G
 #SBATCH --cpus-per-task=40
 ###############################################################################
 ## header
+    pipeline=0054_metagenome_assembly_by_metaspades_for_illumina
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-    log "SBATCH STARTED : 0054_metagenome_assembly_by_metaspades_for_illumina -----------------------------------"
+    sublist=$wd/tmp/lists/ABC
+    data_type=$( grep -w "my_data_type" $parameters | awk '{print $2}' )
+	fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
+    log "SBATCH STARTED : $pipeline -----------------------------------"
+
+    log "data_type = $data_type"
+    log "fastq_path = $fastq_path"
 ###############################################################################
 ## step-01: preparatoion
-    pipeline=0054_metagenome_assembly_by_metaspades_for_illumina
-    wd=results/$pipeline
-    sublist=$wd/tmp/lists/ABC
-
-    if [ -d results/0025_QC_of_paired-fastq_by_fastp ] ; then 
-        fastq_file_path=results/0025_QC_of_paired-fastq_by_fastp/raw_files
-        else 
-        fastq_file_path=XYZ
-    fi 
 
     for i in $(cat $sublist); do
-        if [ ! -f $wd/raw_files/$i/contigs.fasta ] || grep -q "== Error ==" $wd/raw_files/$i/spades.log ; then 
-            log "STARTED : metaspades-assembler for $i"
+        mkdir results/$pipeline/raw_files/$i > /dev/null 2>&1
 
-            mkdir results/$pipeline/raw_files/$i
+        if [ $data_type = "paired" ] ; then 
+            if [ ! -f $raw_files/$i/contigs.fasta ] || grep -q "== Error ==" $raw_files/$i/spades.log ; then 
+                log "STARTED : metaspades-assembler for $i : $read_type"
 
-            python3 /home/groups/VEO/tools/SPAdes/v3.15.5/metaspades.py \
-            -1 $fastq_file_path/$i*R1*.fastq.gz \
-            -2 $fastq_file_path/$i*R2*.fastq.gz \
-            -t $SLURM_CPUS_PER_TASK \
-            -m 500 \
-            -o $wd/raw_files/$i
+                python3 /home/groups/VEO/tools/SPAdes/v3.15.5/metaspades.py \
+                -1 $fastq_path/$i*R1*.fastq.gz \
+                -2 $fastq_path/$i*R2*.fastq.gz \
+                -t $SLURM_CPUS_PER_TASK \
+                -m 500 \
+                -o $raw_files/$i
 
-            log "FINISHED : metaspades-assembler for $i"
-            else
-            log "ALREADY FINISHED : metaspades-assembler for $i"
+                log "FINISHED : metaspades-assembler for $i : $read_type"
+                else
+                log "ALREADY FINISHED : metaspades-assembler for $i : $read_type"
+            fi
+        elif [ $data_type = "single" ] ; then 
+            if [ ! -f $raw_files/$i/contigs.fasta ] ; then 
+                log "STARTED : metaspades-assembler for $i : $read_type"
+
+                python3 /home/groups/VEO/tools/SPAdes/v3.15.5/metaspades.py \
+                -s $fastq_path/$i.fastq.gz \
+                -t $SLURM_CPUS_PER_TASK \
+                -m 500 \
+                -o $raw_files/$i
+
+                log "FINISHED : metaspades-assembler for $i : $read_type"
+                else
+                log "ALREADY FINISHED : metaspades-assembler for $i : $read_type"
+            fi 
         fi
     done
 
-    echo -e "IDs\tnumber_of_contigs" > $wd/summary.tsv
-    mkdir $wd/all_fasta > /dev/null 2>&1
+    mkdir $raw_files/all_fasta > /dev/null 2>&1
     for i in $(cat $sublist); do
-        if [ -f $wd/raw_files/$i/contigs.fasta ] && [ ! -f $wd/all_fasta/$i.contigs.fasta ] ; then
-            cp $wd/raw_files/$i/contigs.fasta $wd/all_fasta/$i.contigs.fasta
+        if [ -f $raw_files/$i/contigs.fasta ] && [ ! -f $raw_files/all_fasta/$i.contigs.fasta ] ; then
+            cp $raw_files/$i/contigs.fasta $raw_files/all_fasta/$i.contigs.fasta
 
-            number_of_contigs=$(grep -c ">" $wd/raw_files/$i/contigs.fasta)
-            echo $number_of_contigs >> $wd/summary.tsv
+            number_of_contigs=$(grep -c ">" $raw_files/$i/contigs.fasta)
+            echo $number_of_contigs >> summary.tsv
             else 
-            echo "$i NA" >> $wd/summary.tsv
+            echo "$i NA" >> summary.tsv
         fi
     done
 
@@ -57,17 +70,17 @@
 ## step-02: run quast
 
         for i in $(cat $sublist); do
-            if [ -f $wd/raw_files/$i/contigs.fasta ] ; then 
-                if [ ! -f $wd/raw_files/$i/quast/report.html ] ; then 
+            if [ -f $raw_files/$i/contigs.fasta ] ; then 
+                if [ ! -f $raw_files/$i/quast/report.html ] ; then 
 				    log "STARTED : $pipeline for $i : quast"
 
-                    mkdir -p $wd/raw_files/$i/quast
+                    mkdir -p $raw_files/$i/quast
                 
                     python3 /home/groups/VEO/tools/quast/v5.2.0/quast.py \
-                    -o $wd/raw_files/$i/quast/ \
+                    -o $raw_files/$i/quast/ \
                     -t 40 \
                     --silent \
-                    $wd/raw_files/$i/contigs.fasta
+                    $raw_files/$i/contigs.fasta
 
                     log "FINISHED : $pipeline for $i : quast"
                     else
@@ -81,16 +94,16 @@
 ## step-03: run metaquast
 
     for i in $(cat $sublist); do  
-		if [ -f $wd/raw_files/$i/contigs.fasta ] ; then 
-			if [ ! -f $wd/raw_files/$i/metaquast/report.html ] ; then 
+		if [ -f $raw_files/$i/contigs.fasta ] ; then 
+			if [ ! -f $raw_files/$i/metaquast/report.html ] ; then 
                 log "STARTED : $pipeline for $i : metaquast"
 
-				mkdir -p $wd/raw_files/$i/metaquast/fasta
+				mkdir -p $raw_files/$i/metaquast/fasta
 
 				python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py --silent \
                 -t 40 \
-				-o $wd/raw_files/$i/metaquast/ \
-				$wd/raw_files/$i/contigs.fasta 
+				-o $raw_files/$i/metaquast/ \
+				$raw_files/$i/contigs.fasta 
 
                 log "FINISHED : $pipeline for $i : metaquast"
                 else
@@ -102,5 +115,5 @@
 
 ###############################################################################
 ## footer
-    log "SBATCH ENDED : 0054_metagenome_assembly_by_metaspades_for_illumina ----------------------"
+    log "SBATCH ENDED : $pipeline ----------------------"
 ###############################################################################

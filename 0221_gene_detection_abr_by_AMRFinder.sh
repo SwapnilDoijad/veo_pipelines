@@ -3,7 +3,7 @@
 ## header
     pipeline=0221_gene_detection_abr_by_AMRFinder
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-    log "STARTED: $pipeline "
+    log "STARTED SUBMISSION: $pipeline "
 ###############################################################################
 ## step-01: file and directory preparation
     fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )

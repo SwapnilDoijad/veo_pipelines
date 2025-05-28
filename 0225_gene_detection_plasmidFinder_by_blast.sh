@@ -5,10 +5,10 @@
     echo "STARTED : 0225_gene_detection_plasmidFinder_by_blast ---------------------------------"
 ###############################################################################
 ## step-00: database creation
-	# if [ ! -f /work/groups/VEO/databases/plasmidfinder/v20170202/plasmid.fasta.phr ] ; then
+	# if [ ! -f /veodata/03/databases/plasmidfinder/v20170202/plasmid.fasta.phr ] ; then
 	# 	echo "creating blast database"
 	# 	/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
-	# 	-in /work/groups/VEO/databases/plasmidfinder/v20170220/plasmid.fasta \
+	# 	-in /veodata/03/databases/plasmidfinder/v20170220/plasmid.fasta \
 	# 	-parse_seqids -dbtype nucl
 	# fi
 ###############################################################################
@@ -62,7 +62,7 @@ exit
 
 	cat $wd/Virulence_gene_frequency.csv.1.tmp | sort -k 2,2rn $wd/Virulence_gene_frequency.csv.1.tmp > $wd/Virulence_gene_frequency.csv.2.tmp
 
-	awk -f /home/groups/VEO/scripts_for_users/supplementary_scripts/vlookup-VFDB.2.awk /work/groups/VEO/databases/VFDB/v2021/VFDB-annotations.2.txt $wd/Virulence_gene_frequency.csv.2.tmp > $wd/Virulence_gene_frequency.csv.3.tmp
+	awk -f /home/groups/VEO/scripts_for_users/supplementary_scripts/vlookup-VFDB.2.awk /veodata/03/databases/VFDB/v2021/VFDB-annotations.2.txt $wd/Virulence_gene_frequency.csv.2.tmp > $wd/Virulence_gene_frequency.csv.3.tmp
 
 	paste $wd/Virulence_gene_frequency.csv.2.tmp $wd/Virulence_gene_frequency.csv.3.tmp > $wd/Virulence_gene_frequency.csv
 

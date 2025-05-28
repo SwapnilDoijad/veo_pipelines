@@ -1,0 +1,4 @@
+## This is a parameter file for 0003_download_SRA_from_NCBI_no_split pipeline
+## please give a path of a single folder in which all fastq files are stored
+## example path is given below (change the path accordingto your data):
+my_storage_dir	/veodata/02/databases/fastqs/raw_files

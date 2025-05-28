@@ -1,0 +1,4 @@
+## This is a parameter file for 0222_gene_detection_abr_by_CARD-rgi pipeline
+## please give a relative path of a folder that you would like to analyse (tab seperated)
+## example path given below (change according to your data):
+my_fasta_directory	results/0450_genome_assembly_for_nanopore_for_phage_long2shortReads_by_spades/all_fasta

@@ -14,7 +14,6 @@
     split_list $wd $list
     submit_jobs $wd $pipeline
     
-    rm list.$pipeline.txt
 ###############################################################################
 ## footer
     log "ENDED : $pipeline ------------------------"

@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name extract_read_ids_if_two_pattern_present
-#SBATCH --partition=interactive
+#SBATCH --partition=interactive,standard,long
 #SBATCH --output results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.out.extract_read_ids_if_two_pattern_present.txt
 #SBATCH --error results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.err.extract_read_ids_if_two_pattern_present.txt
 ###############################################################################

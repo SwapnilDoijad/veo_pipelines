@@ -6,54 +6,13 @@
     log "STARTED : 0171_comparative_genomics_core_pan_by_panaroo ---------------"
 ###############################################################################
 ## step-01: preparation 
-
-    wd=results/0171_comparative_genomics_core_pan_by_panaroo
-
-    if [ -f list.prophage_fasta.txt ]; then 
-        list=list.prophage_fasta.txt
-        gff_dir=results/0083_annotation_prophage_by_pharokka/raw_files
-        elif [ -f list.bacterial_fasta.txt ]; then
-        list=list.bacterial_fasta.txt
-        gff_dir=results/0081_annotation_by_prokka/raw_files
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | sed 's/ /\n/g' | sed 's/list\.//g' | sed 's/\.txt//g'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
-
-    #echo "Wish to run ClonalFrameML?"
-    #read CFML_ans
-
     create_directories_structure_1 $wd
-    (mkdir -p $wd/tmp/gff) > /dev/null 2>&1
-
-    log "Copying gff files to $wd/raw_files"
-    for F1 in $(cat $list);do
-        cp $gff_dir/$F1/$F1.gff $wd/tmp/gff/$F1.gff 
-    done
-
-    ## parameter file 
-    
-    
 ###############################################################################
-## step-02: run panaroo through sbatch (80 CPUs, 200 GB memory)
 
     cp /home/groups/VEO/scripts_for_users/supplementary_scripts/0171_comparative_genomics_core_pan_by_panaroo.sbatch \
     $wd/tmp/sbatch/0171_comparative_genomics_core_pan_by_panaroo.sbatch
     
     sbatch $wd/tmp/sbatch/0171_comparative_genomics_core_pan_by_panaroo.sbatch > /dev/null 2>&1
-
-    log "SUBMITTED : panaroo sbatch --------------------------------------------"
-
-    while [ ! -f "$wd/raw_files/summary_statistics.txt" ]; do
-        log "WAITING : panaroo to finish"
-        sleep 60
-    done
-    log "FINISHED : panaroo"
-    cp "$wd/raw_files/summary_statistics.txt" $wd/summary.txt
 
 ###############################################################################
 ## footer

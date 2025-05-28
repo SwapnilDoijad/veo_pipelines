@@ -1,74 +1,52 @@
 #!/bin/bash
 ###############################################################################
 ## header
+	pipeline=0054_metagenome_assembly_by_metaspades_for_illumina
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-	log "STARTED : 0054_metagenome_assembly_by_metaspades_for_illumina started ------------------------------------"
+	log "STARTED : $pipeline started ------------------------------------"
 ###############################################################################
 ## step-01: preparation
 
-    ## tool path
-    my_tool_path=/home/groups/VEO/tools/metaspades/v2.2/metaspades-2.2/bin
-	pipeline=0054_metagenome_assembly_by_metaspades_for_illumina
-	wd=results/$pipeline
+	fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
+	ls $fastq_path/ | sed 's/\.fastq\.gz//g' > list.fastq.$pipeline.txt
+	list=list.fastq.$pipeline.txt
 
-    if [ -f list.fastq.txt ]; then 
-        list=list.fastq.txt
-		else
-		echo "provide list file (for e.g. all)"
-		read l
-		list=$(echo "list.$l.txt")
-	fi
-
-	if [ -f result_summary.read_me.txt ]; then
-        fastq_file_path=$(grep fastq result_summary.read_me.txt | awk '{print $NF}')
-        else
-        echo "provide fastq_file_path"
-        read fastq_file_path
-    fi
+	echo -e "IDs\tnumber_of_contigs" > $summary.tsv
 
     create_directories_structure_1 $wd
     split_list $wd $list
-###############################################################################
-## step-02: create and run sbatch files
-
-    for sublist in $( ls $wd/tmp/lists/ ) ; do
-        sed "s#ABC#$sublist#g" /home/groups/VEO/scripts_for_users/supplementary_scripts/0054_metagenome_assembly_by_metaspades_for_illumina.sbatch \
-        | sed "s#XYZ#$fastq_file_path#g" \
-        > $wd/tmp/sbatch/$pipeline.$sublist.sbatch
-        sbatch $wd/tmp/sbatch/$pipeline.$sublist.sbatch > /dev/null 2>&1
-        log "SUBMITTED : metaspades sbatch for $sublist"
-    done
+    submit_jobs $wd $pipeline
 
 ###############################################################################
-## step-02: wait untill assembly is finished
-	rm $wd/tmp/metaspades_assembly.finished > /dev/null 2>&1
-	if [ ! -f $wd/tmp/metaspades_assembly.finished ] ; then 
-		counter=0
-		max_attempts=1800 ## 30 hours
+	# ## step-02: wait untill assembly is finished
+	# 	rm $wd/tmp/metaspades_assembly.finished > /dev/null 2>&1
+	# 	if [ ! -f $wd/tmp/metaspades_assembly.finished ] ; then 
+	# 		counter=0
+	# 		max_attempts=1800 ## 30 hours
 
-		cat $list > $wd/tmp/tmp.list
-		while [ $counter -lt $max_attempts ] && [ -s $wd/tmp/tmp.list ]; do
-			for F1 in $(cat $wd/tmp/tmp.list); do
-				if [ -f "$wd/raw_files/$F1/contigs.fasta" ] || grep -q "== Error ==" $wd/raw_files/$F1/spades.log ; then
-					sed -i "/$F1/d" $wd/tmp/tmp.list
-					echo "metaspades assembly $F1 finished, no more waiting"
-					break
-					else
-					echo "metaspades assembly $F1 not finished in $counter/$max_attempts minutes, waiting another minute"
-					sleep 60
-					counter=$((counter + 1))
-				fi
-			done
-		done
+	# 		cat $list > $wd/tmp/tmp.list
+	# 		while [ $counter -lt $max_attempts ] && [ -s $wd/tmp/tmp.list ]; do
+	# 			for F1 in $(cat $wd/tmp/tmp.list); do
+	# 				if [ -f "$wd/raw_files/$F1/contigs.fasta" ] || grep -q "== Error ==" $wd/raw_files/$F1/spades.log ; then
+	# 					sed -i "/$F1/d" $wd/tmp/tmp.list
+	# 					echo "metaspades assembly $F1 finished, no more waiting"
+	# 					break
+	# 					else
+	# 					echo "metaspades assembly $F1 not finished in $counter/$max_attempts minutes, waiting another minute"
+	# 					sleep 60
+	# 					counter=$((counter + 1))
+	# 				fi
+	# 			done
+	# 		done
 
-		if [ $counter -eq $max_attempts ]; then
-			echo "File not found after 30 hour. Exiting..."
-		fi
+	# 		if [ $counter -eq $max_attempts ]; then
+	# 			echo "File not found after 30 hour. Exiting..."
+	# 		fi
 
-		rm $wd/tmp/tmp.list > /dev/null 2>&1
-		sleep 60 ## needed for the files to be writen, it takes time for the metaspades 
-		echo "metaspades assembly finished" > $wd/tmp/metaspades_assembly.finished
-	fi 
+	# 		rm $wd/tmp/tmp.list > /dev/null 2>&1
+	# 		sleep 60 ## needed for the files to be writen, it takes time for the metaspades 
+	# 		echo "metaspades assembly finished" > $wd/tmp/metaspades_assembly.finished
+	# 	fi 
 	
 ###############################################################################
 ## step-02: run metaquast
@@ -116,7 +94,7 @@
 
     # deactivate
 ###############################################################################
-log "ENDED : $pipeline ended --------------------------------------"
+	log "ENDED : $pipeline ended --------------------------------------"
 ###############################################################################
 
 

@@ -1,29 +1,22 @@
 #!/bin/bash
 ###############################################################################
 ## header
+    pipeline=0021_rawreads_filter_by_trimmomatic
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     echo "STARTED : 0021_rawreads_filter_by_trimmomatic ---------------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
 
-    pipeline=0021_rawreads_filter_by_trimmomatic
-    wd=results/$pipeline
-
-    if [ -f list.fasta.txt ]; then 
-        list=list.fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
+    fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
+    ls $fastq_path/ | sed 's/\.fastq\.gz//g' | sed 's/_R1//g' | sed 's/_R2//g' | sort | uniq  > list.$pipeline.txt
+    list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
     split_list $wd $list
     submit_jobs $wd $pipeline
 
+    (mkdir $wd/fastq_filtered/ )> /dev/null 2>&1
+    echo "id f_raw_reads r_raw_reads raw_arl total_raw_reads f_filtered_reads r_filtered_reads filtered_arl total_filtered_reads" | tr ' ' '\t' > $wd/summary.tsv
 ###############################################################################
 ## step-01: preparations
 

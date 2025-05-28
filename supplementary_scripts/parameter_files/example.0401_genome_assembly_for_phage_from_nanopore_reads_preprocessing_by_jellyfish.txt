@@ -7,18 +7,27 @@ my_fastqs	data/raw_reads
 my_minimum_length	200
 
 ## maximum length of the read
-my_maximum_length	6500
+my_maximum_length	250000
 
 ## reads with less than phred score will be filtered out
 my_phred	10
 
 ## Cutting long reads to short read length 
-my_final_read_length	100
+my_final_read_length	250
 
 ## subsampling	
-## can give value for e.g. "1000" or "no_subsample" (if you dont want to subsampling)
-my_subsample	10000
+## can give value for e.g. "1000" or "No" (if you dont want to subsampling)
+my_subsample	No
 
 ## subsampling	final ## this is the subsampling of cut and filtered reads 
-## can give value for e.g. "1000" or "no_subsample" (if you dont want to subsampling)
-my_final_subsample	1000000
+## can give value for e.g. "1000" or "No" (if you dont want to subsampling)
+my_final_subsample	No
+
+## would you like to mask (replace by N) bases that has phred <10 : Yes or No
+my_masking	No
+
+## would you like to run remove_contaminant_reads step? Yes or No
+my_remove_contaminant_reads	No
+
+## kmer size for JellyFish (any integer more than 4, for e.g. 4, 5, 7 11, 21, 33 etc)
+my_kmer_size	4

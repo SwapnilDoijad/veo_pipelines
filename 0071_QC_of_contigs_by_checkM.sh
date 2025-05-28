@@ -1,24 +1,15 @@
 #!/bin/bash
 ###############################################################################
 ## header
+    pipeline=0071_QC_of_contigs_by_checkM
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     echo "STARTED : 0071_QC_of_contigs_by_checkM -----------------------------------------------------"
 ###############################################################################
 ## step-01: preparations
 
-    pipeline=0071_QC_of_contigs_by_checkM
-    wd=results/$pipeline
-
-    if [ -f list.fasta.txt ]; then 
-        list=list.fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
+    fasta_file_dir=$(grep "my_fasta_path" $parameters | awk '{print $2}')
+    ls $fasta_file_dir | sed 's/\.fasta//g' > list.$pipeline.txt
+    list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
     split_list $wd $list

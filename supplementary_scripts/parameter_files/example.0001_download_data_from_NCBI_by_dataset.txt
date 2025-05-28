@@ -1,0 +1,7 @@
+## This is a parameter file for 0001_download_data_from_NCBI_by_dataset pipeline
+
+## Only type strains? #options: Yes or No
+my_type_strains	No
+
+## Genus or specoes name for e.g. Rhizobium or Rhizobium_esperanzae (no space)
+my_name	Rhizobium

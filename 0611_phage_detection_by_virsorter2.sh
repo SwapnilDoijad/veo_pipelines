@@ -1,32 +1,20 @@
 #!/bin/bash
 ###############################################################################
-## m012 virsorter2
+## header
+    pipeline=0611_phage_detection_by_virsorter2
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+    log "STARTED : $pipeline ---------------------------------"
 ###############################################################################
-## installation steps
-## conda create --name virsorter2 -c conda-forge -c bioconda virsorter=2
-## virsorter setup -d /work/groups/VEO/databases/virsorter2 -j 4
-###############################################################################
-    source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-    conda activate virsorter2
+## step-01: file and directory preparation
+	fasta_dir_path=$(grep "my_fasta_path" $parameters | awk '{print $2}')
+    ls $fasta_dir_path/*.fasta | awk -F'/' '{print $NF}' | sed 's/.fasta//g' > list.$pipeline.txt
+    list=list.$pipeline.txt
 
-    if [ -f list.my_fasta.txt ]; then 
-        list=list.my_fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
-    
-    (mkdir -p results/b061_virsorter2/raw_files) > /dev/null 2>&1
+    create_directories_structure_1 $wd
+    split_list $wd $list
+    submit_jobs $wd $pipeline
+
 ###############################################################################
-    for fasta in $(cat $list); do
-        echo "virsorter2 running for $fasta"
-        (mkdir results/b061_virsorter2/raw_files/$fasta ) > /dev/null 2>&1
-        virsorter run -w results/b061_virsorter2/raw_files/$fasta/ \
-        -i /work/groups/VEO/databases/ncbi/genomes/refseq/bacteria/$fasta/"$fasta"*_genomic.fna \
-        -d /work/groups/VEO/databases/virsorter2 --min-length 1500 -j 100 all
-    done
+    log "STARTED : $pipeline ---------------------------------"
 ###############################################################################
+

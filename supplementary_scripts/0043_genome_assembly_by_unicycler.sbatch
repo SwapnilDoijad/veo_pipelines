@@ -1,27 +1,37 @@
 #!/bin/bash
-#SBATCH --job-name=0041_genome_assembly_by_shovill
+#SBATCH --job-name=0043_genome_assembly_by_unicycler
 #SBATCH --partition=interactive
-#SBATCH --output=results/0041_genome_assembly_by_shovill/tmp/slurm/%j.out
-#SBATCH --error=results/0041_genome_assembly_by_shovill/tmp/slurm/%j.err
+#SBATCH --output=results/0043_genome_assembly_by_unicycler/tmp/slurm/%j.out
+#SBATCH --error=results/0043_genome_assembly_by_unicycler/tmp/slurm/%j.err
 #SBATCH --mem=300G
 #SBATCH --cpus-per-task=24
 ###############################################################################
-	
+	pipeline=0043_genome_assembly_by_unicycler
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+    log "STARTED: $pipeline -----------------------"
+	sublist=results/$pipeline/tmp/lists/ABC
+	fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
+###############################################################################
+	echo "data_directory_fastq_path: $fastq_path"
 ## step-02: unicycler assembly
 	# check short and long read, if both available
-    for F1 in $(cat $list); do
+    for F1 in $(cat $sublist); do
 		if [ ! -f $wd/raw_files/$F1/assembly.fasta ] ; then 
-			if [ -f $path/results/02_filtered_reads/$F1/"$F1"_R1_001.filtered_paired.fastq.gz ] && [ -f $path/data"$ncbi"/long_read/raw_reads/"$SRABiosample_run".fastq.gz ] ; then
-				echo "running hybrid assembly for $F1"
+			if [ -f $fastq_path/$F1/"$F1"_R1_001.filtered_paired.fastq.gz ] && [ -f $fastq_path/$F1/"$F1"_R1_001.filtered_paired.fastq.gz ] ; then
+				echo "running assembly for $F1"
 				WorDir=$(echo $PWD)
 				python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
-				-1 $path/results/02_filtered_reads/$F1/"$F1"_R1_001.filtered_paired.fastq.gz \
-				-2 $path/results/02_filtered_reads/$F1/"$F1"_R2_001.filtered_paired.fastq.gz \
-				-l $path/data"$ncbi"/long_reads/final_reads/"$F1".fastq.gz \
+				-1 $fastq_path/$F1/"$F1"_R1_001.filtered_paired.fastq.gz \
+				-2 $fastq_path/$F1/"$F1"_R2_001.filtered_paired.fastq.gz \
 				-o $WorDir/$wd/raw_files/$F1 \
 				--spades_path /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
 				--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
-				--keep 0
+				--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
+				--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
+				--keep 0 \
+				& my_pid=$!
+				get_resource_stat $my_pid $wd/tmp/resource_log/$F1.unicycler.tsv
+
 				cd $WorDir
 				cp $wd/raw_files/$F1/assembly.fasta $wd/raw_files/$F1/$F1.joined.fasta
 				sed -i 's/>.*/NNNNNNNNNN/g' $wd/raw_files/$F1/$F1.joined.fasta
@@ -53,7 +63,7 @@
 	done
 ###############################################################################
 # ## step : split each contig: 
-# 	for F1 in $(cat $list ) ; do 
+# 	for F1 in $(cat $sublist ) ; do 
 # 		mkdir -p $wd/raw_files/tmp_tmp
 # 		/home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_fasta.pl \
 # 		--input_file=$wd/raw_files/$F1/assembly.fasta \
@@ -62,7 +72,7 @@
 # 	done 
 ###############################################################################
 ## step-03: post-assembly statistics and converting fasta files
-	for F1 in $(cat $list); do
+	for F1 in $(cat $sublist); do
 		if [ ! -f $wd/all_fasta_joined/$F1.joined.fasta ] ; then 
 			if [ -f $wd/raw_files/$F1/assembly.fasta ]; then
 				echo "copying files to all_fasta and all_fasta_joined"
@@ -79,7 +89,7 @@
 ## step-04: count the length of the fasta 
  	if [ ! -f $wd/summary.tsv ] ; then 
 		echo -e "id\tnumber_of_contigs\tfasta_length" > $wd/summary.tsv
-		for i in $(cat $list ) ; do 
+		for i in $(cat $sublist ) ; do 
 			if [ -f $wd/raw_files/$i/assembly.fasta ]; then
 				number_of_contigs=$(grep -c ">" $wd/all_fasta/$i.fasta | awk '{print $1}' )
 				fasta_length=$( grep -v '^>' $wd/all_fasta/$i.fasta | tr -d '\n' | wc -c )
@@ -92,7 +102,7 @@
 ###############################################################################
 ## step-05: run metaquast
 	if [ ! -f $wd/summary.2.tsv ] ; then 
-		for F1 in $(cat $list); do  
+		for F1 in $(cat $sublist); do  
 			if [ -f $wd/raw_files/$F1/assembly.fasta ] ; then 
 				if [ ! -d $wd/raw_files/$F1/quast/fasta ] ; then 
 					log "STARTED : metaquast for $F1"
@@ -113,7 +123,7 @@
 			fi
 		done 
 
-		for F1 in $(cat $list); do  
+		for F1 in $(cat $sublist); do  
 			if [ -f $wd/raw_files/$F1/assembly.fasta ] ; then 
 				awk -F'\t' '{print $2}' $wd/raw_files/$F1/quast/report.tsv | sed "s/assembly/$F1/g" \
 				> $wd/tmp/$F1.metaquast.txt 

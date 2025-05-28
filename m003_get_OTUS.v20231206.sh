@@ -44,10 +44,10 @@
             # for sample_id in $(cat $sample_id_list); do
             #     if [ ! -f tmp/step_1/run_ids_for_sample/list.run_ids_for_sample_"$sample_id".txt ] ; then 
             #         echo "getting run_ids for sample $sample_id"
-            #         study_id=$(grep $sample_id /work/groups/VEO/databases/mgnify/mgnify_all_ids_combined.20230127.tab | awk '{print $3}' )
+            #         study_id=$(grep $sample_id /veodata/03/databases/mgnify/mgnify_all_ids_combined.20230127.tab | awk '{print $3}' )
             #         ## get run ids 
             #         ## sometime there are more than one run ids and run ids are also "null" (@Swapnil need to cross check why these are "null" occur)
-            #         grep $sample_id /work/groups/VEO/databases/mgnify/mgnify_all_ids_combined.20230127.tab | awk '{print $2}' | sed -z 's/_/ /g' | sed 's/ /\n/g' | sed 's/null//g' > tmp/step_1/run_ids_for_sample/list.run_ids_for_sample_"$sample_id".txt
+            #         grep $sample_id /veodata/03/databases/mgnify/mgnify_all_ids_combined.20230127.tab | awk '{print $2}' | sed -z 's/_/ /g' | sed 's/ /\n/g' | sed 's/null//g' > tmp/step_1/run_ids_for_sample/list.run_ids_for_sample_"$sample_id".txt
             #     fi
             # done
 
@@ -88,7 +88,7 @@
         (mkdir tmp/step_2) > /dev/null 2>&1
 
         ## 20231204 : 
-        # find /work/groups/VEO/databases/mgnify/OTU_biom_files/ -type f > /work/groups/VEO/databases/mgnify/mgnify_all_OTUs_table_available.20231204.tab
+        # find /veodata/03/databases/mgnify/OTU_biom_files/ -type f > /veodata/03/databases/mgnify/mgnify_all_OTUs_table_available.20231204.tab
 
         ## 20231204 : below steps were demoted as /home/xa73pav/scripts/database_maintainance/mgnify/OTU_table/archieved/all/ contains all the biom format files and 
             ## tmp/step_2/list.run_id_unique_biom_path.txt files can straight forwrad can be written
@@ -101,7 +101,7 @@
                 ## 20231204 : bash loop script is demoted for speed by python script (see below)
                 # for run_id in $(cat tmp/step_1/run_ids_unique.txt); do
                 #     echo "getting OTU file path for run-id $run_id"
-                #         OTUs_table_path=$(grep $run_id /work/groups/VEO/databases/mgnify/mgnify_all_OTUs_table_available.20230127.tab )
+                #         OTUs_table_path=$(grep $run_id /veodata/03/databases/mgnify/mgnify_all_OTUs_table_available.20230127.tab )
                 #         if [ -z $OTUs_table_path ]; then 
                 #             echo "$sample_id $run_id" >> tmp/step_2/list.OTUs_table_absent.txt
                 #             else 
@@ -280,7 +280,7 @@
         if [ ! -f tmp/step_5/list.final_sample_ids.txt ] ; then
             for run_id in $(cat tmp/step_2/list.run_id_unique_biom.txt); do
                 echo "creating list.final_sample_ids.txt $run_id"
-                final_sample_id=$(grep $run_id /work/groups/VEO/databases/mgnify/mgnify_all_ids_combined.20230127.tab | awk '{print $1}')
+                final_sample_id=$(grep $run_id /veodata/03/databases/mgnify/mgnify_all_ids_combined.20230127.tab | awk '{print $1}')
                 echo $final_sample_id >> tmp/step_5/list.final_sample_ids.txt
             done 
         fi

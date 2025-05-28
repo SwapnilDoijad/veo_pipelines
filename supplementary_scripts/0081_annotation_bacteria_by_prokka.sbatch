@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name 0081_annotation_bacteria_by_prokka
-#SBATCH --partition=short
+#SBATCH --partition=gpu-veo,interactive,short
 #SBATCH --output results/0081_annotation_bacteria_by_prokka/tmp/slurm/%j.out
 #SBATCH --error results/0081_annotation_bacteria_by_prokka/tmp/slurm/%j.err
-#SBATCH --mem=200G
-#SBATCH --cpus-per-task=80
+#SBATCH --mem=5G
+#SBATCH --cpus-per-task=2
 #-- Command section ------------------------
     pipeline=0081_annotation_bacteria_by_prokka
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
@@ -27,9 +27,11 @@
             --prefix $F1 \
             --addgenes \
             --locustag $F1 \
-            --cpus 80 \
+            --cpus $SLURM_CPUS_PER_TASK \
             --fast \
-            --rnammer $fasta_file_dir/"$F1".fasta
+            --rnammer $fasta_file_dir/"$F1".fasta \
+            & my_pid=$!
+			get_resource_stat $my_pid $wd/tmp/resource_log/$id.prokka.tsv 
 
             else
             echo "annotation of $F1 alredy finished"

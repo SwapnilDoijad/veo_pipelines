@@ -1,0 +1,9 @@
+## This is a parameter file for 0005_compress_files_by_gzip pipeline
+## please give a path of a single folder in which all fastq files are stored
+## example path is given below (change the path accordingto your data):
+
+my_uncompressed_file_dir	/veodata/02/databases/fastqs/raw_files
+my_compressed_file_dir	/veodata/02/databases/fastqs/raw_files
+
+## wish to remove source file "Yes" or "No"
+my_source_file_remove	Yes

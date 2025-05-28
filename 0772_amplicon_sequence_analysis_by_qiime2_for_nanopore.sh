@@ -19,12 +19,12 @@
 ## step-01b : preparing the database (need only once)
 
 	## step-01b : Import reference sequences and taxonomy information into QIIME 2
-		# if [ ! -f /work/groups/VEO/databases/silva/v138.1/silva-ref-seqs.qza ] ; then 
+		# if [ ! -f /veodata/03/databases/silva/v138.1/silva-ref-seqs.qza ] ; then 
 		# 	log "STARTED : step-01b : Import reference sequences and taxonomy information into QIIME 2"
 		# 	qiime feature-classifier fit-classifier-naive-bayes \
-		# 	--i-reference-reads /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
-		# 	--i-reference-taxonomy /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-tax.qza \
-		# 	--o-classifier /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-classifier.qza
+		# 	--i-reference-reads /veodata/03/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
+		# 	--i-reference-taxonomy /veodata/03/databases/silva/v138_for_qiime/silva-138-99-tax.qza \
+		# 	--o-classifier /veodata/03/databases/silva/v138_for_qiime/silva-138-99-classifier.qza
 		# 	log "ENDED : step-01b : Import reference sequences and taxonomy information into QIIME 2"
 		# 	else
 		# 	log "ALREADY FINISHED : step-01b : Import reference sequences and taxonomy information into QIIME 2"
@@ -35,9 +35,9 @@
 		# you can use the qiime feature-classifier evaluate-classifier command.
  
 			# qiime feature-classifier evaluate-classifier \
-			# --i-classifier /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-classifier.qza \
-			# --i-reference-reads /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
-			# --i-reference-taxonomy /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-tax.qza
+			# --i-classifier /veodata/03/databases/silva/v138_for_qiime/silva-138-99-classifier.qza \
+			# --i-reference-reads /veodata/03/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
+			# --i-reference-taxonomy /veodata/03/databases/silva/v138_for_qiime/silva-138-99-tax.qza
 
 
 ###############################################################################
@@ -160,12 +160,12 @@
 	# Assign taxonomy to the representative sequences using a classifier trained on the 16S rRNA gene sequences. \
 	# QIIME 2 provides pre-trained classifiers for various regions of the 16S rRNA gene (e.g., Greengenes, SILVA).
 
-	# /work/groups/VEO/databases/silva/silva-138-99-515-806-nb-classifier.pretrained_directly_downloaded.qza
+	# /veodata/03/databases/silva/silva-138-99-515-806-nb-classifier.pretrained_directly_downloaded.qza
 	if [ ! -f $raw_files/single-end-demux.qza.rep-seqs-deblur.qza.taxonomy.qza.qzv ]; then
 		log "STARTED : step-02-05 : Taxonomic classification by qiime2"
 		qiime feature-classifier classify-sklearn \
 		--p-n-jobs 40 \
-		--i-classifier /work/groups/VEO/databases/silva/silva-138-99-nb-classifier.pretrained_directly_downloaded.qza \
+		--i-classifier /veodata/03/databases/silva/silva-138-99-nb-classifier.pretrained_directly_downloaded.qza \
 		--i-reads $raw_files/sequences.rep_seqs_deblur.qza \
 		--o-classification $raw_files/sequences.rep_seqs_deblur.qza.taxonomy.qza
 

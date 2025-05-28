@@ -9,7 +9,7 @@
     pipeline=0083_annotation_prophage_by_pharokka
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
-    fasta_path=$(grep "my_fasta_path" tmp/parameters/$pipeline.* | awk '{print $2}')
+    fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
 ###############################################################################
 	log "SBATCH STARTED : $pipeline : $sublist"
 ###############################################################################
@@ -21,12 +21,14 @@
         if [ ! -f $wd/raw_files/$i/$i.gbk ]; then
 			log "STARTED : $pipeline : $i"
 
+            id=$(echo $i | cut -f 1 -d '_')
+
             pharokka.py \
-            -i $fasta_path/$i.fasta \
-            -o $wd/raw_files/$i \
-            -d /work/groups/VEO/databases/pharokka/v20230501 \
+            -i $fasta_directory/$i.fasta \
+            -o $raw_files/$i \
+            -d /veodata/03/databases/pharokka/v20230501 \
             -t $SLURM_CPUS_PER_TASK \
-            -p $i
+            -f -p $i -l $id
 
 			log "FINISHED : $pipeline : $i"
             else

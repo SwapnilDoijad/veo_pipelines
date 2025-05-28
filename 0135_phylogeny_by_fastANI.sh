@@ -7,12 +7,11 @@
     ## optoin: mash distance tree
 ###############################################################################
 ## header
+    pipeline=0135_phylogeny_by_fastANI
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     echo "STARTED : 0135_phylogeny_by_fastANI -----------------------------------"
 ###############################################################################
 ## step-00: preparation
-    pipeline=0135_phylogeny_by_fastANI
-    wd=results/$pipeline
 
     if [ -f list.fasta.txt ]; then 
         list=list.fasta.txt

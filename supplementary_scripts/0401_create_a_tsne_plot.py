@@ -47,7 +47,7 @@ def detect_outliers(input_file, output_dir, zscore_threshold=2):
 
     # Plot outliers and inliers
     plt.figure(figsize=(8, 6))
-    plt.scatter(inliers['t-SNE_Component_1'], inliers['t-SNE_Component_2'], color='blue', label='Inliers')
+    plt.scatter(inliers['t-SNE_Component_1'], inliers['t-SNE_Component_2'], color='black', label='Inliers')
     plt.scatter(outliers['t-SNE_Component_1'], outliers['t-SNE_Component_2'], color='red', label='Outliers')
     plt.xlabel('t-SNE_Component_1')
     plt.ylabel('t-SNE_Component_2')

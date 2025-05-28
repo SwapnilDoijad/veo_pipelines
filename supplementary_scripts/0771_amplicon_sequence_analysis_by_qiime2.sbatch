@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name 0771_amplicon_sequence_analysis_by_qiime2
 #SBATCH --partition=short,interactive,standard,long,gpu
-#SBATCH --output results/0771_amplicon_sequence_analysis_by_qiime2/tmp/slurm/%J.out
-#SBATCH --error results/0771_amplicon_sequence_analysis_by_qiime2/tmp/slurm/%j.err
+#SBATCH --output $tmp/slurm/%J.out
+#SBATCH --error $tmp/slurm/%j.err
 #SBATCH --mem=200G
 #SBATCH --cpus-per-task=20
 #SBATCH --mail-type=END
@@ -16,10 +16,10 @@
 ## step-00a: preparation
 
 	# source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate qiime2-2023.5 #&& qiime --help  
-		## compatible database : /work/groups/VEO/databases/silva/silva-138-99-nb-classifier.pretrained_directly_downloaded.qza
-		## compatible database : /work/groups/VEO/databases/silva/silva-138-99-515-806-nb-classifier.pretrained_directly_downloaded.qza ## Don't use
+		## compatible database : /veodata/03/databases/silva/silva-138-99-nb-classifier.pretrained_directly_downloaded.qza
+		## compatible database : /veodata/03/databases/silva/silva-138-99-515-806-nb-classifier.pretrained_directly_downloaded.qza ## Don't use
 	 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate qiime2-amplicon-2024.5 #&& qiime --help
-		## compatible database : /work/groups/VEO/databases/silva/v2024.5_qiime2/silva-138-99-nb-classifier.qza
+		## compatible database : /veodata/03/databases/silva/v2024.5_qiime2/silva-138-99-nb-classifier.qza
 
 	( mkdir -p $raw_files/ ) > /dev/null 2>&1
 
@@ -43,12 +43,12 @@
 ## step-00b : preparing the database (need only once)
 
 	## step-01b : Import reference sequences and taxonomy information into QIIME 2
-		# if [ ! -f /work/groups/VEO/databases/silva/v138.1/silva-ref-seqs.qza ] ; then 
+		# if [ ! -f /veodata/03/databases/silva/v138.1/silva-ref-seqs.qza ] ; then 
 		# 	log "STARTED : step-01b : Import reference sequences and taxonomy information into QIIME 2"
 		# 	qiime feature-classifier fit-classifier-naive-bayes \
-		# 	--i-reference-reads /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
-		# 	--i-reference-taxonomy /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-tax.qza \
-		# 	--o-classifier /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-classifier.qza
+		# 	--i-reference-reads /veodata/03/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
+		# 	--i-reference-taxonomy /veodata/03/databases/silva/v138_for_qiime/silva-138-99-tax.qza \
+		# 	--o-classifier /veodata/03/databases/silva/v138_for_qiime/silva-138-99-classifier.qza
 		# 	log "ENDED : step-01b : Import reference sequences and taxonomy information into QIIME 2"
 		# 	else
 		# 	log "ALREADY FINISHED : step-01b : Import reference sequences and taxonomy information into QIIME 2"
@@ -59,9 +59,9 @@
 		# you can use the qiime feature-classifier evaluate-classifier command.
  
 			# qiime feature-classifier evaluate-classifier \
-			# --i-classifier /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-classifier.qza \
-			# --i-reference-reads /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
-			# --i-reference-taxonomy /work/groups/VEO/databases/silva/v138_for_qiime/silva-138-99-tax.qza
+			# --i-classifier /veodata/03/databases/silva/v138_for_qiime/silva-138-99-classifier.qza \
+			# --i-reference-reads /veodata/03/databases/silva/v138_for_qiime/silva-138-99-seqs.qza \
+			# --i-reference-taxonomy /veodata/03/databases/silva/v138_for_qiime/silva-138-99-tax.qza
 
 ###############################################################################
 ## QIIME2
@@ -194,6 +194,93 @@
 			log "ALREADY FINISHED : step-02a : Quality control and denoising by qiime2"
 		fi
 	fi
+
+###############################################################################
+## 2024-12-20 10:02:26 @Swapnil, need to integrate this in the pipeline add data
+	## To ensure comparability across samples and minimize bias in diversity measurements, \
+	## all samples were rarefied to an equal sequencing depth before performing alpha and beta \
+	## diversity analyses. This normalization step ensures that observed differences in microbial \
+	## diversity and composition are attributable to biological variation rather than differences in sequencing depth.
+
+	## use this data for alpha and beta diversity analysis !! 
+
+	qiime diversity core-metrics \
+		--i-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
+		--p-sampling-depth 10000 \
+		--m-metadata-file $metadata \
+		--output-dir $raw_files/03_core-metrics-results
+
+	qiime feature-table summarize \
+		--i-table $raw_files/03_core-metrics-results/rarefied_table.qza \
+		--o-visualization $raw_files/03_core-metrics-results/rarefied_table.qzv
+
+	qiime tools export \
+		--input-path $raw_files/03_core-metrics-results/rarefied_table.qza \
+		--output-path $raw_files/03_core-metrics-results/exported_feature
+
+	biom convert \
+		-i $raw_files/03_core-metrics-results/feature-table.biom \
+		-o $raw_files/03_core-metrics-results/feature-table.tsv \
+		--to-tsv
+
+	qiime metadata tabulate \
+		--m-input-file $raw_files/03_core-metrics-results/shannon_vector.qza \
+		--o-visualization $raw_files/03_core-metrics-results/shannon_vector.qzv
+		
+	qiime tools export \
+	--input-path $raw_files/03_core-metrics-results/shannon_vector.qza \
+	--output-path $raw_files/03_core-metrics-results/exported_alpha
+
+	qiime emperor plot \
+		--i-pcoa $raw_files/03_core-metrics-results/bray_curtis_pcoa_results.qza \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/03_core-metrics-results/bray_curtis_emperor.qzv
+
+	qiime diversity alpha-group-significance \
+		--i-alpha-diversity $raw_files/03_core-metrics-results/shannon_vector.qza \
+		--m-metadata-file $metadata \
+		--o-visualization $raw_files/03_core-metrics-results/shannon_group_significance.qzv
+
+	## 2024-12-20 10:54:32 @Swapnil, need to change the GroupColumnName
+		## automate the script to get the GroupColumnName automatically from the metadata file
+	qiime diversity beta-group-significance \
+		--i-distance-matrix $raw_files/03_core-metrics-results/bray_curtis_distance_matrix.qza \
+		--m-metadata-file $metadata \
+		--m-metadata-column organ \
+		--o-visualization $raw_files/03_core-metrics-results/bray_curtis_group_significance.qzv
+
+	qiime tools export \
+		--input-path $raw_files/03_core-metrics-results/bray_curtis_distance_matrix.qza \
+		--output-path $raw_files/03_core-metrics-results/exported_beta
+
+	qiime tools export \
+		--input-path $raw_files/03_core-metrics-results/bray_curtis_group_significance.qzv \
+		--output-path $raw_files/03_core-metrics-results/exported_organ
+
+	qiime diversity beta-group-significance \
+		--i-distance-matrix $raw_files/03_core-metrics-results/bray_curtis_distance_matrix.qza \
+		--m-metadata-file $metadata \
+		--m-metadata-column group \
+		--o-visualization $raw_files/03_core-metrics-results/bray_curtis_group_significance.qzv
+
+	qiime tools export \
+		--input-path $raw_files/03_core-metrics-results/bray_curtis_group_significance.qzv \
+		--output-path $raw_files/03_core-metrics-results/exported_group
+
+	## simpson index needs to be calculated for alpha diversity differently
+	## as it is not included in qiime diversity core-metrics
+	qiime diversity alpha \
+		--i-table $raw_files/03_core-metrics-results/rarefied_table.qza \
+		--p-metric simpson \
+		--o-alpha-diversity $raw_files/03_core-metrics-results/simpson_vector.qza
+
+	qiime metadata tabulate \
+		--m-input-file $raw_files/03_core-metrics-results/simpson_vector.qza \
+		--o-visualization $raw_files/03_core-metrics-results/simpson_vector.qzv
+
+	qiime tools export \
+		--input-path $raw_files/03_core-metrics-results/simpson_vector.qza \
+		--output-path $raw_files/03_core-metrics-results/exported
 
 ###############################################################################
 ## step-03 : FeatureTable and FeatureData summarize
@@ -456,7 +543,6 @@
 		qiime tools export \
 		--input-path $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.simpson-alpha.qza \
 		--output-path $raw_files/08_Alpha_Beta_Diversity/simpson-alpha
-
 
 		## beta diversity
 		qiime diversity beta \

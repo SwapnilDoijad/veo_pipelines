@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name 0008_step02_demultiplexing_nanopore_basecalling_gpu
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu,gpu-test
 #SBATCH --output results/0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu/tmp/slurm/%j.out.02_fast5_to_basecall
 #SBATCH --error  results/0008_basecalling_demultiplexing_nanopore_singlex_by_guppy_gpu/tmp/slurm/%j.err.02_fast5_to_basecall
 #SBATCH --gres=gpu:1
@@ -13,6 +13,8 @@
 
     flowcell=$(grep my_flowcell $parameters | awk '{print $2}' )
     kit=$(grep my_kit $parameters | awk '{print $2}' )
+    log "flowcell : $flowcell"
+    log "kit : $kit" 
 ###############################################################################
 ## basecalling
 
@@ -29,10 +31,11 @@
             --flowcell $flowcell \
             --kit $kit \
             -x 'cuda:0'
+            # -x 'cuda:0'   ## depreciated 2025-01-07 16:45:26
             # -c $my_tool_path/data/dna_r10.4.1_450bps_fast.cfg
 
         mv $raw_files/02_fast5_to_basecall/*.log $raw_files/02_fast5_to_basecall/all_files/log > /dev/null 2>&1
-        stat.reads_pass_sequencing_summary.tsv
+        # stat.reads_pass_sequencing_summary.tsv
 
     log "FINISHED SBATCH : 02_fast5_to_basecall"
 ###############################################################################

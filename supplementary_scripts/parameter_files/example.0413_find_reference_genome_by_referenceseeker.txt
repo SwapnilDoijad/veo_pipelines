@@ -1,0 +1,8 @@
+## This is a parameter file for 0413_find_reference_genome_by_referenceseeker pipeline
+## please give a path of an ASSEMBLY folder where all your fasta are located 
+## all fasta should end with .fasta
+## example path (change the path according to your data):
+my_fasta_dir	results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/01_pod5_to_fastq/demultiplexed_fastq
+
+## Do you want to download the  genome of best closest relative? Yes or No
+my_ref_fasta_needed	Yes 

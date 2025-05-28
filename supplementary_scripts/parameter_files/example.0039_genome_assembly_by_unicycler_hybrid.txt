@@ -1,0 +1,16 @@
+## This is a parameter file for 0039_genome_assembly_by_unicycler_hybrid pipeline
+## tab seperated
+## files should end with .fastq.gz 
+## If you mention the 'single' below, the data in the paired will be ignored and vice-versa
+
+## please give a path of every files as below
+## example path is given below (change the path according to your data):
+## long_read	illumina_R1	illumina_R2
+data/pacbio/pacbio_decompressed/ABM_DNA_S10-1_4_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S10-1_4_1.fastq.gz	data/illumina/fastq/ABM_DNA_S10-1_4_2.fastq.gz
+data/pacbio/pacbio_decompressed/ABM_DNA_S11-2_5_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S11-2_5_1.fastq.gz	data/illumina/fastq/ABM_DNA_S11-2_5_2.fastq.gz
+data/pacbio/pacbio_decompressed/ABM_DNA_S12-2_6_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S12-2_6_1.fastq.gz	data/illumina/fastq/ABM_DNA_S12-2_6_2.fastq.gz
+data/pacbio/pacbio_decompressed/ABM_DNA_S9-1_3_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S9-1_3_1.fastq.gz	data/illumina/fastq/ABM_DNA_S9-1_3_2.fastq.gz
+data/pacbio/pacbio_decompressed/ABM_July_1_HiFi.fastq.gz	data/illumina/fastq/ABM_July_1_1.fastq.gz	data/illumina/fastq/ABM_July_1_2.fastq.gz
+data/pacbio/pacbio_decompressed/ABM_July_2_HiFi.fastq.gz	data/illumina/fastq/ABM_July_2_1.fastq.gz	data/illumina/fastq/ABM_July_2_2.fastq.gz
+data/pacbio/pacbio_decompressed/ABM_NL1369-1_7_HiFi.fastq.gz	data/illumina/fastq/ABM_NL1369-1_7_1.fastq.gz	data/illumina/fastq/ABM_NL1369-1_7_2.fastq.gz
+

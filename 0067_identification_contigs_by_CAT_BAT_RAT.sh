@@ -1,11 +1,10 @@
 ###############################################################################
 ## header
+    pipeline=0067_identification_contigs_by_CAT_BAT_RAT
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     log "STARTED : 0067_identification_contigs_by_CAT -------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
-    pipeline=0067_identification_contigs_by_CAT_BAT_RAT
-    wd=results/$pipeline
 
     if [ -f list.fasta.txt ]; then 
         list=list.fasta.txt

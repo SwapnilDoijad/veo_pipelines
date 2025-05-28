@@ -1,0 +1,397 @@
+#!/bin/bash
+#SBATCH --job-name=0068_read_mapping_by_bwa
+#SBATCH --partition=interactive
+#SBATCH --output=results/0068_read_mapping_by_bwa/tmp/slurm/%j.out.txt
+#SBATCH --error=results/0068_read_mapping_by_bwa/tmp/slurm/%j.err.txt
+#SBATCH --mem=40G
+#SBATCH --cpus-per-task=20
+###############################################################################
+pipeline=0068_read_mapping_by_bwa
+source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+sublist=$wd/tmp/lists/ABC
+data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
+SNP_analysis=$(grep -w "my_SNP_analysis" $parameters | awk '{print $2}')
+snp_annotation=$(grep -w "my_snp_annotation" $parameters | awk '{print $2}')
+read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
+
+    ## read_type_input
+    if [ "$read_type" = "pacbio" ]; then
+        read_type_input="map-pb"
+    elif [ "$read_type" = "nanopore" ]; then
+        read_type_input="map-ont"
+    elif [ "$read_type" = "illumina" ]; then
+        read_type_input="sr"
+    fi
+###############################################################################
+    log "The run for sublist : $sublist is started"
+############################################################################### 
+    while IFS= read -r line; do
+
+        assembly_id_path=$( echo $line | awk '{print $1}' | xargs -I{} dirname {} | sort | uniq )
+        assembly_id=$( echo $line | awk '{print $1}' | awk -F'/' '{print $NF}' | sed 's/\.fasta//g' | sort | uniq )
+        fastq_id_path=$( echo $line | awk '{print $2}' | xargs -I{} dirname {} | tr ' ' '\n' | sort | uniq )
+        fastq_id=$( echo $line | awk '{print $2}'| awk -F'/' '{print $NF}' | sed 's/\.fastq\.gz//g' | tr ' ' '\n' |  sort | uniq )
+
+        fwd_reads=$(grep $assembly_id $wd/tmp/lists/ABC | awk '{print $2}')
+        rev_reads=$(grep $assembly_id $wd/tmp/lists/ABC | awk '{print $3}')
+
+        log "assembly_id_path: $assembly_id_path"
+        log "assembly_id: $assembly_id"
+        log "fastq_id_path: $fastq_id_path"
+        log "fastq_id: $fastq_id"
+        log "SLURM_CPUS_PER_TASK: $SLURM_CPUS_PER_TASK"
+
+
+
+        if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt ] ; then 
+
+            if [ ! -f $raw_files/index_files/$assembly_id.amb ]; then
+                log "STARTED : creating index for $assembly_id"
+
+                /home/groups/VEO/tools/bwa/v0.7.17/bwa index \
+                -p $raw_files/index_files/$assembly_id \
+                $assembly_id_path/"$assembly_id".fasta
+
+                log "FINISHED : creating index for $assembly_id"
+                else
+                echo "ALREADY FINISHED : index for $assembly_id"
+            fi
+
+            if [ ! -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
+                log "STARTED : mapping $fastq_id on $assembly_id using bwa mem"
+
+                /home/groups/VEO/tools/bwa/v0.7.17/bwa mem \
+                -t $SLURM_CPUS_PER_TASK \
+                $raw_files/index_files/$assembly_id \
+                $fwd_reads $rev_reads \
+                > $raw_files/sam_files/$assembly_id.$fastq_id.sam
+
+                log "FINISHED : mapping for $fastq_id on $assembly_id"
+                else
+                log "ALREADY FINISHED : mapping for $fastq_id on $assembly_id"
+            fi
+
+
+                                            #     ## Minimap2 is designed to work with both interleaved paired reads and split paired reads for short or long reads.
+                                            #     ## For paired-end data provided as a single interleaved FASTQ file, minimap2 can properly parse and process the paired reads without requiring any additional steps.
+                                            #     ## use The -x map-pb preset is optimized for long-read mapping (e.g., PacBio or ONT reads), which typically are not in paired-end format. 
+                                            #     ## If you're using paired-end reads with this preset, minimap2 will still handle them correctly, as it expects reads to be continuous and will ignore pairing information by default.
+                                            #     ## create index ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads 
+                                            #     if [ ! -f $assembly_id_path/"$assembly_id".fasta.mmi ]; then
+                                            #         log "STARTED : creating index for $assembly_id"
+                                            #         /home/groups/VEO/tools/minimap2/v2.26/minimap2 \
+                                            #         -x $read_type_input -t $SLURM_CPUS_PER_TASK \
+                                            #         -d $raw_files/index_files/$assembly_id.fasta.mmi \
+                                            #         $assembly_id_path/"$assembly_id".fasta
+                                            #         log "FINISHED : creating index for $assembly_id"
+                                            #         else
+                                            #         echo "ALREADY FINISHED : index for $assembly_id"
+                                            #     fi
+
+                                            #     ## create index for reference fasta file using samtools, needed in addition to minimap2 index, for other tools
+                                            #     if [ "$SNP_analysis" = "Yes" ] && [ ! -f $assembly_id_path/"$assembly_id".samtools.dict ]; then
+                                            #         log "STARTED : creating Samtool index for $assembly_id"
+                                            #         cp $assembly_id_path/"$assembly_id".fasta \
+                                            #         $assembly_id_path/"$assembly_id".samtools.fasta
+
+                                            #         /home/groups/VEO/tools/samtools/v1.17/bin/samtools \
+                                            #         faidx $assembly_id_path/"$assembly_id".samtools.fasta
+                                                    
+                                            #         conda activate gatk_v4.6.1.0
+                                            #         gatk CreateSequenceDictionary \
+                                            #         -R $assembly_id_path/"$assembly_id".samtools.fasta \
+                                            #         -O $assembly_id_path/"$assembly_id".samtools.dict
+                                            #         conda deactivate 
+                                            #         else
+                                            #         echo "ALREADY FINISHED : Samtool index for $assembly_id"
+                                            #     fi
+
+                                            #     if [ $data_type == "single" ]; then
+                                            #         ## map files ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads
+                                            #         if [ ! -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
+                                            #             log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
+                                            #             /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x $read_type_input -a \
+                                            #             -t $SLURM_CPUS_PER_TASK \
+                                            #             $raw_files/index_files/$assembly_id.fasta.mmi \
+                                            #             $fastq_id_path/$fastq_id.fastq.gz \
+                                            #             > $raw_files/sam_files/$assembly_id.$fastq_id.sam
+                                            #             log "FINISHED : mapping for $fastq_id on $assembly_id"
+                                            #             else 
+                                            #             log "ALREADY FINISHED : mapping for $fastq_id on $assembly_id"
+                                            #         fi 
+
+                                            #         elif [ $data_type == "paired" ]; then
+                                                
+                                            #         # Check if the SAM file already exists
+                                            #         if [ ! -f "$raw_files/sam_files/$assembly_id.$fastq_id.sam" ]; then
+                                            #             log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
+
+                                            #             fwd_reads=$(grep $assembly_id $wd/tmp/lists/ABC | awk '{print $2}')
+                                            #             rev_reads=$(grep $assembly_id $wd/tmp/lists/ABC | awk '{print $3}')
+
+                                            #             # Run minimap2 for paired-end reads
+                                            #             ## for paired end sequencing, -x sr is used (as long reads are not in paired-end format)
+                                            #             /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x sr -a \
+                                            #             $raw_files/index_files/$assembly_id.fasta.mmi \
+                                            #             -t $SLURM_CPUS_PER_TASK \
+                                            #             $fwd_reads \
+                                            #             $rev_reads \
+                                            #             > "$raw_files/sam_files/$assembly_id.$fastq_id.sam" \
+                                            #             & my_pid=$!
+                                            # 	        get_resource_stat $my_pid $wd/tmp/resource_log/$id.minimap2.tsv 
+
+                                            #             check_status "Mapping $fastq_id on $assembly_id"
+                                            #         else
+                                            #             log "ALREADY FINISHED : mapping for $fastq_id on $assembly_id"
+                                            #         fi
+                                            #     fi
+
+            ## sort file using samtools
+            /home/groups/VEO/tools/samtools/v1.17/bin/samtools sort \
+            -@ $SLURM_CPUS_PER_TASK -l 9 -m 5000M \
+            -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+            $raw_files/sam_files/$assembly_id.$fastq_id.sam
+
+            ## get summary of sorted .bam file using samtools
+            /home/groups/VEO/tools/samtools/v1.17/bin/samtools flagstat \
+            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt
+
+            /home/groups/VEO/tools/samtools/v1.17/bin/samtools index \
+            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam
+
+            /home/groups/VEO/tools/samtools/v1.17/bin/samtools depth \
+            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+            > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt
+
+            awk '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig]}' \
+            $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt \
+            > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage.txt
+
+            awk '{print $1}' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt | sort | uniq -c | awk '{print $1}' \
+            > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.lenght.txt
+
+            paste $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage.txt $raw_files/depth_and_coverage/$assembly_id.$fastq_id.lenght.txt | sed "s/^/$assembly_id\t/g" \
+            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.avg_coverage_lenght.txt
+
+            echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
+            echo $assembly_id $fastq_id >> $wd/summary.txt
+            cat $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt \
+            >> $wd/summary.txt
+            echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
+                  
+        fi
+
+                                ## Generate Pileup File (required for the variant calling and consesus calling) 
+                                    # mpileup -Ou: The -O option outputs uncompressed binary (BCF) format, and -u ensures the output is uncompressed, which allows for piping.
+                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools mpileup -Ou -f \
+                                        # $assembly_id_path/"$assembly_id".fasta \
+                                        # $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                                        # -o $raw_files/mpileup/$assembly_id.$fastq_id.bcf
+
+                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools call -mv -Oz -o \
+                                        # $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
+                                        # $raw_files/mpileup/$assembly_id.$fastq_id.bcf
+
+                                        # ## Generate Consensus Sequence
+                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz
+
+                                        # cat $assembly_id_path/"$assembly_id".fasta | /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
+                                        # -p $assembly_id \
+                                        # $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
+                                        # > $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta
+
+
+                                        # ## Generate Insertion and Deletion File
+                                        # if [ ! -f $raw_files/InsDel/$assembly_id.$fastq_id.vcf ] ; then
+                                        #     echo -e "#ID\tCHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tout" > $raw_files/InsDel/$assembly_id.$fastq_id.vcf
+                                        # fi
+
+                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools \
+                                        # view $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
+                                        # | grep -v "^#" | sed "s/^/$fastq_id\t/" >> $raw_files/InsDel/$assembly_id.$fastq_id.vcf 
+
+                                        # awk 'NR > 1' $raw_files/InsDel/$assembly_id.$fastq_id.vcf >> $raw_files/summary.InsDel.tsv 
+
+        if [ "$SNP_analysis" = "Yes" ]; then
+            if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.filtered.vcf.gz ] ; then  
+                log "STARTED : freebayes variant calling for $assembly_id.$fastq_id"
+
+                    /home/groups/VEO/tools/freebayes/v1.3.6/freebayes \
+                    --ploidy 1 \
+                    --min-alternate-fraction 0.001 \
+                    --min-alternate-count 1 \
+                    --min-mapping-quality 30 \
+                    --min-base-quality 20 \
+                    --use-best-n-alleles 3 \
+                    -f $assembly_id_path/"$assembly_id".fasta \
+                    $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                    > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf
+                    ## --ploidy 1 : haploid genome for e.g. phage 
+                    ## --min-alternate-fraction 0.001 : minimum fraction of alternate bases to call a variant (at least 0.1% or 1/1000 of the reads need to support the alternate allele)
+                    ## --min-alternate-count 1 : minimum number of alternate bases to call a variant (minimum number of reads supporting the alternate allele for it to be considered a variant.)
+                    ## --min-mapping-quality 10 : minimum mapping quality to consider a read for variant calling (minimum mapping quality a read must have to be considered in the variant calling process.)
+                    ## --min-base-quality 20 : minimum base quality to consider a base for variant calling (the minimum base quality for a base to be considered in variant calling.)
+                    ## --use-best-n-alleles 1: Limits the analysis to the best 1 allele per position, which can reduce noise and help in situations where one allele is dominan
+                
+                    # 2024-11-08 16:17:53
+                    # compress vcf file and get normalised vcf file (complex SNPs are split into multiple lines)   
+                        conda activate gatk_v4.6.1.0
+
+                        bgzip -c $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf \
+                        > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz
+
+                        /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
+                        -m -any $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.gz \
+                        -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf
+
+                        /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools norm \
+                        -m -both -c w $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf \
+                        -f $assembly_id_path/"$assembly_id".fasta \
+                        -Ov -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf
+
+                        gatk LeftAlignAndTrimVariants \
+                        -R $assembly_id_path/"$assembly_id".samtools.fasta \
+                        -V $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf \
+                        -O $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                        --split-multi-allelics
+
+                        conda deactivate  
+
+                                            ## 2024-11-08 16:17:53 : NOT GIVING GOOD RESULTS (some SNPs are skipped)
+                                            # conda activate vcflib_v1.0.10
+
+                                            #     vcfbreakmulti $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf | \
+                                            #     vcfallelicprimitives -k > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.final_decomposed.vcf
+
+                                            # conda deactivate
+
+                ## convert raw vcf to raw tsv 
+                python3 $suppl_scripts/0065_read_mapping_by_minimap2.vcf_to_tsv.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv
+
+                # QUAL>=20: Filters variants to include only those with a quality score (QUAL) greater than or equal to 20. A higher quality score indicates a higher confidence in the variant call.
+                # FORMAT/DP>=10: Filters variants to include only those with a depth of coverage (DP) of 10 or more. Depth of coverage refers to how many reads support the variant at that position.
+                # INFO/NUMALT<=2: To filter out sites with more than one alternate allele (which are more likely to be complex), you can use the INFO/NUMALT field to exclude these multi-allelic calls:
+                # AF>=0.00001: frequency of 1 in 100,000 alleles. Filters variants where the allele frequency (AF) is at least 0.00001. Allele frequency represents the proportion of reads supporting the alternate allele versus the total number of reads.
+
+                # 2025-02-12 13:13:25 @Swapnil "for Wallapat P1L1 and P2L1 i used  -i 'QUAL>=20 && FORMAT/DP>=1 && INFO/NUMALT<=2 && AF>=0.00001'"
+                log "STARTED : filtering freebayes variants for $assembly_id.$fastq_id" 
+                /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools filter \
+                    -i 'QUAL>=20 && FORMAT/DP>=10 && INFO/NUMALT<=2 && AF>=0.00001' \
+                    $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                    -Oz -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+
+                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index \
+                    --tbi $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+
+                log "STARTED : generating consensus sequence for $assembly_id.$fastq_id"
+                /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
+                -f $assembly_id_path/"$assembly_id".fasta \
+                -o $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta \
+                $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+
+                gunzip -k $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
+
+                ## convert raw vcf to raw tsv 
+                python3 $suppl_scripts/0065_read_mapping_by_minimap2.vcf_to_tsv.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv
+
+                source /home/groups/VEO/tools/biopython/myenv/bin/activate
+                python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.tsv
+                deactivate
+                
+                rm $raw_files/vcf/*.gz
+                rm $raw_files/vcf/*.gz.tbi
+            fi
+
+            ## snpEff 
+            ## 2024-11-09 07:44:29 need to give the full path? Don't know. Need to check  
+            if [ $snp_annotation == "Yes" ]; then
+                if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv ]; then  
+                    genBankFile=$( grep $assembly_id $wd/tmp/genBank_filepath.txt | awk -F'\t' '{print $2}' )
+                    log "STARTED : snpEff annotation for $assembly_id.$fastq_id $genBankFile" 
+
+                    ## convert_GenBank_to_GFF3_and_FASTA
+                    ## the names should be genes.gff and sequence.fa for snpEff to work, DON'T change  
+                    mkdir -p $raw_files/tmp/genome_data/$assembly_id > /dev/null 2>&1
+                    source /home/groups/VEO/tools/biopython/myenv/bin/activate
+                        python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_GenBank_to_GFF3_and_FASTA.py \
+                        -i $genBankFile \
+                        -g $raw_files/tmp/genome_data/$assembly_id/genes.gff \
+                        -f $raw_files/tmp/genome_data/$assembly_id/sequences.fa
+                    deactivate
+
+                    cat /home/groups/VEO/scripts_for_users/supplementary_scripts/parameter_files/snpEff.config \
+                    | sed "s/genome_id/$assembly_id/g" \
+                    > $raw_files/tmp/genome_data/$assembly_id/snpEff.config
+
+                    ## need to update the codes   
+                    java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
+                    -gff3 -v \
+                    -dataDir $raw_files/tmp/genome_data/ \
+                    -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                    $assembly_id
+
+                    java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
+                    -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                    -dataDir $raw_files/tmp/genome_data/ \
+                    $assembly_id \
+                    $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
+                    > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf
+
+                    log "STARTED : generating final summary file for $assembly_id.$fastq_id"
+                    bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_bwa.filter.sh \
+                    -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf \
+                    -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+
+                    sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+
+                    awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
+                    grep -v "#" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv | sed "s/^/$fastq_id\t/" >> $raw_files/summary.InsDel.unfiltered.tsv
+                fi
+
+                elif [ $snp_annotation == "No" ]; then
+                log "NOT RUNNING : snpEff annotation for $assembly_id.$fastq_id"
+            fi
+
+            source /home/groups/VEO/tools/biopython/myenv/bin/activate
+            python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
+            -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv \
+            -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv.split.tsv
+            deactivate
+                ## Optional: make count of reads mapped and unmapped to SNPs  
+                    # bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_bwa.count.sh \
+                    # -v $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
+                    # -b $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                    # -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.counts.txt
+
+        fi
+
+        if [ -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam ] ; then 
+            log "COMPRESSING: $assembly_id.$fastq_id.sam.sorted.bam"
+            pigz -9 -c $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.gz ;
+            log "REMOVING: $assembly_id.$fastq_id.sam.sorted.bam"
+            rm -rf $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam
+        fi
+
+        if [ -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
+            log "REMOVING: $assembly_id.$fastq_id.sam"
+            rm -rf raw_files/sam_files/$assembly_id.$fastq_id.sam
+        fi
+
+    done <  $wd/tmp/lists/ABC
+
+    log "The run for sublist : $sublist is completed"
+
+
+############################################################################### 
+## footer
+    clean_empty_files_and_dirs $wd
+    log "The run for sublist : $sublist is completed"
+###############################################################################

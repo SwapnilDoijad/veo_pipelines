@@ -1,0 +1,12 @@
+## This is a parameter file for 0054_metagenome_assembly_by_metaspades_for_illumina pipeline
+## tab seperated
+## files should end with .fastq.gz 
+## paired files should end with _R1_001.fastq.gz and _R2_001.fastq.gz
+## If you mention the 'single' below, the data in the paired will be ignored and vice-versa
+
+## please give a path of a single folder in which all fastq.gz files are stored
+## example path is given below (change the path according to your data):
+my_fastq_path	data/raw_reads
+
+## data type: single or paired
+my_data_type	single 

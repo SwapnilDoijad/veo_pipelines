@@ -1,9 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name 0021_rawreads_filter_by_trimmomatic
-#SBATCH --partition=long
+#SBATCH --partition=short,standard,long,interactive,gpu-veo,gpu
 #SBATCH --output results/0021_rawreads_filter_by_trimmomatic/tmp/slurm/%j.out
 #SBATCH --error  results/0021_rawreads_filter_by_trimmomatic/tmp/slurm/%j.err
-#SBATCH --mail-user=your_email@example.com
 #SBATCH --cpus-per-task=40
 ###############################################################################
 echo "SBATCH STARTED : 0021_rawreads_filter_by_trimmomatic"
@@ -11,9 +10,10 @@ echo "SBATCH STARTED : 0021_rawreads_filter_by_trimmomatic"
 ## step-01: preparation
     pipeline=0021_rawreads_filter_by_trimmomatic
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-    fastq_file_path=$(grep "my_fastqs" tmp/parameters/$pipeline.* | awk '{print $2}')
+    fastq_file_path=$(grep "my_fastq_path" $parameters | awk '{print $2}')
     sublist=$wd/tmp/lists/ABC
     cpus=$SLURM_CPUS_PER_TASK
+    
 ############################################################################### 
 ## step-02: run trimmomatic 
 ## subsampling ? 
@@ -62,16 +62,39 @@ echo "SBATCH STARTED : 0021_rawreads_filter_by_trimmomatic"
             ( mkdir $wd/raw_files/$i )> /dev/null 2>&1
             java -jar /home/groups/VEO/tools/trimmomatic/v0.39/trimmomatic-0.39.jar \
             PE -threads $cpus -phred33 -quiet \
-            $fastq_file_path/"$i"*R1*.fastq.gz \
-            $fastq_file_path/"$i"*R2*.fastq.gz \
-            $wd/raw_files/$i/"$i"_R1.filtered_paired.fastq.gz \
-            $wd/raw_files/$i/"$i"_R1.filtered_unpaired.fastq.gz \
-            $wd/raw_files/$i/"$i"_R2.filtered_paired.fastq.gz \
-            $wd/raw_files/$i/"$i"_R2.filtered_unpaired.fastq.gz \
+            $fastq_file_path/"$i"_*R1*.fastq.gz \
+            $fastq_file_path/"$i"_*R2*.fastq.gz \
+            $raw_files/$i/"$i"_R1_001.filtered_paired.fastq.gz \
+            $raw_files/$i/"$i"_R1_001.filtered_unpaired.fastq.gz \
+            $raw_files/$i/"$i"_R2_001.filtered_paired.fastq.gz \
+            $raw_files/$i/"$i"_R2_001.filtered_unpaired.fastq.gz \
             -trimlog $wd/raw_files/$i/trimlog.log \
             -summary $wd/raw_files/$i/summary.txt \
             ILLUMINACLIP:/home/groups/VEO/tools/trimmomatic/v0.39/adapters/TruSeq2-PE.fa:2:30:10 LEADING:6 TRAILING:6 SLIDINGWINDOW:4:20 MINLEN:36
+
+            mv $wd/fastq_filtered/*.filtered_paired.fastq.gz $wd/fastq_filtered/
+
+            log "Counting reads: $i"
+            f_raw_reads=$( count_reads_from_fastq $fastq_file_path/"$i"_*R1*.fastq.gz )
+            r_raw_reads=$( count_reads_from_fastq $fastq_file_path/"$i"_*R2*.fastq.gz )
+            total_raw_reads=$(( $f_raw_reads + $r_raw_reads))
+
+            raw_f_arl=$(zcat $fastq_file_path/"$i"_*R1*.fastq.gz | awk 'NR%4 == 2 {lengths[length($0)]++} END {for (l in lengths) {print l, lengths[l]}}' | awk '{$3=$1*$2; C+=$3; B+=$2; ARL= C / B} END {print ARL}')
+            raw_r_arl=$(zcat $fastq_file_path/"$i"_*R2*.fastq.gz | awk 'NR%4 == 2 {lengths[length($0)]++} END {for (l in lengths) {print l, lengths[l]}}' | awk '{$3=$1*$2; C+=$3; B+=$2; ARL= C / B} END {print ARL}')
+            raw_arl=$( awk "BEGIN {print ($raw_f_arl+$raw_r_arl)/2; exit}" | awk -F'.' '{print $1}')
+
+            f_filtered_reads=$( count_reads_from_fastq $raw_files/$i/"$i"_R1_001.filtered_paired.fastq.gz )
+            r_filtered_reads=$( count_reads_from_fastq $raw_files/$i/"$i"_R2_001.filtered_paired.fastq.gz )
+            total_filtered_reads=$(( $f_filtered_reads + $r_filtered_reads ))
+
+            filtered_f_arl=$(zcat $raw_files/$i/"$i"_R1_001.filtered_paired.fastq.gz | awk 'NR%4 == 2 {lengths[length($0)]++} END {for (l in lengths) {print l, lengths[l]}}' | awk '{$3=$1*$2; C+=$3; B+=$2; ARL= C / B} END {print ARL}')
+            filtered_r_arl=$(zcat $raw_files/$i/"$i"_R2_001.filtered_paired.fastq.gz | awk 'NR%4 == 2 {lengths[length($0)]++} END {for (l in lengths) {print l, lengths[l]}}' | awk '{$3=$1*$2; C+=$3; B+=$2; ARL= C / B} END {print ARL}')
+            filtered_arl=$( awk "BEGIN {print ($filtered_f_arl+$filtered_r_arl)/2; exit}" | awk -F'.' '{print $1}')
+
+	        echo "$i $f_raw_reads $r_raw_reads $raw_arl $total_raw_reads $f_filtered_reads $r_filtered_reads $filtered_arl $total_filtered_reads" | tr ' ' '\t' >> $wd/summary.tsv
+
             log "FINISHED : $pipeline : $i"
+
         else
             log "ALREADY FINISHED :$pipeline : $i"
         fi

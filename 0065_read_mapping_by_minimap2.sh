@@ -6,6 +6,7 @@
     log "STARTED : $pipeline ----------------------------------"
 ##############################################################################  
 ## step-01: preparations
+    SNP_analysis=$(grep -w "my_SNP_analysis" $parameters | awk '{print $2}')
 
     (rm $wd/tmp/slurm/*.$pipeline.txt ) > /dev/null 2>&1
     (rm $wd/tmp/sbatch/$pipeline.*.sbatch ) > /dev/null 2>&1
@@ -15,14 +16,17 @@
     (mkdir -p $raw_files/sam_files ) > /dev/null 2>&1
     (mkdir -p $raw_files/sam_files_sorted ) > /dev/null 2>&1
     (mkdir -p $raw_files/depth_and_coverage ) > /dev/null 2>&1
-    (mkdir -p $raw_files/consensus_sequences ) > /dev/null 2>&1
-    (mkdir -p $raw_files/mpileup ) > /dev/null 2>&1
-    (mkdir -p $raw_files/vcf ) > /dev/null 2>&1
-    (mkdir -p $raw_files/InsDel ) > /dev/null 2>&1
-    (mkdir -p $raw_files/tmp ) > /dev/null 2>&1
 
-    echo -e "#ID\tCHROM\tPOS\tREF\tALT\tQUAL\tTotal_Reads_Mapped\tReads_Supporting_ALT\tReads_Supporting_REF\tSNP_Type\tAllele_Frequency\tRead_Depth_per_Base\tQualRef\tQualAllel\tSNP_Annotation" > $raw_files/summary.InsDel.tsv
-    echo "#ID	CHROM	POS	ID	REF	ALT	QUAL	FILTER	AB	ABP	AC	AF	AN	AO	CIGAR	DP	DPB	DPRA	EPP	EPPR	GTI	LEN	MEANALT	MQM	MQMR	NS	NUMALT	ODDS	PAIRED	PAIREDR	PAO	PQA	PQR	PRO	QA	QR	RO	RPL	RPP	RPPR	RPR	RUN	SAF	SAP	SAR	SRF	SRP	SRR	TYPE	AD	AO	DP	GT	PL	QA	QR	RO" | tr ' ' '\t' > $raw_files/summary.InsDel.unfiltered.tsv
+    if [ $SNP_analysis == "Yes" ]; then
+        (mkdir -p $raw_files/consensus_sequences ) > /dev/null 2>&1
+        (mkdir -p $raw_files/mpileup ) > /dev/null 2>&1
+        (mkdir -p $raw_files/vcf ) > /dev/null 2>&1
+        (mkdir -p $raw_files/InsDel ) > /dev/null 2>&1
+        (mkdir -p $raw_files/tmp ) > /dev/null 2>&1
+
+        echo -e "#ID\tCHROM\tPOS\tREF\tALT\tQUAL\tTotal_Reads_Mapped\tReads_Supporting_ALT\tReads_Supporting_REF\tSNP_Type\tAllele_Frequency\tRead_Depth_per_Base\tQualRef\tQualAllel\tSNP_Annotation" > $raw_files/summary.InsDel.tsv
+        echo "#ID	CHROM	POS	ID	REF	ALT	QUAL	FILTER	AB	ABP	AC	AF	AN	AO	CIGAR	DP	DPB	DPRA	EPP	EPPR	GTI	LEN	MEANALT	MQM	MQMR	NS	NUMALT	ODDS	PAIRED	PAIREDR	PAO	PQA	PQR	PRO	QA	QR	RO	RPL	RPP	RPPR	RPR	RUN	SAF	SAP	SAR	SRF	SRP	SRR	TYPE	AD	AO	DP	GT	PL	QA	QR	RO" | tr ' ' '\t' > $raw_files/summary.InsDel.unfiltered.tsv
+    fi
 
     create_directories_structure_1 $wd
 

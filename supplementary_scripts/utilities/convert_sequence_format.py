@@ -1,13 +1,16 @@
-#usage: python convert_sequence_format.py
-#change the format accordingly /home/groups/VEO/tools/suppl_scripts/convert_sequence_format.py
+#!/usr/bin/env python3
 
+import argparse
 from Bio import AlignIO
 
-input_handle = open("results/32_veriscan/tmp/my_alignment.aln.fas", "r")
-output_handle = open("results/32_veriscan/tmp/my_alignment.maf", "w")
+# Set up argument parser
+parser = argparse.ArgumentParser(description="Convert sequence alignment format using Biopython.")
+parser.add_argument("-i", "--input", required=True, help="Input alignment file (FASTA format).")
+parser.add_argument("-o", "--output", required=True, help="Output alignment file (MAF format).")
 
-alignments = AlignIO.parse(input_handle, "fasta")
-AlignIO.write(alignments, output_handle, "maf")
+args = parser.parse_args()
 
-output_handle.close()
-input_handle.close()
+# Open input and output files
+with open(args.input, "r") as input_handle, open(args.output, "w") as output_handle:
+    alignments = AlignIO.parse(input_handle, "fasta")
+    AlignIO.write(alignments, output_handle, "maf")

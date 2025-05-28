@@ -1,22 +1,26 @@
 #!/bin/bash
-#SBATCH --job-name 0552_genome_assembly_comparison_by_quast
-#SBATCH --partition=gpu
-#SBATCH --output results/0552_genome_assembly_comparison_by_quast/tmp/slurm/%j.out.0552_genome_assembly_comparison_by_quast
-#SBATCH --error results/0552_genome_assembly_comparison_by_quast/tmp/slurm/%j.err.0552_genome_assembly_comparison_by_quast
+#SBATCH --job-name=0552_genome_assembly_comparison_by_quast
+#SBATCH --partition=interactive
+#SBATCH --output=results/0552_genome_assembly_comparison_by_quast/tmp/slurm/%j.out
+#SBATCH --error=results/0552_genome_assembly_comparison_by_quast/tmp/slurm/%j.err
 #SBATCH --mem=100G
 #SBATCH --cpus-per-task=40
-#-- Command section ------------------------
+###############################################################################
 
 pipeline=0552_genome_assembly_comparison_by_quast
-wd=results/$pipeline
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+fasta_path=$(grep "my_fasta_path" $parameters | awk '{print $2}' )
 
-        # python3 /home/groups/VEO/tools/quast/v5.2.0/quast.py \
-        # -o $wd/raw_files_quast/ \
-        # --silent -t 40 \
-        # $wd/all_fasta/*
+        log "STARTED: $pipeline"
 
         python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py \
-        -o $wd/raw_files_metaquast/ \
-        --silent -t 40 \
-        $wd/all_fasta/*
+        -o $raw_files/ \
+        --silent -t $SLURM_CPUS_PER_TASK \
+        "$fasta_path"/* \
+        & my_pid=$!
+        
+        get_resource_stat $my_pid $wd/tmp/resource_log/$id.quast.tsv
+
+        log "FINISHED: $pipeline"
+
+###############################################################################

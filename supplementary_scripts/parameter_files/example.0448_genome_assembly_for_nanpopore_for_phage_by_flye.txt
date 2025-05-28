@@ -2,3 +2,8 @@
 ## please give a path of fastq folder 
 ## example path (change the path according to your data):
 my_fastq_dir	results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/01_pod5_to_fastq/demultiplexed_fastq
+
+## mode? single or meta? 
+## single: for single genome
+## meta: for metagenome (for single genome from Nanopore reads, use meta for better results)
+my_mode	meta

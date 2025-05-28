@@ -1,52 +1,60 @@
 import argparse
 import gzip
-import os
 from collections import Counter
 
-def get_read_length(sequence):
-    return len(sequence)
-
-def main(input_file, output_file):
+def process_fastq(input_file, output_file, max_out_file=None):
     try:
-        if input_file.endswith('.gz'):
-            infile = gzip.open(input_file, 'rt')
-        else:
-            infile = open(input_file, 'rt')
+        open_func = gzip.open if input_file.endswith('.gz') else open
+        length_counts = Counter()
 
-        with infile, open(output_file, 'wt') as outfile:
-            read_lengths = []
+        with open_func(input_file, 'rt') as infile, open(output_file, 'wt') as outfile:
+            max_out = open(max_out_file, 'wt') if max_out_file else None
+            
+            if max_out:
+                max_out.write("Read_ID\tLength\n")  # Write header for max_out file
 
             while True:
-                header = infile.readline()
-                if not header:  # if the line is empty, end of file is reached
-                    break
+                header = infile.readline().strip()
+                if not header:
+                    break  # End of file
+                
+                if not header.startswith('@'):  # Ensure it's a valid FASTQ header
+                    print(f"Warning: Unexpected format in {input_file}, line: {header}")
+                    continue
+                
+                read_id = header.split()[0][1:]  # Extract read ID (remove '@')
                 sequence = infile.readline().strip()
-                plus = infile.readline()
-                quality = infile.readline()
+                infile.readline()  # Skip '+'
+                infile.readline()  # Skip quality line
+                
+                read_length = len(sequence)
+                length_counts[read_length] += 1
+                
+                if max_out:
+                    max_out.write(f"{read_id}\t{read_length}\n")  # Write read ID and length
+            
+            if max_out:
+                max_out.close()
 
-                read_lengths.append(get_read_length(sequence))
-
-            # Count the occurrences of each read length
-            length_counts = Counter(read_lengths)
-
-            # Sort the lengths
-            sorted_lengths = sorted(length_counts.items())
-
-            # Write the lengths and their counts to the output file
-            for length, count in sorted_lengths:
+            # Write length distribution to output file
+            outfile.write("Length\tCount\n")  # Add header for clarity
+            for length, count in sorted(length_counts.items()):
                 outfile.write(f"{length}\t{count}\n")
 
-        print(f"Read lengths and their counts written to {output_file}")
+        print(f"Read length distribution saved to {output_file}")
+        if max_out_file:
+            print(f"Per-read lengths saved to {max_out_file}")
+
     except FileNotFoundError:
-        print("File not found:", input_file)
+        print(f"Error: File not found - {input_file}")
     except Exception as e:
-        print("An error occurred:", str(e))
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Extract read lengths from a FASTQ file.")
-    parser.add_argument('-i', '--input', required=True, help='Input FASTQ file path')
-    parser.add_argument('-o', '--output', required=True, help='Output file path')
+    parser = argparse.ArgumentParser(description="Compute read length distribution from a FASTQ file.")
+    parser.add_argument('-i', '--input', required=True, help='Path to input FASTQ file (can be .gz)')
+    parser.add_argument('-o', '--output', required=True, help='Path to output file for length distribution')
+    parser.add_argument('-max_out', '--max_output', help='Optional: Path to TSV file for per-read lengths')
 
     args = parser.parse_args()
-
-    main(args.input, args.output)
+    process_fastq(args.input, args.output, args.max_output)

@@ -113,8 +113,13 @@ my_kit	SQK-NBD114-96
 my_flowcell	FLO-MIN114
 
 ## type of seperated	#options: genome or amplicon
-my_type_of_sequencing	genome
+my_type_of_sequencing	amplicon
 
-## Need duplex reads? #options: yes
-my_duplex_choise	no
+## if type_of_sequencing is amplicon, then need to demultiplex? Yes or No (recommended : No)
+my_demultiplex_amplicon	No
 
+## Need duplex reads? #options: Yes or No
+my_duplex_choise	No
+
+## Need to trim the adapter, barcode and primer sequence : Yes or No
+my_trim_adapter_barcode_primer	No

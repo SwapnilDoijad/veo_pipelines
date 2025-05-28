@@ -59,8 +59,8 @@ echo "started.... step-03 minhash prophage -------------------------------------
         #     echo "please provide database name"
         #     exit
         #     elif [ "$database" == "millardlab_1Mar2023" ] ; then
-            database=/work/groups/VEO/databases/genomes_phage_millardlab/v202303/millardlab_1Mar2023_genomes.fa.msh
-            header_file=/work/groups/VEO/databases/genomes_phage_millardlab/v202303/millardlab_1Mar2023_genomes.fa.header
+            database=/veodata/03/databases/genomes_phage_millardlab/v202303/millardlab_1Mar2023_genomes.fa.msh
+            header_file=/veodata/03/databases/genomes_phage_millardlab/v202303/millardlab_1Mar2023_genomes.fa.header
         # fi
 
 ###############################################################################
@@ -116,17 +116,17 @@ if [ ! -d results/03_minhash_prophage_close_relatives/close_relatives_fasta ] ; 
     ( mkdir -p results/03_minhash_prophage_close_relatives/close_relatives_fasta )> /dev/null 2>&1
     for fasta in $(cat $list); do 
         for closest_relative in $(cat $my_dir/closest_relative.tab); do
-            #perl /home/groups/VEO/tools/suppl_scripts/fastagrep.pl -f results/03_minhash_prophage_close_relatives/closest_relative.tab /work/groups/VEO/databases/phage_genomes/millardlab_1Mar2023_genomes.fa > results/03_minhash_prophage_close_relatives/close_relatives_fasta/$fasta.$closest_relative.fasta
-            perl /home/groups/VEO/tools/suppl_scripts/fastagrep.pl $closest_relative /work/groups/VEO/databases/phage_genomes/millardlab_1Mar2023_genomes.fa > results/03_minhash_prophage_close_relatives/close_relatives_fasta/$fasta.$closest_relative.fasta
+            #perl /home/groups/VEO/tools/suppl_scripts/fastagrep.pl -f results/03_minhash_prophage_close_relatives/closest_relative.tab /veodata/03/databases/phage_genomes/millardlab_1Mar2023_genomes.fa > results/03_minhash_prophage_close_relatives/close_relatives_fasta/$fasta.$closest_relative.fasta
+            perl /home/groups/VEO/tools/suppl_scripts/fastagrep.pl $closest_relative /veodata/03/databases/phage_genomes/millardlab_1Mar2023_genomes.fa > results/03_minhash_prophage_close_relatives/close_relatives_fasta/$fasta.$closest_relative.fasta
         done
     done
 fi
 ###############################################################################
 ## query species in database and extract prophage sequences
 
-grep "Pseudomonas" /work/groups/VEO/databases/phage_genomes/millardlab_1Mar2023_genomes.fa.header | grep "complete" | awk '{print $1}' > results/03_minhash_prophage_close_relatives/list.all_prophages_for_species.txt
+grep "Pseudomonas" /veodata/03/databases/phage_genomes/millardlab_1Mar2023_genomes.fa.header | grep "complete" | awk '{print $1}' > results/03_minhash_prophage_close_relatives/list.all_prophages_for_species.txt
 
 for F1 in $(cat ); do
-    cp home/groups/VEO/databases/phage_genomes/millardlab/millardlab_1Mar2023_genomes_seperated/$F1.fasta /work/groups/VEO/databases/phage_genomes/millardlab_1Mar2023_genomes.fa
+    cp home/groups/VEO/databases/phage_genomes/millardlab/millardlab_1Mar2023_genomes_seperated/$F1.fasta /veodata/03/databases/phage_genomes/millardlab_1Mar2023_genomes.fa
 done
 

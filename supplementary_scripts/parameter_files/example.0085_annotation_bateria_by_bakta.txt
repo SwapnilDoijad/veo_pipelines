@@ -2,4 +2,4 @@
 ## please give a path of a single folder in which all fasta files are stored
 ## note that all files should end with .fasta
 ## example path is given below (change the path according to your data):
-my_fasta_dir	data/top5_close_relatives
+my_fasta_dir	results/ragatag_fasta/all_fasta

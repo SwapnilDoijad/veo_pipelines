@@ -1,21 +1,20 @@
 #!/bin/bash
 #SBATCH --job-name 0067_identification_contigs_by_CAT_BAT_RAT
-#SBATCH --partition=gpu
-#SBATCH --output results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.out
-#SBATCH --error results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.err
+#SBATCH --partition=gpu,gpu-veo,interactive,standard,long
+#SBATCH --output=results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.out
+#SBATCH --error=results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.err
 #SBATCH --mem=250G
 #SBATCH --cpus-per-task=40
 ###############################################################################
 ## step-01: preparation
-    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     pipeline=0067_identification_contigs_by_CAT_BAT_RAT
-    wd=results/$pipeline
-
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+    
     sublist=$wd/tmp/lists/ABC
-    parameter_file=tmp/parameters/$pipeline.tsv
+    choise=$(grep my_choise $parameters | awk '{print $2}')
 
-    nr_database=/work/groups/VEO/databases/cat_bat_rat/v20240405/db/
-    tax_database=/work/groups/VEO/databases/cat_bat_rat/v20240405/tax/
+    nr_database=/veodata/03/databases/cat_bat_rat/v20240405/db/
+    tax_database=/veodata/03/databases/cat_bat_rat/v20240405/tax/
     diamond=/home/groups/VEO/tools/cat_bat_rat/diamond_v2.1.8.162
     prodigal=/home/groups/VEO/tools/prodigal/v2.6.3/prodigal
 ###############################################################################
@@ -25,10 +24,11 @@
         log "RUNNING : $pipeline for $i"
 
         mkdir $wd/raw_files/$i/CAT/ > /dev/null 2>&1
-        file_path=$(grep -w "$i" $parameter_file | awk '{print $2}')
-        bin_path=$(grep bins $parameter_file  | grep -v "#" | awk '{print $2}')
-        read_path=$(grep paired_fastq_reads $parameter_file  | grep -v "#" | awk '{print $2}')
+        file_path=$(grep -w "$i" $parameters | awk '{print $2}')
+        bin_path=$(grep bins $parameters  | grep -v "#" | awk '{print $2}')
+        read_path=$(grep paired_fastq_reads $parameters | grep -v "#" | awk '{print $2}')
 
+        if [ "$choise" = "all" ] || [ "$choise" = "CAT" ]; then
         if [ ! -f $wd/raw_files/$i/CAT/$i.contig2classification.txt ] ; then 
             log  "RUNNING : $pipeline : $i"
             mkdir -p $wd/raw_files/$i/CAT
@@ -58,7 +58,9 @@
             else
             log "ALREADY FINISHED : $pipeline : $i"
         fi
+        fi
 
+        if [ "$choise" = "all" ] || [ "$choise" = "BAT" ]; then
         if [ ! -d $wd/raw_files/$i/BAT ] ; then 
             log "STARTED : $pipeline : $i : BAT "
             mkdir -p $wd/raw_files/$i/BAT > /dev/null 2>&1
@@ -87,7 +89,7 @@
             log "ALREADY FINISHED : $pipeline : $i : BAT "
         fi
 
-        rm -r $wd/raw_files/$i/RAT
+        if [ "$choise" = "all" ] || [ "$choise" = "RAT" ]; then
         if [ ! -d $wd/raw_files/$i/RAT ] ; then
             log "RUNNING : RAT for $i"
 
@@ -112,6 +114,7 @@
             else
                 log "ALREADY FINISHED : RAT for $i"
         fi
+        fi
             log "FINISHED : $pipeline for $i"
     done
 
@@ -121,9 +124,9 @@
 
 ## 20240409
 ## notes: This set up worked
-    # nr_database=/work/groups/VEO/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/2021-01-07_CAT_database/
-    # tax_database=/work/groups/VEO/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/2021-01-07_taxonomy/
-    # diamond=/work/groups/VEO/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/Diamond_2.0.6/diamond
+    # nr_database=/veodata/03/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/2021-01-07_CAT_database/
+    # tax_database=/veodata/03/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/2021-01-07_taxonomy/
+    # diamond=/veodata/03/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/Diamond_2.0.6/diamond
 
 
 
@@ -132,8 +135,8 @@
 # -c results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/zr11465-01.contigs.fasta \
 # -1 results/0025_QC_of_paired-fastq_by_fastp/raw_files/zr11465-01_R1.fastq.gz \
 # -2 results/0025_QC_of_paired-fastq_by_fastp/raw_files/zr11465-01_R2.fastq.gz \
-# -d /work/groups/VEO/databases/cat_bat_rat/v20240405/db/ \
-# -t /work/groups/VEO/databases/cat_bat_rat/v20240405/tax/ \
+# -d /veodata/03/databases/cat_bat_rat/v20240405/db/ \
+# -t /veodata/03/databases/cat_bat_rat/v20240405/tax/ \
 # --path_to_prodigal /home/groups/VEO/tools/prodigal/v2.6.3/prodigal \
 # --path_to_diamond /home/groups/VEO/tools/cat_bat_rat/diamond_v2.1.8.162 \
 # --path_to_bwa /home/groups/VEO/tools/bwa/v0.7.17/bwa \

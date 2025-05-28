@@ -4,14 +4,14 @@
 #SBATCH --output results/0672_identifying_close_relative_in_nr_by_blast/tmp/slurm/%j.out
 #SBATCH --error results/0672_identifying_close_relative_in_nr_by_blast/tmp/slurm/%j.err
 #SBATCH --mem=200G
-#SBATCH --cpus-per-task=80
+#SBATCH --cpus-per-task=20
 ###############################################################################
 ## preparation
     pipeline=0672_identifying_close_relative_in_nr_by_blast
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh 
     fasta_dir=$(grep "my_fasta_dir" $parameters | awk '{print $NF}')
     create_directories_structure_1 $wd
-	sublist=results/$pipeline/tmp/lists/ABC
+	sublist=$wd/tmp/lists/ABC
 ###############################################################################
 ## run blast
     echo "STARTED : $pipeline --------------------------------------"
@@ -20,7 +20,7 @@
 			log "STARTED : blast for $i"
 			/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/blastn \
 			-query $fasta_dir/$i.fasta \
-			-db /work/groups/VEO/databases/ncbi/v20230721/nt/nt \
+			-db /veodata/03/databases/ncbi/v20230721/nt/nt \
 			-out $raw_files/$i.blastn \
 			-outfmt "6 qseqid sseqid qlen slen qstart qend sstart send length mismatch pident evalue bitscore " \
 			-num_threads 80 -max_target_seqs 3 -max_hsps 1
@@ -45,7 +45,7 @@
 		for i2 in $(cat $raw_files/$i.blastn.ids ); do 
 			i3=$(echo $i2 | awk -F'|' '{print $4}')
 			hit=$(/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/blastdbcmd \
-			-db /work/groups/VEO/databases/ncbi/v20230721/nt/nt \
+			-db /veodata/03/databases/ncbi/v20230721/nt/nt \
 			-entry $i3 | grep ">" | sed 's/>//g')
 
 			if [ -z $hit ]; then 

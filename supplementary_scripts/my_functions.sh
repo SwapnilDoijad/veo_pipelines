@@ -49,9 +49,16 @@ if [ ! -f list.fastq.txt ]; then
     list=list.fastq.txt
 fi 
 
-
 log() {
     echo "$(date +"%Y-%m-%d %H:%M:%S"): $1"
+}
+
+number_of_users() {
+    squeue | awk '{print $4}' | sort | uniq -c 
+}
+
+number_of_jobs() {
+    squeue | wc -l
 }
 
 # Function to count reads in a FASTQ.gz or FASTQ file
@@ -59,7 +66,7 @@ count_reads_from_fastq() {
     local fastqFile="$1"
     
     if [[ ! -f "$fastqFile" ]]; then
-        echo "fastqFile not found!"
+        echo "fastqFile_absent!"
         return 1
     fi
 
@@ -86,7 +93,7 @@ count_number_of_sequences_in_fasta() {
     local fastaFile="$1"
 
     if [[ ! -f "$fastaFile" ]]; then
-        echo "fastaFile not found!"
+        echo "fastaFile_absent!"
         return 1
     fi
 
@@ -94,6 +101,29 @@ count_number_of_sequences_in_fasta() {
 
     echo "$total_number_of_sequences"
 
+}
+
+# Function to get individual sequence length of all sequences in FASTA 
+get_fasta_lengths() {
+    local fasta_file="$1"
+    awk '/^>/ {
+        if (seqlen) { print seqlen }
+        print
+        seqlen=0
+        next
+    } 
+    {
+        seqlen += length($0)
+    } 
+    END {
+        if (seqlen) print seqlen
+    }' "$fasta_file"
+}
+
+# Function to get accumulated length of all sequences in FASTA
+fasta_length() {
+    local fasta_file="$1"
+    awk '/^>/ { next } { total_length += length($0) } END { print total_length }' "$fasta_file"
 }
 
 
@@ -106,12 +136,10 @@ barcode_files_exist() {
     fi
 }
 
-
 # Function to count the number of currently running jobs
 count_running_jobs() {
     squeue -u $USER | wc -l
 }
-
 
 ## split_list 
 split_list() {
@@ -123,11 +151,14 @@ split_list() {
     pipeline_id=$(echo "$wd" | awk -F'/' '{print $2}')
     total_lines=$(wc -l < "$list")
     
-    if [ "$total_lines" -ge 1 ]  && [ "$total_lines" -le 5 ]; then 
+    if [ "$total_lines" -ge 1 ]  && [ "$total_lines" -le 2 ]; then 
         lines_per_part=$(( total_lines / 1 ))
         split -d -a 3 -l "$lines_per_part" "$list" "$wd/tmp/lists/list.$pipeline_id"_
-        elif [ "$total_lines" -ge 6 ] && [ "$total_lines" -le 10 ]; then
+        elif [ "$total_lines" -ge 3 ] && [ "$total_lines" -le 6 ]; then
         lines_per_part=$(( total_lines / 2 ))
+        split -d -a 3 -l "$lines_per_part" "$list" "$wd/tmp/lists/list.$pipeline_id"_
+        elif [ "$total_lines" -ge 6 ] && [ "$total_lines" -le 10 ]; then
+        lines_per_part=$(( total_lines / 5 ))
         split -d -a 3 -l "$lines_per_part" "$list" "$wd/tmp/lists/list.$pipeline_id"_
         elif [ "$total_lines" -ge 11 ] && [ "$total_lines" -le 50 ]; then
         lines_per_part=$(( total_lines / 5 ))
@@ -149,6 +180,8 @@ create_directories_structure_1() {
     mkdir -p "$1"/tmp/slurm > /dev/null 2>&1
     mkdir -p "$1"/tmp/sbatch > /dev/null 2>&1
     mkdir -p "$1"/tmp/lists > /dev/null 2>&1
+    mkdir -p "$1"/tmp/resource_log > /dev/null 2>&1
+    cp tmp/parameters/$pipeline.* "$wd"/tmp/ > /dev/null 2>&1
 }
 
 ## submit jobs 
@@ -161,8 +194,8 @@ submit_jobs() {
         sublist=$(basename "$sublist")
         sed "s#ABC#$sublist#g" "/home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.sbatch" \
         > "$wd"/tmp/sbatch/"$pipeline.$sublist.sbatch"
-        sbatch "$wd"/tmp/sbatch/"$pipeline.$sublist.sbatch" > /dev/null 2>&1
-        log "SUBMITTED : $pipeline : sbatch for $sublist"
+        job_id=$(sbatch "$wd"/tmp/sbatch/"$pipeline.$sublist.sbatch" | awk '{print $4}')
+        log "SUBMITTED : $pipeline : sbatch for $sublist : $job_id"
     done
 }
 
@@ -186,7 +219,7 @@ wait_for_file_existence_and_completion() {
             break
         else
             log "WAITING : $i : to be written..."
-            sleep 10
+            sleep 15
             initial_size=$current_size
         fi
     done
@@ -229,7 +262,7 @@ wait_until_written() {
     while inotifywait -q -e close_write "$file" >/dev/null 2>&1; do
         # Check if file size remains constant for a short period (indicating it's completely written)
         size1=$(stat -c %s "$file")
-        sleep 1
+        sleep 15
         size2=$(stat -c %s "$file")
         if [ "$size1" -eq "$size2" ]; then
             break
@@ -239,8 +272,8 @@ wait_until_written() {
     echo "File '$file' is completely written"
 }
 
-## wait_till_all_job_finished my_job_name
-wait_till_all_job_finished() {
+## wait_till_all_job_finished_with_name my_job_name
+wait_till_all_job_finished_with_name() {
     local job_name=$1
 
     if [ -z "$job_name" ]; then
@@ -316,5 +349,188 @@ submit_sbatch_and_wait_till_run_is_complete() {
         fi
     done
 }
+
+# clean_empty_files_and_dirs -i /path/to/directory
+clean_empty_files_and_dirs() {
+    local dir=""
+
+    # Ensure at least two arguments are given (-i and directory)
+    if [[ $# -lt 2 ]]; then
+        echo "Error: No directory specified."
+        echo "Usage: clean_empty_files_and_dirs -i <directory>"
+        return 1
+    fi
+
+    # Parse command-line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -i)
+                shift
+                dir="$1"
+                shift
+                ;;
+            *)
+                echo "Error: Invalid argument '$1'."
+                echo "Usage: clean_empty_files_and_dirs -i <directory>"
+                return 1
+                ;;
+        esac
+    done
+
+    # Validate directory
+    if [[ -z "$dir" ]]; then
+        echo "Error: No directory specified."
+        echo "Usage: clean_empty_files_and_dirs -i <directory>"
+        return 1
+    fi
+
+    if [[ ! -d "$dir" ]]; then
+        echo "Error: Directory '$dir' does not exist."
+        return 1
+    fi
+
+    # Find and delete empty files
+    find "$dir" -type f -empty -delete
+
+    # Find and delete empty directories
+    find "$dir" -type d -empty -delete
+}
+
+
+## log_usage
+log_usage() {
+    local pid="$1"
+    local log_file="$2"
+    local num_cores=$(nproc)
+
+    # Check if log file exists; if not, add header
+    if [ ! -f "$log_file" ]; then
+        echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
+    fi
+
+    while kill -0 "$pid" 2>/dev/null; do
+        # Get CPU and memory usage
+        ps_output=$(ps -p "$pid" -o %cpu,rss --no-headers)
+        cpu_usage=$(echo "$ps_output" | awk '{print $1}')
+        mem_usage=$(echo "$ps_output" | awk '{print $2}')
+        mem_usage_mb=$(echo "scale=2; $mem_usage / 1024" | bc)
+        cpus_used=$(echo "scale=2; $cpu_usage * $num_cores / 100" | bc)
+
+        # Get GPU usage (handle cases where NVIDIA GPU is not present)
+        gpu_output=$(nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader,nounits 2>/dev/null)
+        if [ -n "$gpu_output" ]; then
+            gpu_usage=$(echo "$gpu_output" | awk -F ',' '{print $1}')
+            gpu_mem=$(echo "$gpu_output" | awk -F ',' '{print $2}')
+        else
+            gpu_usage="0"
+            gpu_mem="0"
+        fi
+
+        # Append data to log file with updated timestamp format (underscores instead of spaces)
+        echo -e "$(date '+%Y-%m-%d_%H:%M:%S')\t$cpu_usage\t$mem_usage_mb\t$cpus_used\t$gpu_usage\t$gpu_mem" | sed 's/No\ devices\ were\ found/0/g' >> "$log_file"
+
+        sleep 1
+    done
+}
+
+summarize_log() {
+    local log_file="$1"
+
+    # Extract start time and end time from the log file, replacing underscores with spaces for correct date parsing
+    local start_time=$(awk 'NR==2 {print $1}' "$log_file" | sed 's/_/ /g')  # Replace underscore with space
+    local end_time=$(awk 'END {print $1}' "$log_file" | sed 's/_/ /g')    # Replace underscore with space
+
+    # Ensure the timestamp is in a recognizable format for date parsing (e.g., 2025-02-15 09:13:00)
+    start_time=$(echo "$start_time" | sed 's/_/ /g')  # Ensure correct formatting
+    end_time=$(echo "$end_time" | sed 's/_/ /g')      # Ensure correct formatting
+
+    # Calculate runtime in seconds
+    local start_epoch=$(date -d "$start_time" '+%s')
+    local end_epoch=$(date -d "$end_time" '+%s')
+    local runtime_seconds=$((end_epoch - start_epoch))
+
+    # Calculate the runtime in HH:MM:SS format
+    local hours=$((runtime_seconds / 3600))
+    local minutes=$(((runtime_seconds % 3600) / 60))
+    local seconds=$((runtime_seconds % 60))
+    local runtime_hms=$(printf "%02d:%02d:%02d" $hours $minutes $seconds)
+
+    # Use awk to calculate summary stats and write to a summary file
+    awk -v start="$start_time" -v end="$end_time" -v runtime_hms="$runtime_hms" '
+    BEGIN {
+        OFS="\t";
+        print "Summary", "CPU(%)", "Memory(MB)", "CPUs_used", "GPU(%)", "GPU_Mem(MB)";
+    }
+    NR > 1 {
+        # Skip the header row and rows with invalid data
+        if ($2 == "N/A" || $2 == "") next;  # Skip rows where CPU is invalid or zero
+        cpu_sum += $2;
+        mem_sum += $3;
+        cpus_used_sum += $4;
+
+        # Track GPU data
+        if ($5 != "N/A") gpu_sum += $5;  # Only include valid GPU data for average
+        if ($6 != "N/A") gpu_mem_sum += $6;  # Only include valid GPU memory data
+        if (NR == 2 || $5 < gpu_min) gpu_min = $5;  # Calculate Min for GPU(%) usage
+        if (NR == 2 || $5 > gpu_max) gpu_max = $5;  # Calculate Max for GPU(%) usage
+        if (NR == 2 || $6 < gpu_mem_min) gpu_mem_min = $6;  # Calculate Min for GPU memory usage
+        if (NR == 2 || $6 > gpu_mem_max) gpu_mem_max = $6;  # Calculate Max for GPU memory usage
+
+        # Calculate Min/Max for CPU and memory
+        if (NR == 2 || $2 < cpu_min) cpu_min = $2;
+        if (NR == 2 || $2 > cpu_max) cpu_max = $2;
+
+        if (NR == 2 || $3 < mem_min) mem_min = $3;
+        if (NR == 2 || $3 > mem_max) mem_max = $3;
+
+        if (NR == 2 || $4 < cpus_min) cpus_min = $4;
+        if (NR == 2 || $4 > cpus_max) cpus_max = $4;
+
+        count++;
+    }
+    END {
+        # Calculate averages
+        cpu_avg = cpu_sum / count;
+        mem_avg = mem_sum / count;
+        cpus_used_avg = cpus_used_sum / count;
+
+        if (count > 0) {
+            gpu_avg = gpu_sum / count;
+            gpu_mem_avg = gpu_mem_sum / count;
+        } else {
+            gpu_avg = "N/A";
+            gpu_mem_avg = "N/A";
+        }
+
+        # Print summary
+        print "Average", cpu_avg, mem_avg, cpus_used_avg, gpu_avg, gpu_mem_avg;
+        print "Min", cpu_min, mem_min, cpus_min, gpu_min, gpu_mem_min;
+        print "Max", cpu_max, mem_max, cpus_max, gpu_max, gpu_mem_max;
+        print "";
+        print "Process Start Time:", start;
+        print "Process End Time:", end;
+        print "Total Runtime (HH:MM:SS):", runtime_hms;
+    }' "$log_file" > "$(dirname "$log_file")/$(basename "$log_file" .tsv).summary.tsv"
+
+    echo "Summary written to summary.$log_file"
+}
+
+## log_usage
+get_resource_stat() {
+    local pid="$1"
+    local log_file="$2"
+
+    # Log resource usage for the process in the background
+    log_usage "$pid" "$log_file" & usage_pid=$!
+
+    # Wait for both the Python script and the log function to complete
+    wait "$pid"
+    wait "$usage_pid"
+
+    # Summarize the log file
+    summarize_log "$log_file"
+}
+
+
 
 

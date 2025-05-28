@@ -1,0 +1,16 @@
+## This is a parameter file for 0492_contig_mapping_by_ragtag pipeline
+## please give a path of fasta and its reference fasta 
+## example path (change the path according to your data):
+#query_ids	ref_fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_1.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_1_GCF_001664165.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_12.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_12_GCF_001664345.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_15.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_15_GCF_012241395.2.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_16.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_16_GCF_002117725.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_19.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_19_GCF_001664145.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_20.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_20_GCF_001664145.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y1_4.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y1_4_GCF_002117725.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y2_10.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y2_10_GCF_001664525.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y2_17.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y2_17_GCF_001664385.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y2_19.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y2_19_GCF_001664385.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y2_7.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y2_7_GCF_002117725.1.fasta
+/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/04_assembly/all_fasta/Y3_38.fasta	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/results/0413_find_reference_genome_by_referenceseeker/references/Y3_38_GCF_001664325.1.fasta

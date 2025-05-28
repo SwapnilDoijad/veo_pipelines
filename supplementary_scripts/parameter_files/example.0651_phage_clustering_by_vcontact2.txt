@@ -1,0 +1,26 @@
+## This is a parameter file for 0651_phage_clustering_by_vcontact2 pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path accordingto your data):
+my_faa_path	/vast/xa73pav/projects/p_yin_phage/results/0083_annotation_prophage_by_pharokka/faa
+
+## choose one of the database
+#	None
+# 	ProkaryoticViralRefSeq85-ICTV		#best
+# 	ProkaryoticViralRefSeq85-Merged
+# 	ProkaryoticViralRefSeq88-Merged
+# 	ProkaryoticViralRefSeq94-Merged
+# 	ProkaryoticViralRefSeq97-Merged
+# 	ProkaryoticViralRefSeq99-Merged
+# 	ProkaryoticViralRefSeq201-Merged
+# 	ProkaryoticViralRefSeq207-Merged
+# 	ProkaryoticViralRefSeq211-Merged
+# 	ArchaeaViralRefSeq85-Merged
+# 	ArchaeaViralRefSeq94-Merged
+# 	ArchaeaViralRefSeq97-Merged
+# 	ArchaeaViralRefSeq99-Merged
+# 	ArchaeaViralRefSeq201-Merged
+# 	ArchaeaViralRefSeq207-Merged
+# 	ArchaeaViralRefSeq211-Merged
+
+my_database=ProkaryoticViralRefSeq85-ICTV

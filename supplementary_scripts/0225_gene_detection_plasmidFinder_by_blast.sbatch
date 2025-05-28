@@ -13,7 +13,7 @@
     sublist=$wd/tmp/lists/ABC
     parameter_file=tmp/parameters/$pipeline.*
 
-    annotation_file=/work/groups/VEO/databases/VFDB/v2021/VFDB-annotations.txt
+    annotation_file=/veodata/03/databases/VFDB/v2021/VFDB-annotations.txt
 
 	blastn=/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/blastn
     fasta_path=$(grep my_fasta_path $parameter_file | awk '{print $2}')
@@ -26,7 +26,7 @@
 
 			log "STARTED : $pipeline : $i : blastn step"
 			$blastn \
-            -db /work/groups/VEO/databases/plasmidfinder/v20170220/plasmid.fasta \
+            -db /veodata/03/databases/plasmidfinder/v20170220/plasmid.fasta \
 			-query $fasta_path/$i.fasta \
 			-out $wd/raw_files/$i/$i.plasmidFinder-gene-blast.tmp \
 			-num_threads $SLURM_CPUS_PER_TASK -max_target_seqs 1 -max_hsps 1 -evalue 1e-100 \

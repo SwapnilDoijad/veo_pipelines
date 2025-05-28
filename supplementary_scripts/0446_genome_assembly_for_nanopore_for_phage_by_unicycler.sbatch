@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0446_genome_assembly_for_nanopore_for_phage_by_unicycler
-#SBATCH --partition=short
+#SBATCH --partition=standard,long,interactive
 #SBATCH --output results/0446_genome_assembly_for_nanopore_for_phage_by_unicycler/tmp/slurm/%j.out
 #SBATCH --error results/0446_genome_assembly_for_nanopore_for_phage_by_unicycler/tmp/slurm/%j.err
 #SBATCH --mem=200G
@@ -17,9 +17,8 @@
 
 ###############################################################################
 ## step-01: unicycler assembly
-	# check short and long read, if both available
     for i in $(cat $sublist); do
-		if [ ! -f $raw_files/$i/unicycler.log ] ; then 
+		if [ ! -f $raw_files/$i/assembly.fasta ] ; then 
 
 			log "STARTED : long-read assembly for $i"
 
@@ -32,7 +31,9 @@
 			--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
 			--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
 			--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
-			--keep 0
+			--keep 0 \
+			& my_pid=$!
+			get_resource_stat $my_pid $wd/tmp/resource_log/$id.unicycler.tsv 
 
 			echo "FINISHED : long-read assembly for $i"
 			else
@@ -75,15 +76,11 @@
 
 ###############################################################################
 ## step-03: count the length of the fasta 
-		if [ ! -f $wd/summary.tsv ] ; then 
-			echo -e "id\tfasta_length" > $wd/summary.tsv
-		fi 
-
 		for i in $(cat $sublist ) ; do 
 			if ! grep -q "$i" $wd/summary.tsv ; then
 				if [ -f $raw_files/$i/assembly.fasta ]; then
-					contigs=$( grep -c '>' $wd/all_fasta/$i.fasta )
-					fasta_length=$( grep -v '^>' $wd/all_fasta/$i.fasta | tr -d '\n' | wc -c )
+					contigs=$( grep -c '>' $raw_files/$i/assembly.fasta )
+					fasta_length=$( grep -v ">" $raw_files/$i/assembly.fasta | tr -d '\n' | wc -c )
 					echo -e "$i\t$contigs\t$fasta_length" >> $wd/summary.tsv
 					else
 					echo -e "$i\t0\tassembly-failed" >> $wd/summary.tsv
@@ -94,13 +91,3 @@
 ## footer
 	log "FINISHED : $pipeline ------------------------"
 ###############################################################################
-exit 
-		python3.6 /home/groups/VEO/tools/unicycler/v0.5.0/unicycler-runner.py \
-		-l data/my_fastq_filtered_Q10_2000_75000_based_on_kmers_5K/barcode05.10.10000.fastq.gz \
-		-o results/0446_genome_assembly_for_nanopore_for_phage_by_unicycler/raw_files/barcode05.10.10000 \
-		-t 75 \
-		--spades_path /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
-		--racon_path /home/groups/VEO/tools/racon/v1.5.0/build/bin/racon \
-		--tblastn_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/tblastn \
-		--makeblastdb_path /home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb \
-		--keep 0

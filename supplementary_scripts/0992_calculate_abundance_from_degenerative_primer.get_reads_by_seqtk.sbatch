@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name get_reads
-#SBATCH --partition=short
+#SBATCH --partition=short,long,standard
 #SBATCH --output results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.out.get_reads
 #SBATCH --error results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.err.get_reads
 ###############################################################################

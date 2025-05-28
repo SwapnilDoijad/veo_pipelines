@@ -6,17 +6,15 @@
     log "STARTED: $pipeline -----------------------"
 ###############################################################################
 ## step-00: preparation	
-    if [ -f list.fastq.txt ]; then 
-        list=list.fastq.txt
-		else
-		echo "provide list file (for e.g. all)"
-		read l
-		list=$(echo "list.$l.txt")
-	fi
-
+    fastq_path=$( grep my_fastq_dir $parameters | awk '{print $2}' )
+    ls $fastq_path/ | sed 's/\.fastq\.gz//g' > list.$pipeline.txt
+    list=list.$pipeline.txt
+	
     create_directories_structure_1 $wd
     split_list $wd $list
     submit_jobs $wd $pipeline
+
+    echo -e "id\tfasta_length" > $wd/summary.tsv
 ###############################################################################
 ## footer
 	log "FINISHED : $pipeline ------------------------"

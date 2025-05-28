@@ -6,25 +6,9 @@
     log "STARTED : 0083_annotation_prophage_by_pharokka ------------------------"
 ###############################################################################
 ## step-01: file preparations
-
-    if [ -f list.fasta.txt ]; then 
-        list=list.fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-        sfx=$(echo "_$l")
-    fi
-
-    if [ -f result_summary.read_me.txt ]; then
-        fasta_path=$(grep "fasta" result_summary.read_me.txt | awk '{print $NF}')
-        else
-        echo "provide fasta_file_path"
-        read fasta_file_path
-    fi 
+    fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
+    ls $fasta_directory | sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.txt
+    list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
     split_list $wd $list

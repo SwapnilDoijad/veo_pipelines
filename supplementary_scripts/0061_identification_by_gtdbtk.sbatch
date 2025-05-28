@@ -1,35 +1,46 @@
 #!/bin/bash
 #SBATCH --job-name 0061_identification_by_gtdbtk
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu,gpu-veo,standard,long
 #SBATCH --output results/0061_identification_by_gtdbtk/tmp/slurm/%j.out.0061_identification_by_gtdbtk.txt
 #SBATCH --error results/0061_identification_by_gtdbtk/tmp/slurm/%j.err.0061_identification_by_gtdbtk.txt
 #SBATCH --mem=100G
 #SBATCH --cpus-per-task=40
 ###############################################################################
 ## header
-    start_time=$(date +"%Y%m%d_%H%M%S")
+    pipeline=0061_identification_by_gtdbtk
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+    fasta_file_dir=$(grep "my_fasta_dir" $parameters | awk '{print $2}')
+    # sublist=$wd/tmp/lists/ABC
+    sublist=list.$pipeline.tmp
+###############################################################################
+    log "STARTED: $pipeline : $list"
 ###############################################################################
 ## notes
-    ## the db path changed from default GTDBTK_DATA_PATH = /home/groups/VEO/tools/anaconda3/envs/gtdbtk_v2.1.1/share/gtdbtk-2.1.1/db to
-    ## conda env config vars set GTDBTK_DATA_PATH="/work/groups/VEO/databases/gtdbtk/r207_v2"
+    ## 2025-02-16 05:00:55 conda env config vars set GTDBTK_DATA_PATH="/veodata/03/databases/gtdbtk/r214/release214";
     ## for more conda env config see https://ecogenomics.github.io/GTDBTk/installing/bioconda.html (conda env config vars set GTDBTK_DATA_PATH="/path/to/unarchived/gtdbtk/data";)
     ## https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#setting-environment-variables
 
-    source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-    conda activate gtdbtk_v2.1.1
+    export GTDBTK_DATA_PATH=/veodata/03/databases/gtdbtk/release226/
 
-    sublist=ABC
+    # source /home/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+    # conda activate gtdbtk_v2.1.1
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+    conda activate gtdbtk_v2.4.1
 
-    echo "0061_identification_by_gtdbtk for $sublist: running"
+    log "RUNNING: $pipeline"
 
-    gtdbtk classify_wf --cpus $SLURM_CPUS_PER_TASK \
-    --batchfile results/0061_identification_by_gtdbtk/tmp/lists/$sublist \
-    --out_dir results/0061_identification_by_gtdbtk/results/$sublist --extension fasta
+    gtdbtk classify_wf \
+    --cpus $SLURM_CPUS_PER_TASK \
+    --batchfile $sublist \
+    --out_dir $raw_files/$sublist \
+    --extension fasta \
+    --mash_db /veodata/03/databases/gtdbtk/release226/mash_file.msh \
+    & my_pid=$! 
+    get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.gtdbtk.tsv 
 
-    echo "0061_identification_by_gtdbtk for $sublist: finished"
+    log "FINISHED: $pipeline"
 
 ###############################################################################
 ## footer
-    end_time=$(date +"%Y%m%d_%H%M%S")
-    bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/time_calculations.sh "$start_time" "$end_time"
+    log "FINISHED: $pipeline : $list"
 ###############################################################################

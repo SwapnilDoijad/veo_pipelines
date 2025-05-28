@@ -20,7 +20,7 @@
             echo "kraken2 for $F1 ($current_line_number/$number_of_lines): running"
 
             /home/groups/VEO/tools/kraken2/v2.1.2/kraken2 \
-            --db /work/groups/VEO/databases/kraken2/v20180901 \
+            --db /veodata/03/databases/kraken2/v20180901 \
             --minimum-hit-groups 1 --output - --threads 80 --report results/0063_identification_fasta_by_kraken2/raw_files/$F1.report.txt \
             --use-mpa-style --use-names $fasta_file_path/$F1.fasta
 

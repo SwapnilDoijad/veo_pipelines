@@ -3,7 +3,7 @@
 #SBATCH --partition=short
 #SBATCH --output=results/0450_genome_assembly_for_nanopore_for_phage_long2shortReads_by_spades/tmp/slurm/%j.out
 #SBATCH --error=results/0450_genome_assembly_for_nanopore_for_phage_long2shortReads_by_spades/tmp/slurm/%j.err
-#SBATCH --mem=20G
+#SBATCH --mem=200G
 #SBATCH --cpus-per-task=8
 ###############################################################################
 ## step-00: preparation
@@ -29,7 +29,8 @@
 			(mkdir $raw_files/$i) > /dev/null 2>&1
 			python3.6 /home/groups/VEO/tools/SPAdes/v3.15.5/bin/spades.py \
 			-s $fastq_path/"$i".fastq.gz \
-			-t $SLURM_CPUS_PER_TASK -m 200 --isolate -o $raw_files/$i
+			-t $SLURM_CPUS_PER_TASK -m 20 \
+			--isolate -o $raw_files/$i
 			(rm -r $raw_files/$i/K21) > /dev/null 2>&1
 			(rm -r $raw_files/$i/K33) > /dev/null 2>&1
 			(rm -r $raw_files/$i/K55) > /dev/null 2>&1
@@ -55,9 +56,14 @@
 		if [ -f $raw_files/$i/contigs.fasta ] ; then
 			source /home/groups/VEO/tools/biopython/myenv/bin/activate
 			if [ ! -f $wd/all_fasta/$i.fasta ] ; then
+			
 				log "STARTED: $i: find_and_trim_overalp_in_multifasta"
-				python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/find_and_trim_overalp_in_multifasta.py \
+				python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/find_and_trim_overlap_in_multifasta.py \
 				-i $raw_files/$i/contigs.fasta \
+				-o $raw_files/$i/$i.fasta.tmp 
+
+				python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/find_and_trim_overlap_in_multifasta.within_start_and_end.py \
+				-i $raw_files/$i/$i.fasta.tmp \
 				-o $raw_files/$i/$i.fasta 
 
 				log "STARTED: $i: filter_fasta_based_on_length"
@@ -146,7 +152,7 @@
 	if [ -n "$ref_seq" ]; then 
 		source /home/groups/VEO/tools/biopython/myenv/bin/activate
 		for i in $(cat $sublist); do
-			if [ -f $wd/all_fasta/$i.fasta ] ; then
+			if [ -f $wd/all_fasta/$i.fasta ] && [ ! -f $raw_files/$i/$i.aligned.fasta ]; then
 				log "RUNNING: contigs arrangement as per reference for $i "
 				( rm -rf /home/groups/VEO/tools/mauve/v2.4.0/mauve_snapshot_2015-02-13/$i ) > /dev/null 2>&1
 
@@ -159,6 +165,7 @@
 				-ref $WorDir/$ref_seq \
 				-draft $WorDir/$wd/all_fasta/$i.fasta
 		
+				log "FINISHED: contigs arrangement as per reference for $i "
 				cd $WorDir
 
 				Var1=$( ls /home/groups/VEO/tools/mauve/v2.4.0/mauve_snapshot_2015-02-13/$i/ | sort -r | head -1 )
@@ -168,17 +175,25 @@
 				sed -i '2d' $wd/all_fasta/$i.fasta
 				( rm -rf /home/groups/VEO/tools/mauve/v2.4.0/mauve_snapshot_2015-02-13/$i ) > /dev/null 2>&1
 
+				log "STARTED: reformat_fasta : $i"
 				python3.6 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/reformat_fasta.py \
 				-i $wd/all_fasta/$i.fasta \
 				-o $wd/all_fasta/$i.2.fasta
 
-				python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/find_and_trim_overalp_in_multifasta.py \
+				log "STARTED: find_and_trim_overalp_in_multifasta : $i"
+				python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/find_and_trim_overlap_in_multifasta.py \
 				-i $wd/all_fasta/$i.2.fasta \
-				-o $wd/all_fasta/$i.fasta
+				-o $wd/all_fasta/$i.fasta.tmp
 				
+				log "STARTED: find_and_trim_overlap_in_multifasta.within_start_and_end : $i"
+				python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/find_and_trim_overlap_in_multifasta.within_start_and_end.py \
+				-i $raw_files/$i/$i.fasta.tmp \
+				-o $raw_files/$i/$i.fasta 
+
 				rm -rf $wd/all_fasta/$i.2.fasta > /dev/null 2>&1
 
 				if [ -n "$start_seq" ]; then
+					log "STARTED: rearrange_genome_starting_from_desired_sequence : $i"
 					python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/rearrange_genome_starting_from_desired_sequence.py \
 					-i $wd/all_fasta/$i.fasta \
 					-o $wd/all_fasta_rearranged/$i.fasta \
@@ -186,13 +201,13 @@
 				fi
 	
 				if [ -f $wd/all_fasta_rearranged/$i.fasta ]; then 
+					log "STARTED: get_fasta_length : $i"
 					length=$(python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/get_fasta_length.py -i $wd/all_fasta_rearranged/$i.fasta)
 					elif [ -f $wd/all_fasta/$i.fasta ] ; then
 					length=$(python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/get_fasta_length.py -i $wd/all_fasta/$i.fasta)
 				fi
 
 				echo -e "$i\t$length" >> $wd/summary.final_rearranged_genome.tsv
-
 
 			fi 
 		done

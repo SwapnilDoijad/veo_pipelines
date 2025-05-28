@@ -11,62 +11,71 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
     
-    seq_type=$( grep my_seq_type $parameters | awk '{print $2}' )
-    fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
-    ref_seq=$( grep my_ref_seq $parameters | awk '{print $2}' )
+    data_type=$(grep -w "my_data_type" $parameters | awk '{print $2}')
+    phylogeny=$(grep -w "my_phylogeny" $parameters | awk '{print $2}')
 
     log "starting $pipeline"
-    log "seq_type: $seq_type"
-    log "fastq_path: $fastq_path"
-    log "ref_seq: $ref_seq"
 ###############################################################################
 ## 01: run snippy program
     source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
-    conda activate snippy_v2009  
-    for i in $(cat $sublist); do
-
-        if [ "$seq_type" == "paired" ] ; then 
+    conda activate snippy_v2009
+    if [ "$data_type" == "paired" ] ; then
+        while IFS=$'\t' read -r ref forward_read reverse_read; do
+            i=$( echo $ref | awk -F'/' '{print $NF}' | sed "s/.gbk//g")
+            log "RUNNING: snippy for $data_type : $i"
+            log "REFERENCE: $ref"
+            log "FORWARD_READ: $forward_read"
+            log "REVERSE_READ: $reverse_read"
 
             if [ ! -d $raw_files/$i ] ; then
-                log "RUNNING: snippy for $i $seq_type "
+                log "RUNNING: snippy for $i $data_type "
                 mkdir $raw_files/$i 
 
+                get_resource_stat "$wd"/tmp/resource_log/$i.snippy.tsv \
                 snippy \
-                --cpus $SLURM_CPUS_PER_TASK --quiet --prefix $i \
-                --force --outdir \
-                $raw_files/$i \
-                --ref $ref_seq \
-                --pe1 $fastq_path/"$i"_R1_001.filtered_paired.fastq.gz \
-                --pe2 $fastq_path/"$i"_R2_001.filtered_paired.fastq.gz 
-                log "FINISHED: snippyfor $i $seq_type"
+                --cpus $SLURM_CPUS_PER_TASK \
+                --quiet \
+                --prefix $i \
+                --force \
+                --outdir $raw_files/$i \
+                --ref "$ref" \
+                --pe1 $forward_read \
+                --pe2 $reverse_read
+                log "FINISHED: snippy for $i $data_type"
                 else
-                log "ALREADY FINISHED: snippy for $i $seq_type"
+                log "ALREADY FINISHED: snippy for $i $data_type"
             fi
+        done < $wd/tmp/lists/ABC
+    fi
 
-        elif [ "$seq_type" == "single" ] ; then
+    if [ "$data_type" == "single" ] ; then
+        while IFS='\t' read -r ref reads; do
+            i=$( echo $ref | awk -F'/' '{print $NF}' | sed "s/.gbk//g")
+            log "RUNNING: snippy for $data_type : $i"
+            log "REFERENCE: $ref"
+            log "READs: $reads"
 
             if [ ! -d $raw_files/$i ] ; then
-                log "RUNNING: snippy for $i $seq_type "
+                log "RUNNING: snippy for $i $data_type "
                 mkdir $raw_files/$i 
 
+                get_resource_stat "$wd"/tmp/resource_log/$i.snippy.tsv \
                 snippy \
                 --cpus $SLURM_CPUS_PER_TASK --prefix $i \
                 --force --mapqual 1 \
                 --basequal 1 \
                 --mincov 10 \
                 --outdir $raw_files/$i \
-                --ref $ref_seq \
-                --se $fastq_path/$i.fastq.gz
-                log "FINISHED: snippy for $i $seq_type"
+                --ref $ref \
+                --se $reads
+                log "FINISHED: snippy for $i $data_type"
                 else
-                log "ALREADY FINISHED: snippy for $i $seq_type"
+                log "ALREADY FINISHED: snippy for $i $data_type"
             fi
+        done < $wd/tmp/lists/ABC
+    fi
 
-        fi
-
-        awk 'NR > 1' $raw_files/$i/$i.csv | sed "s/^/$i\,/" >> $wd/summary.csv
-    done
-
+    awk 'NR > 1' $raw_files/$i/$i.csv | sed "s/^/$i\,/" >> $wd/summary.csv
     (rm list.tmp ) > /dev/null 2>&1
     for i in $(cat $sublist); do
         echo $raw_files/$i >> list.tmp
@@ -74,19 +83,22 @@
 
     wait_till_all_job_finished 0131_phylogeny_by_snippy
 
+    if [ "$phylogeny" == "Yes" ] ; then
+        log "STARTED: phylogeny"
 
+        snippy-core --prefix core --ref $ref_seq $(cat list.tmp)
+        mv core.* $raw_files/
+        (rm list.tmp)> /dev/null 2>&1
 
-    snippy-core --prefix core --ref $ref_seq $(cat list.tmp)
-    mv core.* $raw_files/
-    (rm list.tmp)> /dev/null 2>&1
+        snp-sites -o $raw_files/clean.core.aln $raw_files/clean.full.aln
 
-    snp-sites -o $raw_files/clean.core.aln $raw_files/clean.full.aln
+        snp-dists -q $raw_files/core.full.aln > $raw_files/core.full.aln.matrix.tsv
 
-    snp-dists -q $raw_files/core.full.aln > $raw_files/core.full.aln.matrix.tsv
+        conda deactivate
 
-    conda deactivate
+        /home/groups/VEO/tools/fastTreeMP/v2.1.11/FastTreeMP -gtr -nt $raw_files/clean.core.aln > $raw_filesclean.core.aln.nwk
 
-    /home/groups/VEO/tools/fastTreeMP/v2.1.11/FastTreeMP -gtr -nt $raw_files/clean.core.aln > $raw_filesclean.core.aln.nwk
+    fi
 
 
 exit

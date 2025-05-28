@@ -19,7 +19,7 @@ QC=my_QC_value
 
             /home/groups/VEO/tools/seqtk/v1.4/seqtk/seqtk subseq \
             $wd/subsampled/all_combined.subsampled_"$subsample".fastq \
-            $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids.$subsample.txt \
+            $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids.only.$subsample.txt \
             > $raw_files/read_ids_extracted_fastq/$barcode_FR.$barcode_RC.$QC.$subsample.fastq
 
             number_of_reads=$( count_reads_from_fastq $raw_files/read_ids_extracted_fastq/$barcode_FR.$barcode_RC.$QC.$subsample.fastq )

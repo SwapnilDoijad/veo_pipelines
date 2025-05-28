@@ -22,7 +22,7 @@
 	log "STARTED : $barcode_FR && $barcode_RC for brady for $subsample"
 	
 	if [[ $database_parameter == "silva" ]] ; then 
-		database="/work/groups/VEO/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db"
+		database="/veodata/03/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db"
 	elif [[ $database_parameter == "query_sequences" ]] ; then 
 		database="$wd/databases/query_sequence.fasta.db"
 	else

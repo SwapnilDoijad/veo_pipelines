@@ -5,7 +5,7 @@ def get_OTUs_table_path(run_id):
     OTUs_table_path = None
 
     # Replace with the actual path to your OTUs table file
-    OTUs_table_file = "/work/groups/VEO/databases/mgnify/mgnify_all_OTUs_table_available.20240201.tab"
+    OTUs_table_file = "/veodata/03/databases/mgnify/mgnify_all_OTUs_table_available.20240201.tab"
 
     with open(OTUs_table_file, 'r') as file:
         for line in file:

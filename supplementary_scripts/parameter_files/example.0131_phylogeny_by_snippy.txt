@@ -1,12 +1,24 @@
 ## This is a parameter file for 0131_phylogeny_by_snippy pipeline
-## use tab seperated values
+## tab seperated
 
-## please give a path of a single folder in which all fastq.gz files are stored
-## example path is given below (change the path according to your data):
-my_fastq_path	data/raw_reads
+## data type: single or paired
+my_data_type	paired
 
-## give type of sequencing (single or paired)
-my_seq_type	single
+## for paired end sequencing 
+#assembly_or_fasta_gbk_ids	forward_fastq_filepath	reverse_fastq_filepath
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi/ABM_DNA_S10-1_4_HiFi.gbk	data/illumina/fastq/ABM_DNA_S10-1_4_1.fastq.gz	data/illumina/fastq/ABM_DNA_S10-1_4_2.fastq.gz
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi/ABM_DNA_S11-2_5_HiFi.gbk	data/illumina/fastq/ABM_DNA_S11-2_5_1.fastq.gz	data/illumina/fastq/ABM_DNA_S11-2_5_2.fastq.gz
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi/ABM_DNA_S12-2_6_HiFi.gbk	data/illumina/fastq/ABM_DNA_S12-2_6_1.fastq.gz	data/illumina/fastq/ABM_DNA_S12-2_6_2.fastq.gz
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi/ABM_DNA_S9-1_3_HiFi.gbk	data/illumina/fastq/ABM_DNA_S9-1_3_1.fastq.gz	data/illumina/fastq/ABM_DNA_S9-1_3_2.fastq.gz
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi/ABM_July_1_HiFi.gbk	data/illumina/fastq/ABM_July_1_1.fastq.gz	data/illumina/fastq/ABM_July_1_2.fastq.gz
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi/ABM_July_2_HiFi.gbk	data/illumina/fastq/ABM_July_2_1.fastq.gz	data/illumina/fastq/ABM_July_2_2.fastq.gz
+/vast/xa73pav/projects/p_mauri_hybrid_assembly/results/0081_annotation_bacteria_by_prokka/raw_files/ABM_DNA_S10-1_4_HiFi//ABM_NL1369-1_7_HiFi.gbk	data/illumina/fastq/ABM_NL1369-1_7_1.fastq.gz	data/illumina/fastq/ABM_NL1369-1_7_2.fastq.gz
 
-## give a single reference fasta or gbk sequence file including path 
-my_ref_seq	data/MN988491_1_Rhizobium_phage_RHph_Y3_36.gbk
+## for single end sequencing 
+#assembly_or_fasta_gbk_ids	single_fastq_filepath
+data/my_fasta/canu.barcode01.gbk	data/my_fasta/barcode01.fastq.gz
+data/my_fasta/canu.barcode04.fasta	data/my_fasta/barcode04.fastq.gz
+data/my_fasta/canu.barcode07.fasta	data/my_fasta/barcode07.fastq.gz
+
+## Wish to construct phylongey based on core SNPs :  Yes or No
+my_phylogeny	No
