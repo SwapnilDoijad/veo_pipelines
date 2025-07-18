@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name get_reads
-#SBATCH --partition=interactive
+#SBATCH --partition=standard,long
 #SBATCH --output results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.out.get_reads
 #SBATCH --error results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.err.get_reads
 ###############################################################################

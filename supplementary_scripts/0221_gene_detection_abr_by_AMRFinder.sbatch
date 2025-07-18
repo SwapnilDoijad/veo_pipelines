@@ -39,10 +39,18 @@
                 fi
 
             awk 'FNR>1' $raw_files/$fasta.csv >> $raw_files/tmp/all.txt
+            
+            sed "s/^/$i\t/g"  $raw_files/$i.fasta.csv \
+            | sed "0,/$i/s/$i/id/" \
+            > $raw_files/$i.fasta.tsv
+
             else
             log "ALREADY FINISHED : $pipeline : $fasta"
         fi
     done
+
+    sed '/Method/d' $raw_files/*.fasta.tsv \
+    >> $raw_files/tmp/combined.fasta.tsv
 
     log "ENDED : $pipeline : sbatch for $sublist"
 ###############################################################################

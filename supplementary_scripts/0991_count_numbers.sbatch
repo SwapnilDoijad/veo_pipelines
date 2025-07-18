@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=04_0991_calculate_abundance_from_fastq
-#SBATCH --partition=gpu-test
+#SBATCH --partition=standrd,long
 #SBATCH --output=results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.out.count
 #SBATCH --error=results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.err.count
 #SBATCH --cpus-per-task=24

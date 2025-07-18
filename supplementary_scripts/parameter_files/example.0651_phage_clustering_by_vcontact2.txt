@@ -23,4 +23,4 @@ my_faa_path	/vast/xa73pav/projects/p_yin_phage/results/0083_annotation_prophage_
 # 	ArchaeaViralRefSeq207-Merged
 # 	ArchaeaViralRefSeq211-Merged
 
-my_database=ProkaryoticViralRefSeq85-ICTV
+my_database ProkaryoticViralRefSeq85-ICTV

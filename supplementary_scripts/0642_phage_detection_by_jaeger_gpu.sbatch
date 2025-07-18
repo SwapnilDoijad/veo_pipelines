@@ -1,64 +1,27 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0642_phage_detection_by_jaeger_gpu
-#SBATCH --partition=gpu,gpu-veo,gpu-test
+#SBATCH --partition=short
 #SBATCH --output=results/0642_phage_detection_by_jaeger_gpu/tmp/slurm/%j.out
 #SBATCH --error=results/0642_phage_detection_by_jaeger_gpu/tmp/slurm/%j.err
-#SBATCH --gres=gpu:1
 ###############################################################################
 ## step-01: preparation
     pipeline=0642_phage_detection_by_jaeger_gpu
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
 
-    module load nvidia/cuda/12.1.0
-    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
-    conda activate jaeger_dev
-    # conda activate jaeger_v1.1.30a0
-    # module load nvidia/cuda/11.7 
+
 
     fasta_path=$(grep "fasta_path" $parameters | awk '{print $2}')
 ###############################################################################
 ## step-02: main command 
 
-    log "STARTED : $pipeline : sbatch for $sublist"
 
-    for i in $(cat $sublist); do 
-        if [ ! -d $raw_files/prophage/$i ] ; then
-            log "STARTED : $pipeline : sbatch for $sublist : $i "
-            
-            export TF_CPP_MIN_LOG_LEVEL=3
 
-            ## phage and prophage detection
-            python3 /home/groups/VEO/tools/jaeger/v1.1.30a0/Jaeger/bin/jaeger run \
-            -p -i $fasta_path/$i.fasta -o $raw_files/prophage --batch 40  \
-            & my_pid=$!
-            get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
-
-            ## Depreciated as it will get only phage (no prophage); above step get both
-                ## Jaeger -i $fasta_path -o $raw_files/ --batch 40 &
-                    # python3 /home/groups/VEO/tools/jaeger/v1.1.30a0/Jaeger/bin/jaeger run \
-                    # -i $fasta_path/$i.fasta -o $raw_files/phage --batch 40  \
-                    # & my_pid=$!
-                    # get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.phage.tsv
-
-            log "FINISHED : $pipeline : sbatch for $sublist : $i "
-        else
-            log "ALREADY FINISHED : $pipeline : sbatch for $sublist : $i "
-        fi 
-    done
 ###############################################################################
 ## step-04: post-processing
-
-    for i in $(cat $sublist); do 
-        prophage_count=$(tail -n +2 $raw_files/prophage/$i/"$i"_default_prophages/prophages_jaeger.tsv  | wc  -l)
-        phage_count=$( awk -F'\t' '$3=="phage" {print $0}' $raw_files/prophage/$i/"$i"_default_jaeger.tsv | wc -l )
-        echo -e "$i\t$phage_count\t$prophage_count" | tee -a $wd/phage_prophage_count.tsv
-    done
-
     ## extract phage fasta
     for i in $(cat $sublist); do
-        if [ ! -f $wd/extracted_fasta/$i/$i.phage.fasta ] ; then 
             log "STARTED : $pipeline : extracting fasta for $i"
             mkdir -p $wd/extracted_fasta/$i
 
@@ -72,13 +35,20 @@
                 -f $raw_files/prophage/$i/$i.contigs_jaeger.tsv.phage.list \
                 $fasta_path/$i.fasta \
                 > $wd/extracted_fasta/$i/$i.phage.fasta
-                
-                sed -i "s/>/>"$i"_phage/g" $wd/extracted_fasta/$i/$i.phage.fasta
+
+                sed -i "s/>/>"$i"_phage_/g" $wd/extracted_fasta/$i/$i.phage.fasta
                 sed -i "s/ /_/g" $wd/extracted_fasta/$i/$i.phage.fasta
+
+                /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_multifasta.sh \
+                -i $wd/extracted_fasta/$i/$i.phage.fasta \
+                -o $wd/extracted_fasta/$i
+                
+                rm -rf $wd/extracted_fasta/$i/$i.phage.fasta
+            
             fi
 
             ## extract prophage fasta
-            awk 'NR>1 {print $1, $9, $12}' \
+            awk -F'\t' 'NR>1 {print $1, $9, $12}' \
             $raw_files/prophage/$i/"$i"_default_prophages/prophages_jaeger.tsv \
             > $raw_files/prophage/$i/$i.contigs_jaeger.tsv.prophage.list
 
@@ -90,12 +60,7 @@
 
                 rm -rf $fasta_path/$i.fasta.fai
             done < $raw_files/prophage/$i/$i.contigs_jaeger.tsv.prophage.list
-
-
-            log "FINISHED : $pipeline : extracting fasta for $i"
-            else
-            log "ALREADY FINISHED : $pipeline : extract fasta for $i"
-        fi 
+            
     done
 
     # for i in $(cat $sublist); do

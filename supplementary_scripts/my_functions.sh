@@ -1,14 +1,16 @@
 #!/bin/bash
 source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
-wd=results/$pipeline
-raw_files=$wd/raw_files
+wd="results/$pipeline"
+raw_files="$wd/raw_files"
 pn=$(echo $pipeline | awk -F'_' '{print $1}' ) # pipeline number
 ## paths
-yq=/home/groups/VEO/tools/yq/v4.42.1/yq
+yq="/home/groups/VEO/tools/yq/v4.42.1/yq"
 suppl_scripts="/home/groups/VEO/scripts_for_users/supplementary_scripts"
-my_tool_path="/home/groups/VEO/tools"
+utilities="/home/groups/VEO/scripts_for_users/supplementary_scripts/utilities"
+plots="/home/groups/VEO/scripts_for_users/supplementary_scripts/plots"
+tools="/home/groups/VEO/tools"
 scripts_for_users_path="/home/groups/VEO/scripts_for_users"
-parameters=tmp/parameters/$pipeline.*
+parameters="tmp/parameters/$pipeline.*"
 files_in_data_directory="tmp/parameters/files_in_data_directory.txt"
 
 if [ -f tmp/parameters/$pipeline.txt ]; then 
@@ -351,51 +353,23 @@ submit_sbatch_and_wait_till_run_is_complete() {
 }
 
 # clean_empty_files_and_dirs -i /path/to/directory
-clean_empty_files_and_dirs() {
-    local dir=""
+clean() {
+    find "$wd" -type f -empty -delete
+    find "$wd" -type d -empty -delete
+    ## send email notification
+        user=$(whoami)
+        user_name=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $2}')
+        # user_email=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $3}')
 
-    # Ensure at least two arguments are given (-i and directory)
-    if [[ $# -lt 2 ]]; then
-        echo "Error: No directory specified."
-        echo "Usage: clean_empty_files_and_dirs -i <directory>"
-        return 1
-    fi
+        sed "s/my_user/$user/g" $suppl_scripts/emails/general_log.py \
+        | sed "s/my_pipeline/$pipeline/g" | sed "s|my_dir|$wd|g" \
+        | sed "s/user_name/$user_name/g" | sed "s|my_jobid|$SLURM_JOB_ID|g" > tmp/$user.$SLURM_JOB_ID.general_log.py
 
-    # Parse command-line arguments
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -i)
-                shift
-                dir="$1"
-                shift
-                ;;
-            *)
-                echo "Error: Invalid argument '$1'."
-                echo "Usage: clean_empty_files_and_dirs -i <directory>"
-                return 1
-                ;;
-        esac
-    done
-
-    # Validate directory
-    if [[ -z "$dir" ]]; then
-        echo "Error: No directory specified."
-        echo "Usage: clean_empty_files_and_dirs -i <directory>"
-        return 1
-    fi
-
-    if [[ ! -d "$dir" ]]; then
-        echo "Error: Directory '$dir' does not exist."
-        return 1
-    fi
-
-    # Find and delete empty files
-    find "$dir" -type f -empty -delete
-
-    # Find and delete empty directories
-    find "$dir" -type d -empty -delete
+        source /home/groups/VEO/tools/email/myenv/bin/activate
+        python tmp/$user.$SLURM_JOB_ID.general_log.py
+        deactivate
+        rm -rf tmp/$user.$SLURM_JOB_ID.general_log.py
 }
-
 
 ## log_usage
 log_usage() {
@@ -532,5 +506,5 @@ get_resource_stat() {
 }
 
 
-
+log "$pipeline : $(whoami) : $(hostname)" >> /vast/groups/VEO/.veo_pipeline_usage.log
 

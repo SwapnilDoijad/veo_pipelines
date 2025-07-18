@@ -19,44 +19,6 @@ echo "script 0060_QC_genome-metagenome_assembly_by_metaquast started -----------
 	(mkdir -p results/0060_QC_genome-metagenome_assembly_by_metaquast/all_fasta ) > /dev/null 2>&1
 
 ###############################################################################
-## step-01: copy data
-
-    if [ ! -d results/0060_QC_genome-metagenome_assembly_by_metaquast/all_fasta ] ; then 
-    for i in $(cat $list); do  
-
-        ( mkdir -p results/0060_QC_genome-metagenome_assembly_by_metaquast/all_fasta/$i ) > /dev/null 2>&1
-
-        if [ -d results/0051_metagenome_assembly_by_canu/raw_files/ ] ; then 
-            if [ -f results/0051_metagenome_assembly_by_canu/raw_files/$i/$i.contigs.fasta ] ; then
-                ( cp results/0051_metagenome_assembly_by_canu/raw_files/$i/$i.contigs.fasta \
-                results/0060_QC_genome-metagenome_assembly_by_metaquast/all_fasta/$i/canu.$i.fasta ) > /dev/null 2>&1
-                else
-                echo "results/0051_metagenome_assembly_by_canu/raw_files/$i/$i.contigs.fasta not available"
-            fi
-        fi 
-
-        if [ -d results/0052_metagenome_assembly_by_fly/raw_files/ ] ; then 
-            if  [ -f results/0052_metagenome_assembly_by_fly/raw_files/$i/assembly.fasta ] ; then
-                ( cp results/0052_metagenome_assembly_by_fly/raw_files/$i/assembly.fasta \
-                results/0060_QC_genome-metagenome_assembly_by_metaquast/all_fasta/$i/fly.$i.fasta ) > /dev/null 2>&1
-                else
-                echo "results/0052_metagenome_assembly_by_fly/raw_files/$i/assembly.fasta not available" 
-            fi
-        fi 
-
-        if [ -d results/0053_metagenome_assembly_by_raven/raw_files/ ] ; then 
-            if [ -f results/0053_metagenome_assembly_by_raven/raw_files/$i.fasta ]; then 
-                ( cp results/0053_metagenome_assembly_by_raven/raw_files/$i.fasta \
-                results/0060_QC_genome-metagenome_assembly_by_metaquast/all_fasta/$i/raven.$i.fasta ) > /dev/null 2>&1
-                else
-                echo "results/0053_metagenome_assembly_by_raven/raw_files/$i.fasta not available"
-            fi
-        fi
-
-    done 
-    fi 
-
-###############################################################################
 ## step-02: run metaquast
     
     for i in $(cat $list); do  

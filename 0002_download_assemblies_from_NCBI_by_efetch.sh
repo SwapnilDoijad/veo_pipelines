@@ -12,6 +12,7 @@ echo "script 0002 download assemblies from NCBI started ------------------------
 
     (mkdir -p results/0040_assembly/all_fasta ) > /dev/null 2>&1
     
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate perl_v5.32.1
 ###############################################################################
 for i in $(cat $list);do
     echo $i
@@ -44,4 +45,9 @@ done
 echo "script 0002 download assemblies from NCBI ended --------------------------------" 
 ###############################################################################
 exit
+
+for acc in NZ_JBGKEB000000000 NZ_JBGKEC000000000 NZ_JBGIWG000000000 NZ_JBGMSK000000000; do
+     /home/groups/VEO/tools/edirect/esearch -db nucleotide -query "$acc" | efetch -format fasta > "${acc}.fasta"
+done
+
 

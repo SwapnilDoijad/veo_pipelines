@@ -1,0 +1,8 @@
+## This is a parameter file for 0654_phage_clustering_by_vclust pipeline
+## please give a path of a single folder in which single or all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path accordingto your data):
+my_fasta_path	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complete_high
+
+## do you need a figure? Yes or No. if more than 200 phages it takes more than 1 hour
+my_figure   No

@@ -7,8 +7,8 @@
 ###############################################################################
     fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
     type_strain_fasta_directory=$( grep my_type_strain_fasta_path $parameters | awk '{print $2}' )
-    ls $fasta_directory | sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.txt
-    ls $type_strain_fasta_directory | sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.type_strain.txt
+    ls $fasta_directory | grep -v "fasta.fai" |  sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.txt
+    ls $type_strain_fasta_directory | grep -v "fasta.fai" |  sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.type_strain.txt
     list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
@@ -22,3 +22,4 @@
 ###############################################################################
 
 
+    

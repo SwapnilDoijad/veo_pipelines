@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0069_identification_by_ANI_by_mash
-#SBATCH --partition=interactive,short,long,standard,gpu-veo
+#SBATCH --partition=standard,long,gpu,gpu-test,gpu-veo
 #SBATCH --output=results/0069_identification_by_ANI_by_mash/tmp/slurm/%j.out
 #SBATCH --error=results/0069_identification_by_ANI_by_mash/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=80

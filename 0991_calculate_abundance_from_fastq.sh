@@ -19,7 +19,9 @@
 
         ## 3: try with 16S database only
 
-    sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/0991_calculate_abundance_from_fastq.sbatch
-    
+    create_directories_structure_1 $wd
+    cp $suppl_scripts/$pipeline.sbatch $wd/tmp/
+    sbatch $wd/tmp/$pipeline.sbatch
+
     echo "ENDED : $pipeline --------------------------------------"
 ###############################################################################

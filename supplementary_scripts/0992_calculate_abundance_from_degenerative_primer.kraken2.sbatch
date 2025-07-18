@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0992_kraken2
-#SBATCH --partition=interactive,long,standard,gpu-veo
+#SBATCH --partition=standard,long,gpu-veo,gpu,gpu-test,interactive
 #SBATCH --output=results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.out.kraken2
 #SBATCH --error=results/0992_calculate_abundance_from_degenerative_primer/tmp/slurm/%j.err.kraken2
 #SBATCH --cpus-per-task=40
@@ -15,8 +15,16 @@ sample=my_sample
 mismatch=my_mismatch
 QC=my_QC_value
 	
+if [ "$database" = "silva"]; then
+		database_path=/veodata/03/databases/kraken2/silva_16s_138
+	elif [ "$database" = "kraken2" ]; then
+		database_path=/veodata/03/databases/kraken2/v20240605
+	else
+		log "invalid database name: $database"
+fi
+
 	/home/groups/VEO/tools/kraken2/v2.1.2/kraken2 \
-	--db /veodata/03/databases/kraken2/v20240605 \
+	--db $database_path \
 	--output $raw_files/kraken2/hits/$subsample.$sample.$mismatch.fastq.fasta.out \
 	--report $raw_files/kraken2/hits/$subsample.$sample.$mismatch.fastq.fasta.report \
 	--threads $SLURM_CPUS_PER_TASK \

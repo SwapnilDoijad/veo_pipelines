@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0991_calculate_abundance_from_fastq
-#SBATCH --partition=gpu-veo,interactive,standard,long
+#SBATCH --partition=standard,long
 #SBATCH --output=results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.out
 #SBATCH --error=results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
@@ -12,6 +12,8 @@
 	(mkdir -p $wd/tmp/list_BarcodePrimers/samples ) > /dev/null 2>&1
 
     create_directories_structure_1 $wd
+    awk '/# ----------/{flag=!flag; next} flag' $parameters > tmp/parameters/$pipeline.my_barcode.txt
+    awk 'NR>1 {print $2}' tmp/parameters/$pipeline.my_barcode.txt > $wd/tmp/lists/samples.txt
     subsampling=no
     QC=10
     my_blast_mismatches=( 100 ) ## 10 15 100
@@ -20,22 +22,24 @@
     maxlength=$(( $anticipated_read_length + 300 ))
     rawFastqFile=$(grep my_fastq_file $parameters | awk $fastq_path '{print $2}')
     filteredFastqFile=$raw_files/all_combined.$QC.fastq
+    tool=$(grep my_tool $parameters | awk '{print $2}')
+    mismatches=(0)
     # mismatches=( 0 1 2 3 4)
     # subsamples_list=( 1000000 2000000 3000000 4000000 )
 	bp=$wd/tmp/list_BarcodePrimers
     threads=20
     run_id=$( pwd | awk -F'/' '{print $NF}' | awk -F'_' '{print $NF}') ## only for some analysis
     
-    database_parameter=$( grep my_database $parameters | awk $fastq_path '{print $2}' )
-    log "database_parameter : $database_parameter"
-    if [[ $database_parameter == "silva" ]] ; then 
+    database=$( grep my_database $parameters | awk $fastq_path '{print $2}' )
+    log "database : $database"
+    if [[ $database == "silva" ]] ; then 
         log "database : using silva"
-		database="/veodata/03/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db"
-	elif [[ $database_parameter == "query_sequences" ]] ; then 
+		database_path="/veodata/03/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db"
+	elif [[ $database == "query_sequences" ]] ; then 
         log "database : using query_sequences"
-		database="$wd/databases/query_sequence.fasta.db"
+		database_path="$wd/databases/query_sequence.fasta.db"
 	else
-		echo "ERROR: database not found (database_parameter=$database_parameter)"
+		echo "ERROR: database not found (database=$database)"
 		exit 1
 	fi
 
@@ -46,6 +50,18 @@
         rawFastqFile=$wd/all_combined.fastq
     fi
 
+    echo "---------------------------------------------------------------------"
+    echo "pipeline: $pipeline"
+    echo "subsampling: $subsampling"
+    echo "QC: $QC"
+    echo "anticipated_read_length: $anticipated_read_length"
+    echo "minlength: $minlength"
+    echo "maxlength: $maxlength"
+    echo "rawFastqFile: $rawFastqFile"
+    echo "filteredFastqFile: $filteredFastqFile"
+    echo "tool: $tool"
+    echo "threads: $threads"
+    echo "---------------------------------------------------------------------"
 ###############################################################################   
 ## step-01: create barcode files 
     if [ ! -f $bp/list.barcodes_all.RC.txt ] ; then 
@@ -105,7 +121,7 @@
         
     ## count total number of reads 
     if [ ! -f $wd/tmp/total_number_of_reads.txt ] ; then 
-        echo "calculating total number of reads"
+        log "RUNNING : calculating total number of reads"
         count_reads_from_fastq $rawFastqFile > $wd/tmp/total_number_of_reads.txt
         else
         log "ALREADY FINISHED : total number of reads"
@@ -188,20 +204,20 @@
 
             for barcode_FR in $(cat $bp/list.barcodes_all.FR.txt); do 
                 if [ ! -f $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.only.$subsample.txt ] ; then 
-                    log "creating and submitting sbatch for $barcode_FR $barcode_FR"
-                    sed "s/ABC/$barcode_FR/g" /home/groups/VEO/scripts_for_users/supplementary_scripts/0991_extract_read_ids.sbatch | sed "s/XYZ/$subsample/g" \
-                    > $wd/tmp/sbatch/extract_read_ids.$barcode_FR.$subsample.sbatch
-                    sbatch $wd/tmp/sbatch/extract_read_ids.$barcode_FR.$subsample.sbatch
+                    log "creating and submitting sbatch for barcode_FR $barcode_FR "
+                    sed "s/ABC/$barcode_FR/g" /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.extract_read_ids.FR.sbatch | sed "s/XYZ/$subsample/g" \
+                    > $wd/tmp/sbatch/extract_read_ids.$barcode_FR.$subsample.FR.sbatch
+                    sbatch $wd/tmp/sbatch/extract_read_ids.$barcode_FR.$subsample.FR.sbatch
                     wait_for_jobs_to_complete 50
                 fi
             done
             
             for barcode_RC in $(cat $bp/list.barcodes_all.RC.txt); do 
                 if [ ! -f $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.only.$subsample.txt ] ; then 
-                    log "creating and submitting sbatch for $barcode_RC $barcode_RC"
-                    sed "s/ABC/$barcode_RC/g" /home/groups/VEO/scripts_for_users/supplementary_scripts/0991_extract_read_ids.sbatch | sed "s/XYZ/$subsample/g" \
-                    > $wd/tmp/sbatch/extract_read_ids.$barcode_RC.$subsample.sbatch
-                    sbatch $wd/tmp/sbatch/extract_read_ids.$barcode_RC.$subsample.sbatch
+                    log "creating and submitting sbatch for barcode_RC $barcode_RC"
+                    sed "s/ABC/$barcode_RC/g" /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.extract_read_ids.RC.sbatch | sed "s/XYZ/$subsample/g" \
+                    > $wd/tmp/sbatch/extract_read_ids.$barcode_RC.$subsample.RC.sbatch
+                    sbatch $wd/tmp/sbatch/extract_read_ids.$barcode_RC.$subsample.RC.sbatch
                     wait_for_jobs_to_complete 50
                 fi
             done
@@ -212,10 +228,10 @@
         log "ALREADY FINISHED : extract_read-ids_from_fastq_if_pattern_present"
     fi
 
-    wait_till_all_job_finished 01_0991
+    wait_till_all_job_finished_with_name 01_0991
     # first checkpoint for sbatch 
     # exit 
-###############################################################################
+############################################################################### 
 ## step-06: combine read ids from F, R and RC sequences, remove duplicates, also make a count
     mkdir $raw_files/read_ids_extracted_per_sample > /dev/null 2>&1
 
@@ -230,21 +246,23 @@
             log "RUNNING: $subsample combining read ids, removing duplicates and counting "
             while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do
                 sample_id=$(grep "$barcode_FR.$barcode_RC" $bp/list.barcodes.names.txt | awk '{print $2}')
-                num_of_barcode_FR=$( wc -l $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.$subsample.txt | awk '{print $1}' )
-                num_of_barcode_RC=$( wc -l $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.$subsample.txt | awk '{print $1}' )
+                num_of_barcode_FR=$( wc -l $raw_files/read_ids_extracted/list.$sample_id.$barcode_FR.FR.read_ids.$subsample.txt | awk '{print $1}' )
+                num_of_barcode_RC=$( wc -l $raw_files/read_ids_extracted/list.$sample_id.$barcode_RC.RC.read_ids.$subsample.txt | awk '{print $1}' )
+
+                echo "$sample_id $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC" 
                 num_of_new_reads_by_RC=$(diff \
-                $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.only.$subsample.txt \
-                $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.only.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$sample_id.$barcode_FR.FR.read_ids.only.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$sample_id.$barcode_RC.RC.read_ids.only.$subsample.txt \
                 | grep "^>" | sed 's/^> //' | wc -l )
 
-                cat $raw_files/read_ids_extracted/list.$barcode_FR.read_ids.only.$subsample.txt \
-                $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.only.$subsample.txt | \
-                sort | uniq | sed 's/\@//g' > $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids.only.$subsample.txt
+                cat $raw_files/read_ids_extracted/list.$sample_id.$barcode_FR.FR.read_ids.only.$subsample.txt \
+                $raw_files/read_ids_extracted/list.$sample_id.$barcode_RC.RC.read_ids.only.$subsample.txt | \
+                sort | uniq | sed 's/\@//g' > $raw_files/read_ids_extracted/list.$sample_id.$barcode_FR.$barcode_RC.read_ids.only.$subsample.txt_FR_RC
 
                 non_duplicate_read_ids=$(($num_of_barcode_FR + $num_of_new_reads_by_RC ))
 
                 echo $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC $num_of_new_reads_by_RC $non_duplicate_read_ids \
-                > $raw_files/read_ids_extracted/number_of_reads.$barcode_FR.$barcode_RC.read_ids.$subsample.txt
+                > $raw_files/read_ids_extracted/number_of_reads.$sample_id.read_ids.$subsample.txt
 
                 echo $sample_id $barcode_FR $barcode_RC $num_of_barcode_FR $num_of_barcode_RC $num_of_new_reads_by_RC $non_duplicate_read_ids \
                 | sed 's/ /\t/g' >> $wd/tmp/number_of_reads.read_ids.$subsample.tsv
@@ -252,25 +270,27 @@
             done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
 
             ## calculate total number of reads per sample (combine and remove duplicate reads ids from two combination of FR and RC for each sample)
-            echo "sample_id FR_RC_seqeuence_1_for_sample FR_RC_seqeuence_2_for_sample numberOfNonDuplicateReadsPerSample" \
-            | sed 's/ /\t/g' > $wd/tmp/number_of_reads_per_sample.$subsample.tsv
+            if [ ! -f $wd/tmp/number_of_reads_per_sample.$subsample.tsv ]; then
+                echo "sample_id FR_RC_seqeuence_1_for_sample FR_RC_seqeuence_2_for_sample numberOfNonDuplicateReadsPerSample" \
+                | sed 's/ /\t/g' > $wd/tmp/number_of_reads_per_sample.$subsample.tsv
 
-            for sample_id in $(cat $bp/list.samples.txt); do 
+                for sample_id in $(cat $bp/list.samples.txt); do
+                        # sample_id=$(grep "$barcode_FR.$barcode_RC" $bp/list.barcodes.names.txt | awk '{print $2}')
 
-                FR_RC_seqeuence_1_for_sample=$(grep -w "$sample_id" $bp/list.barcodes.names.txt | awk 'NR==1 {print $1}')
-                FR_RC_seqeuence_2_for_sample=$(grep -w "$sample_id" $bp/list.barcodes.names.txt | awk 'NR==2 {print $1}')
-                
-                cat $raw_files/read_ids_extracted/list.$FR_RC_seqeuence_1_for_sample.read_ids.only.$subsample.txt \
-                $raw_files/read_ids_extracted/list.$FR_RC_seqeuence_2_for_sample.read_ids.only.$subsample.txt \
-                | sort | uniq \
-                > $raw_files/read_ids_extracted_per_sample/$sample_id.$subsample.tsv
+                        FR_RC_seqeuence_1_for_sample=$(grep -w $sample_id $bp/list.barcodes.names.txt | awk '{print $1}' | sed -n '1p' )
+                        FR_RC_seqeuence_2_for_sample=$(grep -w $sample_id $bp/list.barcodes.names.txt | awk '{print $1}' | sed -n '2p' )
 
-                number_of_nonDuplicate_reads_for_sample=$( wc -l $raw_files/read_ids_extracted_per_sample/$sample_id.$subsample.tsv | awk '{print $1}')
+                        cat $raw_files/read_ids_extracted/list.$sample_id.*.*.read_ids.only.$subsample.txt_FR_RC \
+                        | sort | uniq \
+                        > $raw_files/read_ids_extracted_per_sample/$sample_id.$subsample.tsv
 
-                echo $sample_id $FR_RC_seqeuence_1_for_sample $FR_RC_seqeuence_2_for_sample $number_of_nonDuplicate_reads_for_sample \
-                | sed 's/ /\t/g' >> $wd/tmp/number_of_reads_per_sample.$subsample.tsv
-                
-            done
+                        number_of_nonDuplicate_reads_for_sample=$( wc -l $raw_files/read_ids_extracted_per_sample/$sample_id.$subsample.tsv | awk '{print $1}')
+
+                        echo $sample_id $FR_RC_seqeuence_1_for_sample $FR_RC_seqeuence_2_for_sample $number_of_nonDuplicate_reads_for_sample \
+                        | sed 's/ /\t/g' >> $wd/tmp/number_of_reads_per_sample.$subsample.tsv
+
+                done
+            fi 
 
             else
             log "ALREADY FINISHED : $subsample combining read ids, removing duplicates and counting"
@@ -285,17 +305,19 @@
         ( mkdir $raw_files/read_ids_extracted_fastq ) > /dev/null 2>&1
 
         for subsample in "${subsamples[@]}"; do
-            while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do
-                if [ ! -f  $raw_files/read_ids_extracted_fastq/$barcode.$barcode_RC.$subsample.fastq ] ; then 
-                    log "step-07: get seperate fastqs for barcode/match for $barcode_FR $barcode_RC $subsample"
-                    sed "s/ABC/$barcode_FR/g" $suppl_scripts/0991_calculate_abundance_from_fastq.get_reads_by_seqtk.sbatch \
-                    | sed "s/DEF/$barcode_RC/g" | sed "s/JKL/$subsample/g" | sed "s/my_QC_value/$QC/g" \
-                    > $wd/tmp/sbatch/0991_calculate_abundance_from_fastq.get_reads_by_seqtk.$barcode.$barcode_RC.$subsample.sbatch
-                    sbatch $wd/tmp/sbatch/0991_calculate_abundance_from_fastq.get_reads_by_seqtk.$barcode.$barcode_RC.$subsample.sbatch
-                    
+            # while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do
+            for sample_id in $(cat $bp/list.samples.txt); do 
+                if [ ! -f  $raw_files/read_ids_extracted_fastq/$sample_id.$subsample.fastq ] ; then 
+                    log "step-07: get seperate fastqs for barcode/match for $sample_id $subsample"
+                    sed "s/my_sample_id/$sample_id/g" $suppl_scripts/$pipeline.get_reads_by_seqtk.sbatch \
+                    | sed "s/JKL/$subsample/g" | sed "s/my_QC_value/$QC/g" \
+                    > $wd/tmp/sbatch/$pipeline.get_reads_by_seqtk.$sample_id.$subsample.sbatch
+                    sbatch $wd/tmp/sbatch/$pipeline.get_reads_by_seqtk.$sample_id.$subsample.sbatch
+
                     wait_for_jobs_to_complete 50
                 fi 
-            done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
+            # done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
+            done
 
         done 
 
@@ -303,7 +325,7 @@
         log "ALREADY FINISHED : get seperate fastqs for barcode_FR and barcode_RC"
     fi
 
-    wait_till_all_job_finished 02_0991
+    wait_till_all_job_finished_with_name 02_0991
     ## second checkpoint for sbatch stop
     # exit 
 
@@ -311,12 +333,13 @@
     if [ ! -f $wd/tmp/percentage_reads_binned.$subsample.txt ] ; then 
         number_of_reads=0
         for subsample in "${subsamples[@]}"; do
-            while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do
-                reads_in_file=$( count_reads_from_fastq raw_files/read_ids_extracted_fastq/$barcode.$barcode_RC.$QC.$subsample.fastq )
+            for sample_id in $(cat $bp/list.samples.txt); do
+                echo "counting reads for $sample_id.$subsample"
+                reads_in_file=$( count_reads_from_fastq $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fastq )
                 # echo $barcode.$barcode_RC.$subsample : $reads_in_file
                 total_number_of_reads=$(( $number_of_reads + $reads_in_file ))
                 number_of_reads=$total_number_of_reads
-            done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
+            done
         done 
         percentage_reads_got_binned=$(( $number_of_reads * 100 / $subsample ))
         echo "$percentage_reads_got_binned percentage ($number_of_reads/$subsample) of reads binned" \
@@ -324,35 +347,38 @@
     fi
     percentage_reads_binned=$(cat $wd/tmp/percentage_reads_binned.$subsample.txt )
     log "percentage_reads_binned : $percentage_reads_binned"
- 
+
 ###############################################################################
 ## step-08: fastq2fasta for filtered reads  
     ## for better subsequent processing, need to convert fastq to fasta
     if [ ! -f $wd/tmp/total_number_of_reads_in_FR_RC_fasta.txt ] ; then 
+        echo A
         for subsample in "${subsamples[@]}"; do
-            while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do 
-                if [ ! -f  $raw_files/read_ids_extracted_fastq/$barcode_FR.$barcode_RC.$QC.fastq.$subsample.fasta ] ; then 
-                    echo "$barcode_FR && $barcode_RC for $subsample"
+            # while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do 
+            for sample_id in $(cat $bp/list.samples.txt); do
+                if [ ! -f  $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fasta ] ; then 
+                    echo "$sample_id for $subsample"
                     python3 $suppl_scripts/0991_fastq2fasta.py \
-                    -i  $raw_files/read_ids_extracted_fastq/$barcode_FR.$barcode_RC.$QC.$subsample.fastq \
-                    -o  $raw_files/read_ids_extracted_fastq/$barcode_FR.$barcode_RC.$QC.fastq.$subsample.fasta
+                    -i  $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fastq \
+                    -o  $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fasta
 
-                    lines_in_fasta10=$(wc -l  $raw_files/read_ids_extracted_fastq/$barcode_FR.$barcode_RC.$QC.fastq.$subsample.fasta | awk '{print $1}')
-                    reads_in_fasta10=$(( $lines_in_fasta10 / 2 ))
-                    echo "$barcode_FR $barcode_RC $reads_in_fasta10" | tee -a $wd/tmp/total_number_of_reads_in_FR_RC_fasta.txt
+                    sed -i 's/@//g' $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fasta
+                    sed -i 's/ .*//g' $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fasta
+                    lines_in_fasta=$(wc -l  $raw_files/read_ids_extracted_fastq/$sample_id.$QC.$subsample.fasta | awk '{print $1}')
+                    reads_in_fasta=$(( $lines_in_fasta / 2 ))
+                    echo "$sample_id $reads_in_fasta10" | tee -a $wd/tmp/total_number_of_reads_in_FR_RC_fasta.txt
                 fi 
             done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
         done
+        else
         log "ALREADY FINISHED : fastq2fasta for filtered reads"
     fi
- 
+
 ###############################################################################
 ## step-09: QC: count the number of reads  
     if [ ! -f $wd/tmp/total_number_of_reads.$QC.txt ] ; then 
         for subsample in "${subsamples[@]}"; do
-            while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do 
-
-                sample_id=$(grep $barcode.$barcode_RC $bp/list.barcodes.names.txt | awk '{print $2}')
+            for sample_id in $(cat $bp/list.samples.txt); do
                 number_of_reads_ids_in_FR=$( wc -l $raw_files/read_ids_extracted/list.$barcode.read_ids.$subsample.txt | awk '{print $1}' )
                 number_of_reads_ids_in_RC=$( wc -l $raw_files/read_ids_extracted/list.$barcode_RC.read_ids.$subsample.txt | awk '{print $1}' )
                 number_of_total_read_ids=$(( $number_of_reads_ids_in_FR + $number_of_reads_ids_in_RC )) ## here duplicates are not removed
@@ -369,7 +395,9 @@
                 echo "$sample_id $barcode && $barcode_RC : $number_of_total_read_ids $non_duplicate_reads $reads_10 $reads_in_fasta10" \
                 | tee -a $wd/tmp/total_number_of_reads.$QC.txt
 
-            done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
+                number_of_reads=$( wc -l $raw_files/read_ids_extracted/list.$read_ids.read_ids.$subsample.txt | awk '{print $1}' )
+
+            done 
         done
     fi
 
@@ -377,8 +405,8 @@
 
 ###############################################################################
 ## step-10a: run blast  
-
-    if [[ $database_parameter == "query_sequences" ]] ; then
+    if [ "$tool" = "blast" ] ; then
+    if [[ $database == "query_sequences" ]] ; then
         if [ ! -d $wd/databases ] ; then
             ( mkdir -p $wd/databases )
             ## reformat multi-line fasta to one line fasta
@@ -414,7 +442,7 @@
         fi
         log "FINISHED : run blast"
 
-        wait_till_all_job_finished 03_0991
+        wait_till_all_job_finished_with_name 03_0991
         # third check point 
         # exit 
 
@@ -431,12 +459,12 @@
             fi
 
     fi
-
+    fi
 
 ###############################################################################
 ## step-10b: run kraken2
-
-    if [[ $database_parameter == "silva" ]] ; then
+    if [ "$tool" = "kraken2" ] ; then
+    if [[ $database == "silva" ]] ; then
         if [ ! -d $raw_files/kraken2 ] ; then
             mkdir -p $raw_files/kraken2/hits
             for subsample in "${subsamples[@]}"; do
@@ -458,12 +486,53 @@
                 done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
             done 
         fi
-        wait_till_all_job_finished 03_0991
-        exit 
+        wait_till_all_job_finished_with_name 03_0991
+        # exit 
     fi 
-
+    fi
     # exit 
 ############################################################################### 
+## step-10c: run emu
+    if [ "$tool" = "emu" ] ; then
+        if [ ! -d $raw_files/$tool/$database ]; then
+            mkdir -p $raw_files/$database/hits 
+            mkdir -p $raw_files/$tool/distribution
+            for subsample in "${subsamples[@]}"; do
+                for sample in $(cat $wd/tmp/lists/samples.txt ); do
+                for mismatch in "${mismatches[@]}"; do
+                    if [ ! -f $raw_files/$tool/$database/$subsample.$sample.$mismatch.fastq.fasta.tsv ] ; then
+                        sed "s/my_subsample/$subsample/g" $suppl_scripts/$pipeline.$tool.sbatch \
+                        | sed "s/my_sample/$sample/g" | sed "s/my_mismatch/$mismatch/g" | sed "s/my_qc_value/$QC/g" \
+                        > $wd/tmp/sbatch/$tool.$subsample.$sample.$mismatch.sbatch
+
+                        sbatch $wd/tmp/sbatch/$tool.$subsample.$sample.$mismatch.sbatch
+                    fi
+                    wait_for_jobs_to_complete 50
+                done
+                done
+            done
+        fi
+        wait_till_all_job_finished_with_name 0991_emu
+
+        source /home/groups/VEO/tools/biopython/myenv/bin/activate
+        python $suppl_scripts/utilities/combine_emu_output.py \
+        -d $raw_files/$tool/$database/ \
+        -o $wd/$tool.$database.combined.tsv
+
+        python $suppl_scripts/utilities/normalise_abundance_based_on_16S_copy.py \
+        -i $wd/$tool.$database.combined.tsv \
+        -o $wd/$tool.$database.combined.normalized.tsv \
+        -r /veodata/03/databases/rrnDB/v5.10/rrnDB-5.10_pantaxa_stats_RDP.tsv 
+
+        python $suppl_scripts/plots/0991_relative_abundance.py \
+        -i $wd/emu.silva.combined.tsv \
+        -o $wd/emu.silva.combined.tsv.png \
+        --group-by genus \
+        --top 25
+        deactivate
+    fi
+exit 
+###############################################################################
 ## step-11: count the numbers
     ## takes long (~OVERNIGHT) time 
     if [ ! -d  $raw_files/count  ] ; then 
@@ -486,7 +555,7 @@
             done
         done 
 
-        wait_till_all_job_finished 04_0991
+        wait_till_all_job_finished_with_name 04_0991
         ## fourth stop for sbatch
         # exit 
 
@@ -642,13 +711,13 @@
                 # done 
 ###############################################################################
 # email
-	# echo "sending email"
-    # user=$(whoami)
-    user_email=$(grep xa73pav /home/groups/VEO/scripts_for_users/supplementary_scripts/user_email.csv | awk -F'\t'  '{print $3}')
+	echo "sending email"
+    user=$(whoami)
+    user_email=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t'  '{print $3}')
 
     source /home/groups/VEO/tools/email/myenv/bin/activate
 
-    python /home/groups/VEO/scripts_for_users/supplementary_scripts/emails/$pipeline.py -e $user_email
+    python $suppl_scripts/emails/$pipeline.py -e $user_email
 
     deactivate
 ###############################################################################

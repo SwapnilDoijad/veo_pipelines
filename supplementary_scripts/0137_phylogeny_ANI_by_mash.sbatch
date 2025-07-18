@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0137_phylogeny_ANI_by_mash
-#SBATCH --partition=interactive,short,long
+#SBATCH --partition=long,standard,gpu,gpu-veo,gpu-test
 #SBATCH --output=results/0137_phylogeny_ANI_by_mash/tmp/slurm/%j.out
 #SBATCH --error=results/0137_phylogeny_ANI_by_mash/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=20
@@ -149,6 +149,7 @@
     rm -rf $wd/out.tab
     echo "post-calculations finished"
 
+exit
 ###############################################################################
 ## GGRaSP
     log "CONVERTING: distance_to_ani"
@@ -166,7 +167,7 @@
     ## sometime 234.140 is read by r as 234.14 and thus it ends up finding duplicates or wrong values
     awk 'NR==1 {print; next} { $1 = "ID_" $1; print }' OFS='\t' $raw_files/matrix.ANI.tab > $raw_files/matrix.ANI.prefixed.tab
 
-    (/home/groups/VEO/tools/ggrasp/v1.0/ggrasp.R  -i $raw_files/matrix.ANI.prefixed.tab --type matrix -d 100 -h 5.0000 -o $raw_files/representatives/representative_of_a_clusters_at_95.0000_250000nucl-5Mb-genome_ANI --plottree  --writetable 1 )> /dev/null 2>&1
+    (/home/groups/VEO/tools/ggrasp/v1.0/ggrasp.R  -i $raw_files/matrix.ANI.prefixed.tab --type matrix -d 100 -h 5.0000 -o $raw_files/representatives/representative_of_a_clusters_at_95.0000_250000nucl-5Mb-genome_ANI --plottree )> /dev/null 2>&1
     (/home/groups/VEO/tools/ggrasp/v1.0/ggrasp.R  -i $raw_files/matrix.ANI.prefixed.tab --type matrix -d 100 -h 0.0100 -o $raw_files/representatives/representative_of_a_clusters_at_99.9900_000500nucl-5Mb-genome_ANI --plottree )> /dev/null 2>&1
     (/home/groups/VEO/tools/ggrasp/v1.0/ggrasp.R  -i $raw_files/matrix.ANI.prefixed.tab --type matrix -d 100 -h 0.0050 -o $raw_files/representatives/representative_of_a_clusters_at_99.9950_000250nucl-5Mb-genome_ANI --plottree )> /dev/null 2>&1
     (/home/groups/VEO/tools/ggrasp/v1.0/ggrasp.R  -i $raw_files/matrix.ANI.prefixed.tab --type matrix -d 100 -h 0.0010 -o $raw_files/representatives/representative_of_a_clusters_at_99.9990_000050nucl-5Mb-genome_ANI --plottree )> /dev/null 2>&1

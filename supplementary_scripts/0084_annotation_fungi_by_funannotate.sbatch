@@ -70,6 +70,8 @@
             if [ ! -f results/0084_annotation_fungi_by_funannotate/raw_files/$i/funannotate/predict_results/*.gbk ] ; then
                 mkdir results/0084_annotation_fungi_by_funannotate/raw_files/$i/funannotate
 
+                export FUNANNOTATE_DB=/veodata/03/databases/funannotate_db/v20240128/
+
                 funannotate predict \
                 -i results/0084_annotation_fungi_by_funannotate/raw_files/$i/$i.cleaned.sorted.masked.fasta  \
                 -o results/0084_annotation_fungi_by_funannotate/raw_files/$i/funannotate \

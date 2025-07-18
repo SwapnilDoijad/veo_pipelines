@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0131_phylogeny_by_snippy
-#SBATCH --partition=interactive
+#SBATCH --partition=long,standard
 #SBATCH --output=results/0131_phylogeny_by_snippy/tmp/slurm/%j.out
 #SBATCH --error=results/0131_phylogeny_by_snippy/tmp/slurm/%j.err
 #SBATCH --mem=50G
@@ -31,7 +31,6 @@
                 log "RUNNING: snippy for $i $data_type "
                 mkdir $raw_files/$i 
 
-                get_resource_stat "$wd"/tmp/resource_log/$i.snippy.tsv \
                 snippy \
                 --cpus $SLURM_CPUS_PER_TASK \
                 --quiet \

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { color: #003366; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .sequence { font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Cluster Report</h1>
+    {% for cluster_id, items in clusters.items() %}
+        <h2>Cluster {{ cluster_id }}</h2>
+        <table>
+            <tr><th>Header_ID</th><th>Sequence</th><th>CRISPR_Length</th><th>Consensus_Repeat</th><th>Direction</th></tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item["Header_ID"] }}</td>
+                <td class="sequence">{{ item["Sequence"] }}</td>
+                <td>{{ item.get("CRISPR_Length", "") }}</td>
+                <td>{{ item.get("Consensus_Repeat", "") }}</td>
+                <td>{{ item.get("CRISPRDirection", "") }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+</body>
+</html>

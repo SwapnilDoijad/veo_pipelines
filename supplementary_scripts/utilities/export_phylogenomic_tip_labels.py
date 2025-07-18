@@ -24,3 +24,5 @@ if __name__ == "__main__":
 
     # Call the function to export tip labels
     export_tip_labels(args.input, args.output)
+
+#  source /home/groups/VEO/tools/biopython/myenv/bin/activate

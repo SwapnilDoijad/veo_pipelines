@@ -1,17 +1,23 @@
 ## This is a parameter file for 0992_calculate_abundance_from_degenerative_primer pipeline
+## input should be tab seperated
 ## please give a path of a single fastq file path
 ## note that all files should end with .fastq.gz
 ## example path is given below (change the path according to your data):
 my_fastq_file	data/all_combined.fastq.gz
 
-## Do you want to use the custom databse (your own sequences) or silva database?
+## which tool you want use for classification? kraken2 or emu 
+## kraken2 is faster but relatively less accurate (work with kraken2 or silva database)
+## emu is designed for the noist Nanopore reads and supposedly better (work with emu or silva database)
+## blast - classical - extremly slow but you get lot of parameter that you can use to control/filter your results (work with custom or silva database)
+my_tool	emu
 
 ## which database you want to use? custom or silva? 
 ## custom = query_sequences ( your own sequences in paramter file example.0992_calculate_abundance_from_degenerative_primer.query_sequence )
 ## silva =  silva ( /veodata/03/databases/silva/v138.1/SILVA_138.1_SSUParc_tax_silva.2.fasta.db ) ## take longer time
 ## kraken2 =  silva ( /veodata/03/databases/kraken2/v20240605 ) ## Recommeded for faster results
+## emu = will only work with emu tool 
 ## example is given below (change as per your need)
-my_database	kraken2
+my_database	silva
 
 ## what is your amplicon size (excluding primer barcodes)
 ## example is given below (change as per your need) tab seperated

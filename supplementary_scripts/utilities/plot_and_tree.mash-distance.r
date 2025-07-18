@@ -2,7 +2,7 @@
 ## simple tree plot
 	library(ape)
 	library(phangorn)
-	all_distance <- as.matrix(read.table("results/0137_phylogeny_ANI_by_mash/raw_files/matrix.tab", header = TRUE, row.names = 1, colClasses = c("character", rep("numeric", 1000))))
+	all_distance <- as.matrix(read.table("results/0137_phylogeny_ANI_by_mash/raw_files/matrix.tab", header = TRUE, row.names = 1, sep = "\t"))
 	treeUPGMA <- upgma(all_distance)
 	mytree <- as.phylo(treeUPGMA)
 	write.tree(mytree,file = "results/0137_phylogeny_ANI_by_mash/matrix.tab.tree.phangorn.nwk")

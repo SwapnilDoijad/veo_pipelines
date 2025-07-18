@@ -19,8 +19,12 @@ sublist=$wd/tmp/lists/ABC
                 log "running : checkV for $i"
                 (mkdir $wd/raw_files/$i) > /dev/null 2>&1
 
-                checkv end_to_end $fasta_dir_path/$i.fasta $wd/raw_files/$i \
-                -t 22 -d /veodata/03/databases/checkv/v1.5 ;
+                checkv \
+				end_to_end \
+				$fasta_dir_path/$i.fasta \
+				$wd/raw_files/$i \
+                -t $SLURM_CPUS_PER_TASK \
+				-d /veodata/03/databases/checkv/v1.5 
 
 				awk 'NR>1 {print $0}' $wd/raw_files/$i/quality_summary.tsv | sed -e 's/^/'"$i\t"'/g ' > $wd/raw_files/$i/quality_summary.tsv.tmp
 				cat "$wd/raw_files/$i/quality_summary.tsv.tmp" >> "$wd/summary.tsv"
@@ -28,5 +32,6 @@ sublist=$wd/tmp/lists/ABC
 				log "already finished: checkV for $i"
 			fi 
 		done
-		
-    log "finished : $pipeline for $sublist"
+###############################################################################
+	log "finished : $pipeline for $sublist" && clean
+###############################################################################

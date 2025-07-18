@@ -16,29 +16,22 @@ parser.add_argument("--step", type=int, default=100, help="Step size for subsamp
 parser.add_argument("--repeats", type=int, default=10, help="Number of subsampling repetitions for each step.")
 args = parser.parse_args()
 
-# Get list of files in the directory
 files = [f for f in os.listdir(args.directory) if f.endswith(".fasta.out")]
-
-# Dictionary to hold grouped files by prefix
 file_groups = {}
 
-# Group files by prefix (e.g., "run10c_barcode01" from "run10c_barcode01...")
 for filename in files:
-    prefix = filename.split(".")[0]  # Extract prefix before the first dot
+    prefix = filename.split(".")[0]
     if prefix not in file_groups:
         file_groups[prefix] = []
     file_groups[prefix].append(filename)
 
-# Initialize Plotly figure and rarefaction data structure
 fig = go.Figure()
 rarefaction_data = []
 plateau_data = []
 
-# Combine files and perform rarefaction on the combined data
 for prefix, file_list in file_groups.items():
     combined_data = pd.DataFrame()
-    
-    # Load and concatenate data from each file in the group
+
     for filename in file_list:
         file_path = os.path.join(args.directory, filename)
         try:
@@ -48,28 +41,27 @@ for prefix, file_list in file_groups.items():
             print(f"Error reading {filename}: {e}")
             continue
 
-    # Remove duplicate reads based on the second column (read ID)
-    combined_data = combined_data.drop_duplicates(subset=[1])  # Column 1 is the second column (0-indexed)
-
-    # Save the combined data to a new file
+    combined_data = combined_data.drop_duplicates(subset=[1])
     combined_filename = f"{prefix}.combined.fasta.out"
     combined_path = os.path.join(args.directory, combined_filename)
     combined_data.to_csv(combined_path, sep="\t", index=False, header=False)
     print(f"Saved combined file with deduplication: {combined_filename}")
 
-    # Extract the taxonomy identifier from the third column (index 2) of the combined data
     taxa_ids = combined_data[2]
-
-    # Calculate total reads in the combined file after deduplication
     total_reads = len(taxa_ids)
-
-    # Prepare to store the average unique taxa count for each sample size
     avg_unique_taxa_counts = []
     sample_sizes = list(range(args.step, min(total_reads, args.max_samples) + 1, args.step))
 
-    # Check if sample_sizes is empty before proceeding
     if not sample_sizes:
         print(f"No sufficient data for rarefaction in {combined_filename}")
+        fig.add_trace(go.Scatter(
+            x=[],
+            y=[],
+            mode='markers',
+            name=f"{prefix} (no data)",
+            marker=dict(symbol='x', color='red', size=10)
+        ))
+
         rarefaction_data.append({
             "Filename": combined_filename,
             "Sample_Size": "None",
@@ -83,47 +75,36 @@ for prefix, file_list in file_groups.items():
             "Status": "failed",
             "Plateau_Status": "Insufficient_data_to_calculate_plateau"
         })
-        continue  # Skip to the next file if there is insufficient data
+        continue
 
-    # Perform rarefaction sampling on the combined data
     for size in sample_sizes:
         unique_counts = []
-        
-        # Repeat sampling at this size for averaging
         for _ in range(args.repeats):
-            sampled_taxa = taxa_ids.sample(n=size, replace=False).unique()  # Random sample without replacement
-            unique_counts.append(len(sampled_taxa))  # Count unique taxa in this sample
-
-        # Calculate the average unique taxa count for this sample size
+            sampled_taxa = taxa_ids.sample(n=size, replace=False).unique()
+            unique_counts.append(len(sampled_taxa))
         avg_unique_taxa = np.mean(unique_counts)
         avg_unique_taxa_counts.append(avg_unique_taxa)
-        
-        # Append to rarefaction data for output
         rarefaction_data.append({
             "Filename": combined_filename,
             "Sample_Size": size,
             "Average_Unique_Taxa": avg_unique_taxa
         })
 
-    # Calculate the rate of increase in unique taxa and determine plateau point
-    rate_of_increase = np.diff(avg_unique_taxa_counts)  # Calculate differences between successive points
+    rate_of_increase = np.diff(avg_unique_taxa_counts)
     plateau_sample_size = None
     plateau_unique_taxa = None
     plateau_status = None
-    threshold = 1  # Define a threshold for minimal increase per step (e.g., 1 new taxa per 100 reads)
+    threshold = 1
 
-    # Find the first point where the rate of increase is below the threshold
     if len(rate_of_increase) > 0:
         for i, rate in enumerate(rate_of_increase):
             if rate < threshold:
-                plateau_sample_size = sample_sizes[i + 1]  # Plateau starts at the next sample size after this point
+                plateau_sample_size = sample_sizes[i + 1]
                 plateau_unique_taxa = avg_unique_taxa_counts[i + 1]
                 plateau_status = "Plateau_Detected"
                 break
-
-        # If no plateau is detected, use the last rate of increase
         if plateau_sample_size is None:
-            plateau_sample_size = sample_sizes[-1]  # Use the last sample size as an approximation
+            plateau_sample_size = sample_sizes[-1]
             plateau_unique_taxa = avg_unique_taxa_counts[-1]
             plateau_status = f"Plateau_NOT_Reached_(last_rate:_{rate_of_increase[-1]:.2f})"
     else:
@@ -131,20 +112,10 @@ for prefix, file_list in file_groups.items():
         plateau_unique_taxa = "None"
         plateau_status = "Insufficient_data_to_calculate_plateau"
 
-    # Determine status based on total reads and plateau status
-    if plateau_status == "Plateau_Detected":
-        if total_reads >= plateau_sample_size:
-            status = "pass"
-        else:
-            status = "failed"
-    else:  # If plateau is not reached
-        status = "failed"
-
-    # Ensure output strings have no spaces, replace them with underscores
+    status = "pass" if plateau_status == "Plateau_Detected" and total_reads >= plateau_sample_size else "failed"
     status = status.replace(" ", "_")
     plateau_status = plateau_status.replace(" ", "_")
 
-    # Append plateau information for this file to plateau_data
     plateau_data.append({
         "Filename": combined_filename,
         "Total_Reads": total_reads,
@@ -154,10 +125,9 @@ for prefix, file_list in file_groups.items():
         "Plateau_Status": plateau_status
     })
 
-    # Plot the rarefaction curve for the current combined file
-    marker_style = dict(size=5, symbol='circle')  # Default style
+    marker_style = dict(size=5, symbol='circle')
     if status == "failed":
-        marker_style = dict(size=8, symbol='x', color='black')  # Highlight failed samples
+        marker_style = dict(size=8, symbol='x', color='black')
 
     fig.add_trace(go.Scatter(
         x=sample_sizes,
@@ -168,29 +138,37 @@ for prefix, file_list in file_groups.items():
         marker=marker_style
     ))
 
-# Save the rarefaction data to a TSV file
+# Save rarefaction data
 rarefaction_df = pd.DataFrame(rarefaction_data)
 rarefaction_df.to_csv(args.tsv_output, sep="\t", index=False)
 print(f"Saved rarefaction data to {args.tsv_output}")
 
-# Save the plateau data to a separate text file
+# Save plateau data
 plateau_df = pd.DataFrame(plateau_data)
-# Sort plateau data except the first row
 first_row = plateau_df.iloc[0]
 sorted_plateau_df = pd.concat([first_row.to_frame().T, plateau_df.iloc[1:].sort_values(by="Total_Reads", ascending=True)], ignore_index=True)
 sorted_plateau_df.to_csv(args.plateau_output, sep="\t", index=False)
 print(f"Saved plateau data to {args.plateau_output}")
 
-# Customize the Plotly plot layout
+# Convert column safely to numeric, coercing errors like "None" to NaN
+y_values = pd.to_numeric(rarefaction_df['Average_Unique_Taxa'], errors='coerce').dropna()
+
+if len(y_values) > 0:
+    max_y = y_values.max() * 1.1
+    max_y = max(max_y, 10)  # Ensure it's at least 10 for visual clarity
+else:
+    max_y = 10
+
+
+# Finalize plot layout
 fig.update_layout(
     title="Rarefaction Curves of Taxa Accumulation",
     xaxis_title="Sample_Size_(Number_of_Reads)",
     yaxis_title="Average_Unique_Taxa_Count",
-    yaxis=dict(range=[0, max(rarefaction_df['Average_Unique_Taxa'].dropna()) * 1.1]),
+    yaxis=dict(range=[0, max_y]),
     xaxis=dict(range=[0, args.max_samples]),
 )
 
-# Save the plot as both a static image and an interactive HTML file
 fig.write_html(args.html_output)
 fig.write_image(args.output, width=1600, height=1200, scale=2)
 print(f"Plot saved as {args.output} and interactive HTML saved as {args.html_output}")

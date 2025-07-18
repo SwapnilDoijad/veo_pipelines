@@ -17,7 +17,7 @@
     # sbatch $suppl_scripts/$pipeline.sbatch
 
     mkdir -p $raw_files/phage
-    mkdir -p $raw_files/prophage
+    # mkdir -p $raw_files/prophage
     
     echo -e "ids\tnumber_of_phages\tnumber_of_prophages" > $wd/phage_prophage_count.tsv
 ###############################################################################

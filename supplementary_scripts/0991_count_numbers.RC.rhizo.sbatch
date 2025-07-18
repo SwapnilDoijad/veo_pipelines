@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name count_rhizo
-#SBATCH --partition=long
+#SBATCH --partition=standard,long
 #SBATCH --output results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.out.count_rhizo
 #SBATCH --error  results/0991_calculate_abundance_from_fastq/tmp/slurm/%j.err.count_rhizo
 #SBATCH --cpus-per-task=80

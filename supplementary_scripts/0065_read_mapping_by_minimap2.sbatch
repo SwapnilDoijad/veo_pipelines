@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=0065_read_mapping_by_minimap2
-#SBATCH --partition=short,standard,interactive,long
+#SBATCH --partition=standard,long,gpu,gpu-test
 #SBATCH --output=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.out.txt
 #SBATCH --error=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.err.txt
-#SBATCH --mem=40G
+#SBATCH --mem=200G
 #SBATCH --cpus-per-task=20
 #SBATCH --exclusive
 ###############################################################################
@@ -26,8 +26,8 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
 ###############################################################################
     log "The run for sublist : $sublist is started"
 ###############################################################################
-    echo "Swapnil, sometime some files are not processed, check if first vcf file is empty. It should not be empty raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf"
-    exit
+    # echo "Swapnil, sometime some files are not processed, check if first vcf file is empty. It should not be empty raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf"
+    # exit
 
     while IFS= read -r line; do
 
@@ -80,7 +80,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
 
             if [ $data_type == "single" ]; then
                 ## map files ## -x map-pb pacBIO reads ## -x sr short reads ## -x map-ont Nanopore reads
-                if [ ! -f $raw_files/sam_files/$assembly_id.$fastq_id.sam ] ; then
+                if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.gz ] ; then
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
                     /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x $read_type_input -a \
                     -t $SLURM_CPUS_PER_TASK \
@@ -95,7 +95,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 elif [ $data_type == "paired" ]; then
             
                 # Check if the SAM file already exists
-                if [ ! -f "$raw_files/sam_files/$assembly_id.$fastq_id.sam" ]; then
+                if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.gz ]; then
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
 
                     fwd_reads=$(echo $line | awk '{print $2}')
@@ -110,7 +110,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                     $rev_reads \
                     > "$raw_files/sam_files/$assembly_id.$fastq_id.sam" \
                     & my_pid=$!
-			        get_resource_stat $my_pid $wd/tmp/resource_log/$id.minimap2.tsv 
+			        get_resource_stat $my_pid $wd/tmp/resource_log/$assembly_id.minimap2.tsv 
 
                     check_status "Mapping $fastq_id on $assembly_id"
                 else
@@ -118,46 +118,68 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 fi
             fi
 
-            ## sort file using samtools
-            /home/groups/VEO/tools/samtools/v1.17/bin/samtools sort -@ $SLURM_CPUS_PER_TASK -l 9 -m 5000M \
-            -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-            $raw_files/sam_files/$assembly_id.$fastq_id.sam
+            if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.gz ] ; then 
+                ## sort file using samtools
+                /home/groups/VEO/tools/samtools/v1.17/bin/samtools sort -@ $SLURM_CPUS_PER_TASK -l 9 -m 5000M \
+                -o $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                $raw_files/sam_files/$assembly_id.$fastq_id.sam
 
-            rm -rf $raw_files/sam_files/$assembly_id.$fastq_id.sam
+                rm -rf $raw_files/sam_files/$assembly_id.$fastq_id.sam
 
-            ## get summary of sorted .bam file using samtools
-            /home/groups/VEO/tools/samtools/v1.17/bin/samtools flagstat \
-            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt
+                ## get summary of sorted .bam file using samtools
+                /home/groups/VEO/tools/samtools/v1.17/bin/samtools flagstat \
+                $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt
 
-            /home/groups/VEO/tools/samtools/v1.17/bin/samtools index \
-            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam
+                /home/groups/VEO/tools/samtools/v1.17/bin/samtools index \
+                $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam
 
-            /home/groups/VEO/tools/samtools/v1.17/bin/samtools depth \
-            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-            > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt
+                /home/groups/VEO/tools/samtools/v1.17/bin/samtools depth \
+                $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt
 
-            ## get per contig converage
-            /home/groups/VEO/tools/samtools/v1.17/bin/samtools idxstats \
-            $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt
+                # Verify file is readable and index is usable
+                /home/groups/VEO/tools/samtools/v1.17/bin/samtools quickcheck \
+                $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam
 
-            awk '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig]}' \
-            $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt \
-            > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage.txt
+                if [ $? -eq 0 ]; then
+                    /home/groups/VEO/tools/samtools/v1.17/bin/samtools idxstats \
+                    $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                    > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt
+                else
+                    log "Error: BAM or index not ready for $assembly_id.$fastq_id" | tee -a $wd/errors.txt
+                fi
+            fi
 
-            awk '{print $1}' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt | sort | uniq -c | awk '{print $1}' \
-            > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.lenght.txt
+            if [ -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt ]; then 
+                total_bases=$(python3 $suppl_scripts/utilities/fastq_get_reads_bases.py $fastq_id_path/$fastq_id.fastq.gz | awk '{print $2}')
+                mapped_bases=$(awk '{sum+=$3} END {print sum}' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt )
+                awk -v total_bases="$total_bases" -v mapped_bases="$mapped_bases" '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig], 10000*(sum[contig]/mapped_bases), 10000*sum[contig]/total_bases}' \
+                $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt \
+                > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage_perBase.txt 
 
-            paste $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage.txt $raw_files/depth_and_coverage/$assembly_id.$fastq_id.lenght.txt | sed "s/^/$assembly_id\t/g" \
-            > $raw_files/sam_files_sorted/$assembly_id.$fastq_id.avg_coverage_lenght.txt
+                total_reads=$(python3 $suppl_scripts/utilities/fastq_get_reads_bases.py $fastq_id_path/$fastq_id.fastq.gz | awk '{print $1}')
+                mapped_reads=$(awk '{sum+=$3} END {print sum}' $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt | awk '{print $1}')
+                awk -v total_reads="$total_reads" -v mapped_reads="$mapped_reads" 'NR==FNR {a[$1]=$0; next} ($1 in a) {print a[$1] "\t" $2, $3, 100*$3/mapped_reads, 100*$3/total_reads}' \
+                $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage_perBase.txt \
+                $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt \
+                | sed "s/^/$assembly_id\t/g" > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv
 
-            echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
-            echo $assembly_id $fastq_id >> $wd/summary.txt
-            cat $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt \
-            >> $wd/summary.txt
-            echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
-                  
+                sed -i '1i assembly_id contig_id avg_cov_perBase_mapped avg_cov_perBase_mapped(CP10K) avg_cov_perBase_TotalBases(CP10K) contig_length reads_mapped %reads_mappedMapped %reads_mappedTotalReads' \
+                $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv
+
+                sed -i 's/ /\t/g' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv
+                rm -rf $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage_perBase.txt 
+                # rm -rf $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt
+
+                echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
+                echo $assembly_id $fastq_id >> $wd/summary.txt
+                cat $raw_files/sam_files_sorted/$assembly_id.$fastq_id.summary.txt \
+                >> $wd/summary.txt
+                echo "--------------------------------------------------------------------------------" >> $wd/summary.txt
+                else
+                log "Error: idxstats file not found for $assembly_id.$fastq_id" 
+            fi
         fi
 
                                 ## Generate Pileup File (required for the variant calling and consesus calling) 
@@ -193,9 +215,9 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
 
         if [ "$SNP_analysis" = "Yes" ] && [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv.split.tsv ] ; then
 
-            if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.tsv ] ; then 
+            if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf ] ; then 
                 log "STARTED : freebayes variant calling for $assembly_id.$fastq_id"
-
+                
                 /home/groups/VEO/tools/freebayes/v1.3.6/freebayes \
                     --ploidy 1 \
                     --min-alternate-fraction 0.001 \
@@ -283,8 +305,15 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 python /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_complex_snps.py \
                 -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv \
                 -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.tsv
+
+                python /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.tsv_to_vcf.py \
+                -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.tsv \
+                -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf
+
                 deactivate
                 
+
+
                 rm $raw_files/vcf/*.gz
                 rm $raw_files/vcf/*.gz.tbi
             fi
@@ -293,7 +322,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
             ## 2024-11-09 07:44:29 need to give the full path? Don't know. Need to check  
             if [ $snp_annotation == "Yes" ]; then
                 if [ ! -f $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv ]; then  
-                    genBankFile=$( grep $assembly_id $wd/tmp/genBank_filepath.txt | awk -F'\t' '{print $2}' )
+                    genBankFile=$( grep $assembly_id $wd/tmp/genBank_filepath.txt | awk -F'\t' '{print $2}' | head -1 )
                     log "STARTED : snpEff annotation for $assembly_id.$fastq_id $genBankFile" 
 
                     ## convert_GenBank_to_GFF3_and_FASTA
@@ -306,40 +335,49 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                         -f $raw_files/tmp/genome_data/$assembly_id/sequences.fa
                     deactivate
 
+                    ## 2025-06-14 22:36:29 sanitise the gff
+                    sed -i 's/>//g' $raw_files/tmp/genome_data/$assembly_id/genes.gff
+
                     cat /home/groups/VEO/scripts_for_users/supplementary_scripts/parameter_files/snpEff.config \
                     | sed "s/genome_id/$assembly_id/g" \
-                    > $raw_files/tmp/genome_data/$assembly_id/snpEff.config
+                    > $raw_files/tmp/genome_data/snpEff.$assembly_id.config
 
                     cur_dir=$(pwd)
                     java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
                     -gff3 -v \
                     -dataDir $cur_dir/$raw_files/tmp/genome_data/ \
-                    -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                    -c $raw_files/tmp/genome_data/snpEff.$assembly_id.config \
                     $assembly_id
 
                     java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar \
-                    -c $raw_files/tmp/genome_data/$assembly_id/snpEff.config \
+                    -c $raw_files/tmp/genome_data/snpEff.$assembly_id.config \
                     -dataDir $cur_dir/$raw_files/tmp/genome_data/ \
                     $assembly_id \
-                    $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf \
-                    > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf
+                    $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf \
+                    | sed 's/<DEL>/-/g' > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf
 
                     log "STARTED : generating final summary file for $assembly_id.$fastq_id"
                     bash /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_read_mapping_by_minimap2.filter.sh \
-                    -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf \
-                    -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+                    -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf \
+                    -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary
 
-                    ## suffix product info to ...vcf.snpEff_annotated.vcf.summary.tsv
-                    grep -v "^#" "$raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv" \
-                    | awk -F'|' '{print $NF}' | tr ' ' '_'\
-                    | while read -r cds; do
-                        product=$(grep "$cds" "$raw_files/tmp/genome_data/$assembly_id/genes.gff" | awk -F';' '{print $5}' | awk -F'product=' '{print $2}')
-                        sed -i "s/$cds/$cds|$product/g" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
-                    done
+                                            ## suffix product info to ...vcf.snpEff_annotated.vcf.summary.tsv
+                                                # grep -v "^#" "$raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary.tsv" \
+                                                # | awk -F'|' '{print $NF}' | tr ' ' '_' \
+                                                # | while read -r cds; do
+                                                #     product=$(grep "$cds" "$raw_files/tmp/genome_data/$assembly_id/genes.gff" | awk -F';' '{print $5}' | awk -F'product=' '{print $2}')
+                                                #     sed -i "s/$cds/$cds|$product/g" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary.tsv
+                                                # done
 
-                    sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv
+                    ## suffix product info to ...vcf.snpEff_annotated.vcf.summary.tsv               
+                    python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0065_get_gene_and_protein.py \
+                    -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary \
+                    -g $raw_files/tmp/genome_data/$assembly_id/genes.gff \
+                    -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary.tsv 
 
-                    awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
+                    sed -i "/#/!s/^/$fastq_id\t/" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary.tsv
+
+                    awk 'NR > 1' $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf.snpEff_annotated.vcf.summary.tsv >> $raw_files/summary.InsDel.tsv
                     grep -v "#" $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv | sed "s/^/$fastq_id\t/" >> $raw_files/summary.InsDel.unfiltered.tsv
                 fi
 
@@ -374,13 +412,9 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
             rm -rf raw_files/sam_files/$assembly_id.$fastq_id.sam
         fi
 
+        echo "--------------------------------------------------------------------------------"
     done <  $wd/tmp/lists/ABC
-
-    log "The run for sublist : $sublist is completed"
-
-
 ############################################################################### 
 ## footer
-    clean_empty_files_and_dirs $wd
     log "The run for sublist : $sublist is completed"
 ###############################################################################

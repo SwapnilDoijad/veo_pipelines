@@ -14,6 +14,7 @@
     subsampling=$(grep my_subsample_choise $parameters | awk '{print $2}')
     database=$(grep my_database $parameters  | awk '{print $2}')
     anticipated_read_length=$(grep my_anticipated_read_length $parameters | awk '{print $2}')
+    tool=$(grep my_tool $parameters | awk '{print $2}')
     QC=10
     threads=$SLURM_CPUS_PER_TASK
     minlength=$(( $anticipated_read_length - 50 ))
@@ -673,6 +674,9 @@
                     -i $raw_files/read_ids_extracted_fastq/$subsample.$sample.$mismatch.fastq \
                     -o $raw_files/read_ids_extracted_fastq/$subsample.$sample.$mismatch.fastq.fasta 
 
+                    sed -i 's/@//g' $raw_files/read_ids_extracted_fastq/$subsample.$sample.$mismatch.fastq.fasta 
+                    sed -i 's/ .*//g' $raw_files/read_ids_extracted_fastq/$subsample.$sample.$mismatch.fastq.fasta 
+
                     reads_in_fasta10=$( count_number_of_sequences_in_fasta $raw_files/read_ids_extracted_fastq/$subsample.$sample.$mismatch.fastq.fasta  )
                     echo "reads in fasta $reads_in_fasta10"
                 fi 
@@ -705,8 +709,9 @@
 ###############################################################################
 ## run blast or Kraken2
     ## for silva database, it take long time to run blast
-    ## for custom datanase, it is faster (as number of sequences are less)
+    ## for custom database, it is faster (as number of sequences are less)
 
+    if [ "$tool" == "blast" ] ; then
         if [ "$database" == "custom" ]; then
             if [ ! -d $raw_files/blast_results ]; then 
                 log "STARTED : run blast with custom database"
@@ -756,7 +761,9 @@
             fi
             wait_till_all_job_finished_with_name blast
         fi 
+    fi
 
+    if [ "$tool" == "kraken2" ]; then
         if [ "$database" == "silva" ]; then
             if [ -d $raw_files/blast_results ]; then 
                 log "STARTED : run blast with SILVA database"
@@ -807,8 +814,60 @@
             fi
             wait_till_all_job_finished_with_name 0992_k ## Next time, change this name to kraken2
         fi
+    fi
 
+    if [ "$tool" == "emu" ]; then
+        log "STARTED : emu with SILVA database"
+        if [ ! -d $raw_files/$tool/$database/hits ]; then
+            mkdir -p $raw_files/$tool/$database/hits 
+            mkdir -p $raw_files/$tool/$database/distribution
+            for subsample in "${subsamples[@]}"; do
+                for sample in $(cat $wd/tmp/lists/samples.txt ); do
+                    for mismatch in "${mismatches[@]}" ; do
 
+                        if [ ! -f $raw_files/$tool/$database/hits/$subsample.$sample.$mismatch.fastq.fasta.tsv ] ; then 
+                            sed "s/my_subsample/$subsample/g" $suppl_scripts/$pipeline.emu.sbatch \
+                            | sed "s/my_sample/$sample/g" | sed "s/my_mismatch/$mismatch/g" | sed "s/my_qc_value/$QC/g" \
+                            > $wd/tmp/sbatch/emu.$subsample.$sample.$mismatch.sbatch
+
+                            sbatch $wd/tmp/sbatch/emu.$subsample.$sample.$mismatch.sbatch
+                        fi 
+
+                        wait_for_jobs_to_complete 20
+                    done
+                done
+            done
+            log "ALREADY FINISHED : $tool with $database database"
+        fi
+        wait_till_all_job_finished_with_name 0992_emu
+
+        source /home/groups/VEO/tools/biopython/myenv/bin/activate
+
+        python $suppl_scripts/utilities/combine_emu_output.py \
+        -d $raw_files/$tool/$database/hits \
+        -o $wd/$tool.$database.combined.tsv
+
+        python $suppl_scripts/utilities/normalise_abundance_based_on_16S_copy.py \
+        -i $wd/$tool.$database.combined.tsv \
+        -o $wd/$tool.$database.combined.normalized.tsv \
+        -r /veodata/03/databases/rrnDB/v5.10/rrnDB-5.10_pantaxa_stats_RDP.tsv 
+
+        python $suppl_scripts/plots/0991_relative_abundance.py \
+        -i $wd/$tool.$database.combined.tsv \
+        -o $wd/$tool.$database.combined.tsv.png \
+        --group-by genus \
+        --top 25
+
+        python $suppl_scripts/plots/0991_relative_abundance.py \
+        -i $wd/$tool.$database.combined.normalized.tsv \
+        -o $wd/$tool.$database.combined.normalized.tsv.png \
+        --group-by genus \
+        --top 25
+
+        deactivate
+    fi
+
+    if [ $tool == "blast" ] ; then 
     if [ "$database" == "silva" ] || [ "$database" == "custom" ] ; then
         ## QC check for BLAST files 
             if [ ! -f $wd/tmp/blast.QC.tsv ] ; then 
@@ -837,17 +896,20 @@
                 done
             fi
     fi
+    fi
 
-    if [ "$database" == "kraken2" ]; then 
-        ## QC check for kraken2 files
-        ehco "subsample sample number_of_lines" | tr ' ' '\t' > $wd/tmp/kraken2.QC.tsv
-        if [ ! -f $wd/tmp/kraken2.QC.tsv ] ; then 
-            for subsample in "${subsamples[@]}"; do
-                for sample in $(cat $wd/tmp/lists/samples.txt ); do 
-                    number_of_lines=$(wc -l $raw_files/kraken2/hits/$subsample.$sample.$mismatch.fastq.fasta.out | awk '{print $1}' )
-                    echo $subsample $sample $number_of_lines | tr ' ' '\t' >> $wd/tmp/kraken2.QC.tsv
+    if [ "$tool" == "kraken2" ] ; then 
+        if [ "$database" == "kraken2" ]; then 
+            ## QC check for kraken2 files
+            echo "subsample sample number_of_lines" | tr ' ' '\t' > $wd/tmp/kraken2.QC.tsv
+            if [ ! -f $wd/tmp/kraken2.QC.tsv ] ; then 
+                for subsample in "${subsamples[@]}"; do
+                    for sample in $(cat $wd/tmp/lists/samples.txt ); do 
+                        number_of_lines=$(wc -l $raw_files/kraken2/hits/$subsample.$sample.$mismatch.fastq.fasta.out | awk '{print $1}' )
+                        echo $subsample $sample $number_of_lines | tr ' ' '\t' >> $wd/tmp/kraken2.QC.tsv
+                    done
                 done
-            done
+            fi
         fi
     fi
 
@@ -855,7 +917,7 @@
 ############################################################################### 
 ## count the numbers
 
-    if [ "$database" == "kraken2" ]; then 
+    if [ "$tool" == "kraken2" ]  && [ "$database" == "kraken2" ]; then 
         python3 $suppl_scripts/$pipeline.combine_to_mpa.py \
         -i $raw_files/kraken2/hits/*.formatted \
         -o $raw_files/kraken2/combined.mpa
@@ -871,9 +933,9 @@
         deactivate
     fi
 
-    if [ "$database" == "silva" ] || [ "$database" == "custom" ] ; then
-        ## takes long (~OVERNIGHT) time 
-        if [ ! -d  $raw_files/count  ] ; then 
+    if [ $tool == "blast" ] && [ "$database" == "silva" ] || [ "$database" == "custom" ] ; then
+        ## takes long (~OVERNIGHT) time
+        if [ ! -d  $raw_files/count  ] ; then
             ( mkdir $raw_files/count ) > /dev/null 2>&1
 
             for subsample in "${subsamples[@]}"; do
@@ -899,137 +961,101 @@
 
 
     ## seventh checkpoint
-    exit 
+    # exit 
 
 ###############################################################################
 ## @Swapnil: Below codes needs extensive modifications
 ## summarise the count
     # grep ">" tmp/parameters/$pipeline.query_sequence.2.fasta | sed 's/>//g' | sort -u > query.fasta.list
 
-    for subsample in "${subsamples[@]}"; do
-        if [ ! -f $raw_files/final_tables/all.$subsample.tsv  ] ; then 
-            ( mkdir $raw_files/final_tables ) > /dev/null 2>&1 
-            if [ ! -f $raw_files/final_tables/final_count.$subsample.tsv ] ; then 
-                ( rm $raw_files/count/*.$QC.fastq.fasta.2.$subsample.txt ) > /dev/null 2>&1 
-                while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do 
-                    echo $barcode.$barcode_RC > $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt
-                    for id in $(cat query.fasta.list ) ; do 
-                        V1=$(grep -w "$id" $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.best_hits.count.$subsample.tsv | awk '{print $2}' )
-                        if [ ! -z $V1 ]; then
-                            echo $V1 >> $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt
-                            else
-                            echo 0 >> $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt
-                        fi 
-                    done
-                done < "list.barcodes_all.FR.txt" 3< "list.barcodes_all.RC.txt" 
+    # for subsample in "${subsamples[@]}"; do
+    #     if [ ! -f $raw_files/final_tables/all.$subsample.tsv  ] ; then 
+    #         ( mkdir $raw_files/final_tables ) > /dev/null 2>&1 
+    #         if [ ! -f $raw_files/final_tables/final_count.$subsample.tsv ] ; then 
+    #             ( rm $raw_files/count/*.$QC.fastq.fasta.2.$subsample.txt ) > /dev/null 2>&1 
+    #             while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do 
+    #                 echo $barcode.$barcode_RC > $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt
+    #                 for id in $(cat query.fasta.list ) ; do 
+    #                     V1=$(grep -w "$id" $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.best_hits.count.$subsample.tsv | awk '{print $2}' )
+    #                     if [ ! -z $V1 ]; then
+    #                         echo $V1 >> $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt
+    #                         else
+    #                         echo 0 >> $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt
+    #                     fi 
+    #                 done
+    #             done < "list.barcodes_all.FR.txt" 3< "list.barcodes_all.RC.txt" 
 
-                sed '1i\ids' query.fasta.list > query.fasta.list.tmp
-                paste query.fasta.list.tmp $raw_files/count/*.$QC.fastq.fasta.2.$subsample.txt \
-                > $raw_files/final_tables/final_count.$subsample.tsv
-                rm query.fasta.list.tmp 
-            fi 
-
-
-            ## QC check for number of blast_total_hits in best_hits and number of lines in count 
-                if [ ! -f $raw_files/tmp/blast.QC.tmp ] ;then 
-                    echo -e "subsample\tbarcode.barcode_RC\tblast_total_hits\tblast_specific_hits\tsample_hits" > $raw_files/tmp/blast.QC.tmp
-                    for subsample in "${subsamples[@]}"; do
-                        while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do  
-                            blast_total_hits=$(wc -l $raw_files/blast_results/$barcode.$barcode_RC.$QC.fastq.fasta.best_hits.$subsample.tsv | awk '{print $1}' )
-                            blast_specific_hits=$(tail -n +2 $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt | awk '{sum+=$1} END {print sum}' ) 
-                            sample_hits=$(wc -l $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.best_hits.count.$subsample.tsv | awk '{print $1}' )
-                            # echo brady $subsample $barcode.$barcode_RC $blast_total_hits $sample_hits
-                            echo $subsample $barcode.$barcode_RC $blast_total_hits $blast_specific_hits $sample_hits >> $raw_files/tmp/blast.QC.tmp
-                        done < "list.barcodes_all.FR.txt" 3< "list.barcodes_all.RC.txt"
-                    done 
-                fi
+    #             sed '1i\ids' query.fasta.list > query.fasta.list.tmp
+    #             paste query.fasta.list.tmp $raw_files/count/*.$QC.fastq.fasta.2.$subsample.txt \
+    #             > $raw_files/final_tables/final_count.$subsample.tsv
+    #             rm query.fasta.list.tmp 
+    #         fi 
 
 
-            # barcodes2samples renaming
+    #         ## QC check for number of blast_total_hits in best_hits and number of lines in count 
+    #             if [ ! -f $raw_files/tmp/blast.QC.tmp ] ;then 
+    #                 echo -e "subsample\tbarcode.barcode_RC\tblast_total_hits\tblast_specific_hits\tsample_hits" > $raw_files/tmp/blast.QC.tmp
+    #                 for subsample in "${subsamples[@]}"; do
+    #                     while IFS= read -r barcode && IFS= read -r barcode_RC <&3; do  
+    #                         blast_total_hits=$(wc -l $raw_files/blast_results/$barcode.$barcode_RC.$QC.fastq.fasta.best_hits.$subsample.tsv | awk '{print $1}' )
+    #                         blast_specific_hits=$(tail -n +2 $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.2.$subsample.txt | awk '{sum+=$1} END {print sum}' ) 
+    #                         sample_hits=$(wc -l $raw_files/count/$barcode.$barcode_RC.$QC.fastq.fasta.best_hits.count.$subsample.tsv | awk '{print $1}' )
+    #                         # echo brady $subsample $barcode.$barcode_RC $blast_total_hits $sample_hits
+    #                         echo $subsample $barcode.$barcode_RC $blast_total_hits $blast_specific_hits $sample_hits >> $raw_files/tmp/blast.QC.tmp
+    #                     done < "list.barcodes_all.FR.txt" 3< "list.barcodes_all.RC.txt"
+    #                 done 
+    #             fi
+
+
+    #         # barcodes2samples renaming
                 
-            while IFS= read -r line; do
-                barcode=$(echo "$line" | awk '{print $1}')
-                name=$(echo "$line" | awk '{print $2}')
-                sed -i "s/$barcode/$name/g" $raw_files/final_tables/final_count.$subsample.tsv
-                # sed -i "s/$barcode/$name/g" $raw_files/final_tables/final_count.rhizo.$subsample.tsv
-            done < list.barcodes.names.txt
-        fi
+    #         while IFS= read -r line; do
+    #             barcode=$(echo "$line" | awk '{print $1}')
+    #             name=$(echo "$line" | awk '{print $2}')
+    #             sed -i "s/$barcode/$name/g" $raw_files/final_tables/final_count.$subsample.tsv
+    #             # sed -i "s/$barcode/$name/g" $raw_files/final_tables/final_count.rhizo.$subsample.tsv
+    #         done < list.barcodes.names.txt
+    #     fi
 
-        if [ ! -f $raw_files/final_tables/all.$subsample.tsv ] ; then
-            (rm $raw_files/final_tables/all.$subsample.tsv) > /dev/null 2>&1 
-            ## create final table for Brady
-            for header in $(head -1 $raw_files/final_tables/final_count.$subsample.tsv | sed 's/ids//g' | tr '\t' '\n' | sed '/^$/d' |  sort -u | sort -V ) ; do 
-                echo $header
-                awk -v header="$header" 'BEGIN {
-                    FS="\t"
-                    print header
-                }
-                NR==1 {
-                    for (i=1; i<=NF; i++) {
-                        if ($i == header) {
-                            col[i] = 1
-                        }
-                    }
-                }
-                NR>1 {
-                    row_sum = 0
-                    for (i=1; i<=NF; i++) {
-                        if (col[i]) {
-                            row_sum += $i
-                        }
-                    }
-                    printf "%s\n", row_sum
-                }' $raw_files/final_tables/final_count.$subsample.tsv > $raw_files/final_tables/$header.tsv
+    #     if [ ! -f $raw_files/final_tables/all.$subsample.tsv ] ; then
+    #         (rm $raw_files/final_tables/all.$subsample.tsv) > /dev/null 2>&1 
+    #         ## create final table for Brady
+    #         for header in $(head -1 $raw_files/final_tables/final_count.$subsample.tsv | sed 's/ids//g' | tr '\t' '\n' | sed '/^$/d' |  sort -u | sort -V ) ; do 
+    #             echo $header
+    #             awk -v header="$header" 'BEGIN {
+    #                 FS="\t"
+    #                 print header
+    #             }
+    #             NR==1 {
+    #                 for (i=1; i<=NF; i++) {
+    #                     if ($i == header) {
+    #                         col[i] = 1
+    #                     }
+    #                 }
+    #             }
+    #             NR>1 {
+    #                 row_sum = 0
+    #                 for (i=1; i<=NF; i++) {
+    #                     if (col[i]) {
+    #                         row_sum += $i
+    #                     }
+    #                 }
+    #                 printf "%s\n", row_sum
+    #             }' $raw_files/final_tables/final_count.$subsample.tsv > $raw_files/final_tables/$header.tsv
 
-                touch $raw_files/final_tables/all.$subsample.tsv
-                paste $raw_files/final_tables/all.$subsample.tsv $raw_files/final_tables/$header.tsv > $raw_files/final_tables/all.tmp
-                mv $raw_files/final_tables/all.tmp $raw_files/final_tables/all.$subsample.tsv
-                rm $raw_files/final_tables/$header.tsv 
-            done 
+    #             touch $raw_files/final_tables/all.$subsample.tsv
+    #             paste $raw_files/final_tables/all.$subsample.tsv $raw_files/final_tables/$header.tsv > $raw_files/final_tables/all.tmp
+    #             mv $raw_files/final_tables/all.tmp $raw_files/final_tables/all.$subsample.tsv
+    #             rm $raw_files/final_tables/$header.tsv 
+    #         done 
 
-            sed '1i\ids' query.fasta.list > query.fasta.list.tmp
-            paste query.fasta.list.tmp $raw_files/final_tables/all.$subsample.tsv > $raw_files/final_tables/all.2.tsv
-            sed 's/\t\t/\t/g' $raw_files/final_tables/all.2.tsv > $raw_files/final_tables/all.$subsample.tsv 
-            rm query.fasta.list.tmp
-            rm $raw_files/final_tables/all.2.tsv
-        fi
-
-        # (rm $raw_files/final_tables/all.rhizo.$subsample.tsv) > /dev/null 2>&1 
-        # ## create final table for Rhizo
-        # for header in $(head -1 $raw_files/final_tables/final_count.rhizo.$subsample.tsv | sed 's/ids//g' | tr '\t' '\n' | sed '/^$/d' |  sort -u | sort -V ) ; do 
-        #   echo $header
-        #   awk -v header="$header" 'BEGIN {
-        #       FS="\t"
-        #       print header
-        #   }
-        #   NR==1 {
-        #       for (i=1; i<=NF; i++) {
-        #           if ($i == header) {
-        #               col[i] = 1
-        #           }
-        #       }
-        #   }
-        #   NR>1 {
-        #       row_sum = 0
-        #       for (i=1; i<=NF; i++) {
-        #           if (col[i]) {
-        #               row_sum += $i
-        #           }
-        #       }
-        #       printf "%s\n", row_sum
-        #   }' $raw_files/final_tables/final_count.rhizo.$subsample.tsv > $raw_files/final_tables/$header.tsv
-
-        #   touch $raw_files/final_tables/all.rhizo.$subsample.tsv
-        #   paste $raw_files/final_tables/all.rhizo.$subsample.tsv $raw_files/final_tables/$header.tsv > $raw_files/final_tables/all.rhizo.tmp
-        #   mv $raw_files/final_tables/all.rhizo.tmp $raw_files/final_tables/all.rhizo.$subsample.tsv
-        #   rm $raw_files/final_tables/$header.tsv
-        #   done 
-        #   sed '1i\ids' query_rhizo.fasta.list > query_rhizo.fasta.list.tmp
-        #   paste query_rhizo.fasta.list.tmp $raw_files/final_tables/all.rhizo.$subsample.tsv > $raw_files/final_tables/all.rhizo.2.tsv
-        #   sed 's/\t\t/\t/g' $raw_files/final_tables/all.rhizo.2.tsv > $raw_files/final_tables/all.rhizo.$subsample.tsv 
-        #   rm query_rhizo.fasta.list.tmp
-        #   rm $raw_files/final_tables/all.rhizo.2.tsv
-    done
+    #         sed '1i\ids' query.fasta.list > query.fasta.list.tmp
+    #         paste query.fasta.list.tmp $raw_files/final_tables/all.$subsample.tsv > $raw_files/final_tables/all.2.tsv
+    #         sed 's/\t\t/\t/g' $raw_files/final_tables/all.2.tsv > $raw_files/final_tables/all.$subsample.tsv 
+    #         rm query.fasta.list.tmp
+    #         rm $raw_files/final_tables/all.2.tsv
+    #     fi
+    # done
 
 
 ###############################################################################
@@ -1047,6 +1073,8 @@
         -i $raw_files/final_tables/all.$subsample.perc.tsv \
         -o $raw_files/final_tables/all.$subsample.perc.tsv.png
     done 
+###############################################################################
+	log "finished : $pipeline for $sublist" && clean
 ###############################################################################
 
 

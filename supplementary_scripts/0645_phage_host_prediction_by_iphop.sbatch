@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0645_phage_host_prediction_by_iphop
-#SBATCH --partition=standard
+#SBATCH --partition=standard,long
 #SBATCH --output=results/0645_phage_host_prediction_by_iphop/tmp/slurm/%j.out
 #SBATCH --error=results/0645_phage_host_prediction_by_iphop/tmp/slurm/%j.err
 #SBATCH --mem=100G

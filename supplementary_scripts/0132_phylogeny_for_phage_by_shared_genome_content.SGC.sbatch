@@ -34,6 +34,9 @@
 
             cat $raw_files/SGC_ANI/tmp/$i.$i2.txt \
             >> $raw_files/SGC_ANI/tmp/$i2.txt
+
+            cat $raw_files/SGC_ANI/tmp/$i.$i2.ANI.txt \
+            >> $raw_files/SGC_ANI/tmp/$i2.ANI.txt
         done 
     done
 
