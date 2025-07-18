@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0492_contig_mapping_by_ragtag
-#SBATCH --partition=interactive
+#SBATCH --partition=short,standard,long,interactive,gpu,gpu-veo,gpu-test
 #SBATCH --output=results/0492_contig_mapping_by_ragtag/tmp/slurm/%j.out
 #SBATCH --error=results/0492_contig_mapping_by_ragtag/tmp/slurm/%j.err
 #SBATCH --mem=100G
@@ -11,6 +11,8 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
 ############################################################################### 
+	log "STARTED : $pipeline for $sublist" 
+###############################################################################
 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate ragtag_v2.1.0 
 	
 	while IFS=$'\t' read -r query ref; do 
@@ -25,11 +27,11 @@
 		-o $raw_files/$query_id
 
 		cp $raw_files/$query_id/ragtag.scaffold.fasta \
-		$wd/all_fasta/$i.fasta
+		$wd/all_fasta/$query_id.fasta
 
 		log "DONE: $query $ref"
 	done < $sublist
 
 ############################################################################### 
-	log "finished : $pipeline for $sublist" && clean
+	log "FINISHED : $pipeline for $sublist" && clean
 ###############################################################################
