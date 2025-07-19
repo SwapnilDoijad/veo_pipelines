@@ -1,27 +1,71 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0642_phage_detection_by_jaeger_gpu
-#SBATCH --partition=short
+#SBATCH --partition=gpu
 #SBATCH --output=results/0642_phage_detection_by_jaeger_gpu/tmp/slurm/%j.out
 #SBATCH --error=results/0642_phage_detection_by_jaeger_gpu/tmp/slurm/%j.err
+#SBATCH --gres=gpu:1
 ###############################################################################
 ## step-01: preparation
     pipeline=0642_phage_detection_by_jaeger_gpu
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
-
-
-
     fasta_path=$(grep "fasta_path" $parameters | awk '{print $2}')
+
+    module load nvidia/cuda/12.1.0
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+    conda activate jaeger_dev
+    Jaeger=/home/groups/VEO/tools/jaeger/v1.1.30a0/Jaeger
+    export TF_CPP_MIN_LOG_LEVEL=3
+
+    # conda activate jaeger_v1.1.30a0
+    # module load nvidia/cuda/11.7 
+    # conda activate jaeger_v1.1
+    echo "pipeline: $pipeline"
+    echo "sublist: $sublist"
+    echo "fasta_path: $fasta_path"
+
 ###############################################################################
 ## step-02: main command 
 
+    log "STARTED : $pipeline : sbatch for $sublist"
 
+    for i in $(cat $sublist); do 
+        if [ ! -d $raw_files/prophage/$i ] ; then
+            log "STARTED : $pipeline : sbatch for $sublist : $i "
+
+            ## fasta should contain only upper case letters and well formatted
+            python $suppl_scripts/utilities/reformat_fasta.py \
+            -i $fasta_path/$i.fasta \
+            -o $fasta_path/$i.fasta.tmp
+
+            mv $fasta_path/$i.fasta.tmp $fasta_path/$i.fasta
+
+            python3 $Jaeger/bin/jaeger \
+            run \
+            -p \
+            -i $fasta_path/$i.fasta \
+            -o \
+            $raw_files/prophage \
+            --batch 100  \
+            & my_pid=$!
+            get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
+
+        fi 
+    done
 
 ###############################################################################
 ## step-04: post-processing
+
+    for i in $(cat $sublist); do 
+        prophage_count=$(tail -n +2 $raw_files/prophage/$i/"$i"_default_prophages/prophages_jaeger.tsv  | wc  -l)
+        phage_count=$( awk -F'\t' '$3=="phage" {print $0}' $raw_files/prophage/$i/"$i"_default_jaeger.tsv | wc -l )
+        echo -e "$i\t$phage_count\t$prophage_count" | tee -a $wd/phage_prophage_count.tsv
+    done
+
     ## extract phage fasta
     for i in $(cat $sublist); do
+        if [ ! -f $wd/extracted_fasta/$i/$i.phage.fasta ] ; then 
             log "STARTED : $pipeline : extracting fasta for $i"
             mkdir -p $wd/extracted_fasta/$i
 
@@ -35,8 +79,8 @@
                 -f $raw_files/prophage/$i/$i.contigs_jaeger.tsv.phage.list \
                 $fasta_path/$i.fasta \
                 > $wd/extracted_fasta/$i/$i.phage.fasta
-
-                sed -i "s/>/>"$i"_phage_/g" $wd/extracted_fasta/$i/$i.phage.fasta
+                
+                sed -i "s/>/>"$i"_phage/g" $wd/extracted_fasta/$i/$i.phage.fasta
                 sed -i "s/ /_/g" $wd/extracted_fasta/$i/$i.phage.fasta
 
                 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_multifasta.sh \
@@ -44,7 +88,6 @@
                 -o $wd/extracted_fasta/$i
                 
                 rm -rf $wd/extracted_fasta/$i/$i.phage.fasta
-            
             fi
 
             ## extract prophage fasta
@@ -60,26 +103,14 @@
 
                 rm -rf $fasta_path/$i.fasta.fai
             done < $raw_files/prophage/$i/$i.contigs_jaeger.tsv.prophage.list
-            
+
+
+            log "FINISHED : $pipeline : extracting fasta for $i"
+            else
+            log "ALREADY FINISHED : $pipeline : extract fasta for $i"
+        fi 
     done
 
-    # for i in $(cat $sublist); do
-    #     if [ ! -d $wd/extracted_fasta_split_all ] ; then 
-    #         log "STARTED : $pipeline : $i : split fasta step "
-    #         mkdir -p $wd/extracted_fasta_split/$i
-    #         mkdir -p $wd/extracted_fasta_split_all
-
-    #         bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_multifasta.sh \
-    #         -i $wd/extracted_fasta/$i/$i.phage.fasta \
-    #         -o $wd/extracted_fasta_split/$i 
-
-    #         bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/split_multifasta.sh \
-    #         -i $wd/extracted_fasta/$i/$i.phage.fasta \
-    #         -o $wd/extracted_fasta_split_all
-    #         else
-    #         log "ALREADY FINISHED : $pipeline : $i : split fasta step "
-    #     fi
-    # done
 ###############################################################################
 ## step: calculate stat 
     # summarize_usage() {
@@ -209,7 +240,8 @@
         # Source: This value is obtained from the nvidia-smi command output, specifically querying the GPU memory usage.
 
 ###############################################################################
-
+    log "ENDED : $pipeline : sbatch for $sublist" && clean
+###############################################################################
 
     # /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/fastagrep.pl -X \
     # -f results/0642_phage_detection_by_jaeger_gpu/raw_files/zr11465-08.contigs_jaeger.tsv.phage.list \

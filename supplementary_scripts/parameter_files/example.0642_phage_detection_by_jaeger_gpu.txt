@@ -3,3 +3,6 @@
 ## note that all files should end with .fasta
 ## example path is given below (change the path accordingto your data):
 my_fasta_path	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta
+
+## which version? v1.1 (= v1.1.30a0) or v1.2 (= v1.2.0)
+my_jaeger_version	v1.1

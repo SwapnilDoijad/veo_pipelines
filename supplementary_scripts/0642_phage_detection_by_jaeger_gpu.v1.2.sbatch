@@ -10,24 +10,16 @@
     pipeline=0642_phage_detection_by_jaeger_gpu
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
+    fasta_path=$(grep "fasta_path" $parameters | awk '{print $2}')
 
     module load nvidia/cuda/12.1.0
     source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
-
-    ## v20250624
-        conda activate jaeger_v20250624
-        export XLA_GPU_CUDA_DATA_DIR=/cluster/nvidia/cuda/12.4.0/
-
-    ## v1.1.30a0
-        # conda activate jaeger_dev
-        # Jaeger=/home/groups/VEO/tools/jaeger/v1.1.30a0/Jaeger
-
-
-    # conda activate jaeger_v1.1.30a0
-    # module load nvidia/cuda/11.7 
-    # conda activate jaeger_v1.1
-
-    fasta_path=$(grep "fasta_path" $parameters | awk '{print $2}')
+    conda activate jaeger_v20250624
+    export XLA_GPU_CUDA_DATA_DIR=/cluster/nvidia/cuda/12.4.0/
+    export TF_CPP_MIN_LOG_LEVEL=3
+    echo "pipeline: $pipeline"
+    echo "sublist: $sublist"
+    echo "fasta_path: $fasta_path"
 ###############################################################################
 ## step-02: main command 
 
@@ -36,30 +28,21 @@
     for i in $(cat $sublist); do 
         if [ ! -d $raw_files/prophage/$i ] ; then
             log "STARTED : $pipeline : sbatch for $sublist : $i "
-            
-            export TF_CPP_MIN_LOG_LEVEL=3
 
-            ## latest version with model
-                jaeger predict \
-                -i $fasta_path/$i.fasta \
-                -o $raw_files/phage/$i \
-                -m jaeger_57341_1.5M_fragment \
-                --batch 100 \
-                & my_pid=$!
-                get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
+            ## fasta should contain only upper case letters
+            python $suppl_scripts/utilities/reformat_fasta.low2upCaps.py \
+            -i $fasta_path/$i.fasta \
+            -o $fasta_path/$i.fasta.tmp
 
-            ## OLD version: phage and prophage detection
-                # python3 $Jaeger/bin/jaeger run \
-                # -p -i $fasta_path/$i.fasta -o $raw_files/prophage --batch 100  \
-                # & my_pid=$!
-                # get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
+            mv $fasta_path/$i.fasta.tmp $fasta_path/$i.fasta
 
-                    ## Depreciated as it will get only phage (no prophage); above step get both
-                        ## Jaeger -i $fasta_path -o $raw_files/ --batch 40 &
-                            # python3 $Jaeger/bin/jaeger run \
-                            # -i $fasta_path/$i.fasta -o $raw_files/phage --batch 40  \
-                            # & my_pid=$!
-                            # get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.phage.tsv
+            jaeger predict \
+            -i $fasta_path/$i.fasta \
+            -o $raw_files/phage/$i \
+            -m jaeger_57341_1.5M_fragment \
+            --batch 100 \
+            & my_pid=$!
+            get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
 
             log "FINISHED : $pipeline : sbatch for $sublist : $i "
         else
@@ -253,7 +236,8 @@
         # Source: This value is obtained from the nvidia-smi command output, specifically querying the GPU memory usage.
 
 ###############################################################################
-
+    log "ENDED : $pipeline : sbatch for $sublist" && clean
+###############################################################################
 
     # /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/fastagrep.pl -X \
     # -f results/0642_phage_detection_by_jaeger_gpu/raw_files/zr11465-08.contigs_jaeger.tsv.phage.list \

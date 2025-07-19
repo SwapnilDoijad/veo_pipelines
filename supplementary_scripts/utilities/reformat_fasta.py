@@ -2,20 +2,32 @@ import argparse
 
 def reformat_fasta(input_file, output_file, line_length=60):
     with open(input_file, 'r') as infile:
-        # Read the file and split into header and sequence
         lines = infile.readlines()
-        header = lines[0].strip()
-        sequence = ''.join([line.strip() for line in lines[1:]])
 
-    # Convert sequence to uppercase
-    sequence = sequence.upper()
+    # Initialize variables
+    formatted_output = []
+    current_sequence = []
 
-    # Break sequence into chunks of `line_length`
-    formatted_sequence = '\n'.join([sequence[i:i+line_length] for i in range(0, len(sequence), line_length)])
+    for line in lines:
+        if line.startswith(">"):  # Header line
+            if current_sequence:
+                # Write the previous sequence to the output
+                formatted_output.append('\n'.join([''.join(current_sequence[i:i+line_length]) 
+                                                   for i in range(0, len(current_sequence), line_length)]))
+                current_sequence = []
+            formatted_output.append(line.strip())  # Add the header
+        else:
+            # Add sequence lines (removing whitespace and converting to uppercase)
+            current_sequence.append(line.strip().upper())
 
-    # Write the output to the file
+    # Add the last sequence to the output
+    if current_sequence:
+        formatted_output.append('\n'.join([''.join(current_sequence[i:i+line_length]) 
+                                           for i in range(0, len(current_sequence), line_length)]))
+
+    # Write the formatted output to the file
     with open(output_file, 'w') as outfile:
-        outfile.write(f"{header}\n{formatted_sequence}\n")
+        outfile.write('\n'.join(formatted_output) + '\n')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Reformat FASTA file to a specified line length.")
