@@ -31,7 +31,7 @@
     log "STARTED : $pipeline : sbatch for $sublist"
 
     for i in $(cat $sublist); do 
-        if [ ! -d $raw_files/prophage/$i ] ; then
+        if [ ! -f $raw_files/prophage/$i/"$i"_default_jaeger.tsv ] ; then
             log "STARTED : $pipeline : sbatch for $sublist : $i "
 
             ## fasta should contain only upper case letters and well formatted
@@ -45,8 +45,7 @@
             run \
             -p \
             -i $fasta_path/$i.fasta \
-            -o \
-            $raw_files/prophage \
+            -o $raw_files/prophage \
             --batch 100  \
             & my_pid=$!
             get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 

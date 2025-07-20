@@ -354,8 +354,8 @@ submit_sbatch_and_wait_till_run_is_complete() {
 
 # clean_empty_files_and_dirs -i /path/to/directory
 clean() {
-    find "$wd" -type f -empty -delete
-    find "$wd" -type d -empty -delete
+    # find "$wd" -type f -empty -delete
+    # find "$wd" -type d -empty -delete
     ## send email notification
         user=$(whoami)
         user_name=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $2}')
