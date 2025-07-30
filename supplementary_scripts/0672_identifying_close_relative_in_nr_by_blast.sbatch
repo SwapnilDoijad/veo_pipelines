@@ -13,8 +13,9 @@
     create_directories_structure_1 $wd
 	sublist=$wd/tmp/lists/ABC
 ###############################################################################
+	log "STARTED : $pipeline for $sublist"
+###############################################################################
 ## run blast
-    echo "STARTED : $pipeline --------------------------------------"
 	for i in $(cat $sublist); do
 		if [ ! -f $raw_files/$i.blastn ] ; then 
 			log "STARTED : blast for $i"
@@ -62,4 +63,6 @@
 		awk '!seen[$2]++' $raw_files/$i.blastn.ids.hits.out \
 		> $raw_files/$i.blastn.ids.hits.out.best
 	done 
+###############################################################################
+log "FINISHED : $pipeline for $sublist" && clean
 ###############################################################################

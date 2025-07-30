@@ -8,7 +8,7 @@
 ## step-01: preparation
 
 	fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
-	ls $fastq_path/ | sed 's/\.fastq\.gz//g' > list.fastq.$pipeline.txt
+	ls $fastq_path/ | sed 's/\.fastq\.gz//g' | sed 's/_R1//g' | sed 's/_R2//g' | sort | uniq > list.fastq.$pipeline.txt
 	list=list.fastq.$pipeline.txt
 
 	echo -e "IDs\tnumber_of_contigs" > $summary.tsv

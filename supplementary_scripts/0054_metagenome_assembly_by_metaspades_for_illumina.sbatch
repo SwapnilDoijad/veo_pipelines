@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=0054_metagenome_assembly_by_metaspades_for_illumina
-#SBATCH --partition=gpu
+#SBATCH --partition=fat,gpu-veo,gpu-test,gpu
 #SBATCH --output=results/0054_metagenome_assembly_by_metaspades_for_illumina/tmp/slurm/%j.out
 #SBATCH --error=results/0054_metagenome_assembly_by_metaspades_for_illumina/tmp/slurm/%j.err
-#SBATCH --mem=250G
-#SBATCH --cpus-per-task=40
+#SBATCH --mem=700G
+#SBATCH --cpus-per-task=20
 ###############################################################################
 ## header
     pipeline=0054_metagenome_assembly_by_metaspades_for_illumina
@@ -20,7 +20,7 @@
 ## step-01: preparatoion
 
     for i in $(cat $sublist); do
-        mkdir results/$pipeline/raw_files/$i > /dev/null 2>&1
+        mkdir $raw_files/$i > /dev/null 2>&1
 
         if [ $data_type = "paired" ] ; then 
             if [ ! -f $raw_files/$i/contigs.fasta ] || grep -q "== Error ==" $raw_files/$i/spades.log ; then 
@@ -31,7 +31,9 @@
                 -2 $fastq_path/$i*R2*.fastq.gz \
                 -t $SLURM_CPUS_PER_TASK \
                 -m 500 \
-                -o $raw_files/$i
+                -o $raw_files/$i \
+                & my_pid=$!
+                get_resource_stat $my_pid $wd/tmp/resource_log/$i.metaspades.paired.tsv
 
                 log "FINISHED : metaspades-assembler for $i : $read_type"
                 else
@@ -45,7 +47,9 @@
                 -s $fastq_path/$i.fastq.gz \
                 -t $SLURM_CPUS_PER_TASK \
                 -m 500 \
-                -o $raw_files/$i
+                -o $raw_files/$i \
+                & my_pid=$!
+                get_resource_stat $my_pid $wd/tmp/resource_log/$i.metaspades.single.tsv
 
                 log "FINISHED : metaspades-assembler for $i : $read_type"
                 else
@@ -80,7 +84,9 @@
                     -o $raw_files/$i/quast/ \
                     -t 40 \
                     --silent \
-                    $raw_files/$i/contigs.fasta
+                    $raw_files/$i/contigs.fasta \
+                    & my_pid=$!
+                    get_resource_stat $my_pid $wd/tmp/resource_log/$i.quast.tsv
 
                     log "FINISHED : $pipeline for $i : quast"
                     else
@@ -103,7 +109,9 @@
 				python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py --silent \
                 -t 40 \
 				-o $raw_files/$i/metaquast/ \
-				$raw_files/$i/contigs.fasta 
+				$raw_files/$i/contigs.fasta \
+                & my_pid=$!
+                get_resource_stat $my_pid $wd/tmp/resource_log/$i.metaquast.tsv
 
                 log "FINISHED : $pipeline for $i : metaquast"
                 else
@@ -115,5 +123,5 @@
 
 ###############################################################################
 ## footer
-    log "SBATCH ENDED : $pipeline ----------------------"
+    log "SBATCH ENDED : $pipeline ----------------------" && clean
 ###############################################################################

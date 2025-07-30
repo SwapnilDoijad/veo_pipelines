@@ -33,5 +33,5 @@ sublist=$wd/tmp/lists/ABC
 			fi 
 		done
 ###############################################################################
-	log "finished : $pipeline for $sublist" && clean
+	log "FINISHED : $pipeline for $sublist" && clean
 ###############################################################################

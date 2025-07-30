@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0055_metagenome_assembly_by_megahit_for_illumina
-#SBATCH --partition=gpu-test
+#SBATCH --partition=fat,gpu-veo,gpu-test,gpu
 #SBATCH --output=results/0055_metagenome_assembly_by_megahit_for_illumina/tmp/slurm/%j.out
 #SBATCH --error=results/0055_metagenome_assembly_by_megahit_for_illumina/tmp/slurm/%j.err
 #SBATCH --mem=230G
@@ -11,7 +11,6 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     data_type=$( grep -w "my_data_type" $parameters | awk '{print $2}' )
 	fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
-    cpus=$SLURM_CPUS_PER_TASK
     sublist=$wd/tmp/lists/ABC
 
     log "SBATCH STARTED : $pipeline : $sublist -----------------------------------"
@@ -29,11 +28,13 @@
             megahit \
             -1 $fastq_path/$i*R1*.fastq.gz \
             -2 $fastq_path/$i*R2*.fastq.gz \
-            -t $cpus \
+            -t $SLURM_CPUS_PER_TASK \
             -m 0.9 \
             --out-prefix $i \
             --min-contig-len 500 \
-            -o $raw_files/$i
+            -o $raw_files/$i \
+            & my_pid=$!
+			get_resource_stat $my_pid $wd/tmp/resource_log/$i.paired.tsv 
 
             log "FINISHED : $pipeline for $i"
             else
@@ -46,11 +47,13 @@
 
             megahit \
             -r $fastq_path/$i.fastq.gz \
-            -t $cpus \
+            -t $SLURM_CPUS_PER_TASK \
             -m 0.9 \
             --out-prefix $i \
             --min-contig-len 500 \
-            -o $raw_files/$i 
+            -o $raw_files/$i \
+            & my_pid=$!
+			get_resource_stat $my_pid $wd/tmp/resource_log/$i.single.tsv
 
             log "FINISHED : $pipeline : $data_type : for $i"
             else
@@ -84,7 +87,9 @@
                     python3 /home/groups/VEO/tools/quast/v5.2.0/quast.py \
                     -o $raw_files/$i/quast/ \
                     --silent \
-                    $wd/all_fasta/$i.fasta
+                    $wd/all_fasta/$i.fasta \
+                    & my_pid=$!
+                    get_resource_stat $my_pid $wd/tmp/resource_log/$i.quast.tsv
 
                     log "FINISHED : $pipeline for $i : quast"
                     else
@@ -107,7 +112,9 @@
 
 				python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py --silent \
 				-o $raw_files/$i/quast/ \
-				$wd/all_fasta/$i.fasta
+				$wd/all_fasta/$i.fasta \
+                & my_pid=$!
+                get_resource_stat $my_pid $wd/tmp/resource_log/$i.metaquast.tsv
 
 				else
 				log "metaquast for $i: already finished"
@@ -116,6 +123,6 @@
     done 
 ###############################################################################
 ## footer
-    log "SBATCH ENDED : $pipeline ----------------------"
+    log "SBATCH ENDED : $pipeline ----------------------" && clean
 ###############################################################################
 

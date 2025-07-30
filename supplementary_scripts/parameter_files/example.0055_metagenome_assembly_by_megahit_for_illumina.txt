@@ -9,4 +9,4 @@
 my_fastq_path	data/raw_reads
 
 ## data type: single or paired
-my_data_type	single 
+my_data_type	paired 

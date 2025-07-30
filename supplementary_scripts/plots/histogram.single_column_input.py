@@ -29,7 +29,7 @@ with open(args.input, 'r') as f:
         except ValueError:
             continue  # Ignore lines that cannot be converted to integers
 
-# Define bins from 0 to 100000 in steps of user-defined range
+# Define bins from 0 to 1000000 in steps of user-defined range
 bins = np.arange(0, 100001, args.range)
 
 # Calculate histogram data
