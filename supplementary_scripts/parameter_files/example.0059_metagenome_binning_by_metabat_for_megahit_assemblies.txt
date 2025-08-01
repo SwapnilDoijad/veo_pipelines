@@ -1,0 +1,5 @@
+## This is a parameter file for 0059_metagenome_binning_by_metabat_for_megahit_assemblies pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_dir	results/0054_metagenome_assembly_by_metaspades_for_illumina/all_fasta

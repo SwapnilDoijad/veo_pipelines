@@ -356,6 +356,7 @@ submit_sbatch_and_wait_till_run_is_complete() {
 clean() {
     # find "$wd" -type f -empty -delete
     # find "$wd" -type d -empty -delete
+    rm -rf tmp.best_free_nodes_at_draco.txt > /dev/null 2>&1
     ## send email notification
         user=$(whoami)
         user_name=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $2}')

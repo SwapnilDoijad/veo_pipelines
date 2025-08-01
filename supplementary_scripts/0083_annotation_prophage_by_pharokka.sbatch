@@ -28,7 +28,9 @@
             -o $raw_files/$i \
             -d /veodata/03/databases/pharokka/v20230501 \
             -t $SLURM_CPUS_PER_TASK \
-            -f -p $i -l $id
+            -f -p $i -l $id \
+			& my_pid=$!
+			get_resource_stat $my_pid $wd/tmp/resource_log/$i.pharokka.tsv 
 
 			log "FINISHED : $pipeline : $i"
             else

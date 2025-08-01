@@ -1,0 +1,13 @@
+## This is a parameter file for 0049_contig_mapping_and_genomeReorganising_by_mauve pipeline
+## tab seperated
+## note that all files should end with .fasta
+## if you want all genomes to start from aproximately same start position (for e.g. for comparative genomic analysis), then use one reference 
+## give ABSOLUTE path of files
+## example ABSOLUTE path is given below (change the path according to your data):
+
+#ref_fasta	query_fasta
+/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/my_fasta/S1.fasta	/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results/data/1_HQ_Data/A1_test.fasta
+/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/my_fasta/S1.fasta	/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results/data/1_HQ_Data/A2_test.fasta
+/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/my_fasta/S1.fasta	/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results/data/1_HQ_Data/A3_test.fasta
+
+## end of paramter file

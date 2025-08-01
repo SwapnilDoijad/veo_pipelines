@@ -1,42 +1,18 @@
 #!/bin/bash
 ###############################################################################
 ## header
+	pipeline=0059_metagenome_binning_by_metabat_for_megahit_assemblies
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 	log "STARTED : 0059_metagenome_binning_by_metabat_for_megahit_assemblies started ------------------------------------"
 ###############################################################################
 ## step-01: preparation
 
-	pipeline=0059_metagenome_binning_by_metabat_for_megahit_assemblies
-	wd=results/$pipeline
-
-    if [ -f list.fastq.txt ]; then 
-        list=list.fastq.txt
-		else
-		echo "provide list file (for e.g. all)"
-		read l
-		list=$(echo "list.$l.txt")
-	fi
-
-	if [ -f result_summary.read_me.txt ]; then
-        fastq_file_path=$(grep fastq result_summary.read_me.txt | awk '{print $NF}')
-        else
-        echo "provide fastq_file_path"
-        read fastq_file_path
-    fi
+    fasta_file_dir=$(grep "my_fasta_dir" $parameters | awk '{print $2}')
+    ls $fasta_file_dir/*.fasta | awk -F'/' '{print $NF}' | sed 's/\.fasta//g' | grep -v "samtools" > list.$pipeline.txt
 
     create_directories_structure_1 $wd
     split_list $wd $list
-###############################################################################
-## step-02: create and run sbatch files
-
-    for sublist in $( ls $wd/tmp/lists/ ) ; do
-        sed "s#ABC#$sublist#g" /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.sbatch \
-        | sed "s#XYZ#$fasta_path#g" \
-        > $wd/tmp/sbatch/$pipeline.$sublist.sbatch
-        sbatch $wd/tmp/sbatch/$pipeline.$sublist.sbatch > /dev/null 2>&1
-        log "SUBMITTED : metabat sbatch for $sublist"
-    done
-
+    submit_jobs $wd $pipeline
 ###############################################################################
 ## step-02: wait untill assembly is finished
 	# rm $wd/tmp/megahit_assembly.finished > /dev/null 2>&1

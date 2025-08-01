@@ -60,8 +60,8 @@
 
     mkdir $raw_files/all_fasta > /dev/null 2>&1
     for i in $(cat $sublist); do
-        if [ -f $raw_files/$i/contigs.fasta ] && [ ! -f $raw_files/all_fasta/$i.contigs.fasta ] ; then
-            cp $raw_files/$i/contigs.fasta $raw_files/all_fasta/$i.contigs.fasta
+        if [ -f $raw_files/$i/contigs.fasta ] && [ ! -f $wd/all_fasta/$i.contigs.fasta ] ; then
+            cp $raw_files/$i/contigs.fasta $wd/all_fasta/$i.fasta
 
             number_of_contigs=$(grep -c ">" $raw_files/$i/contigs.fasta)
             echo $number_of_contigs >> summary.tsv

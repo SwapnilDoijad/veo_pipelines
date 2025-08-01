@@ -60,6 +60,7 @@
             log "ALREADY FINISHED : $pipeline : $data_type : for $i"
         fi
 
+        sleep 60 # wait for the megahit to finish writing the output files
         cp $raw_files/$i/$i.contigs.fa $wd/all_fasta/$i.fasta
     done
 
