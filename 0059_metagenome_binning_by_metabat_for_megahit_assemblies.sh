@@ -13,6 +13,8 @@
     create_directories_structure_1 $wd
     split_list $wd $list
     submit_jobs $wd $pipeline
+
+	mkdir $wd/all_fasta > /dev/null 2>&1
 ###############################################################################
 ## step-02: wait untill assembly is finished
 	# rm $wd/tmp/megahit_assembly.finished > /dev/null 2>&1

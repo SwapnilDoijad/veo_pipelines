@@ -66,6 +66,7 @@
 
 
     mkdir $wd/all_fasta > /dev/null 2>&1
+    echo -e "ids\tcontigs" > $wd/summary.tsv
     for i in $(cat $sublist); do
         if [ -f $wd/all_fasta/$i.fasta ] ; then
             number_of_contigs=$( grep -c ">" $wd/all_fasta/$i.fasta )
@@ -88,6 +89,7 @@
                     python3 /home/groups/VEO/tools/quast/v5.2.0/quast.py \
                     -o $raw_files/$i/quast/ \
                     --silent \
+                    --threads $SLURM_CPUS_PER_TASK \
                     $wd/all_fasta/$i.fasta \
                     & my_pid=$!
                     get_resource_stat $my_pid $wd/tmp/resource_log/$i.quast.tsv
@@ -111,7 +113,9 @@
 
 				mkdir -p $raw_files/$i/metaquast/fasta
 
-				python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py --silent \
+				python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py \
+                --silent \
+                --threads $SLURM_CPUS_PER_TASK \
 				-o $raw_files/$i/quast/ \
 				$wd/all_fasta/$i.fasta \
                 & my_pid=$!
@@ -126,4 +130,9 @@
 ## footer
     log "SBATCH ENDED : $pipeline ----------------------" && clean
 ###############################################################################
-
+## manual post-processing 
+    # python3 /home/groups/VEO/tools/quast/v5.2.0/quast.py \
+    # -t 40 \
+    # -o results/0054_metagenome_assembly_by_metaspades_for_illumina/quast \
+    # --silent results/0054_metagenome_assembly_by_metaspades_for_illumina/all_fasta/*.fasta
+###############################################################################

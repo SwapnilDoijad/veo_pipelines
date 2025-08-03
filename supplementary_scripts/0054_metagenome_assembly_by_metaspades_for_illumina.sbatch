@@ -125,3 +125,9 @@
 ## footer
     log "SBATCH ENDED : $pipeline ----------------------" && clean
 ###############################################################################
+## manual post-processing 
+    # python3 /home/groups/VEO/tools/quast/v5.2.0/quast.py \
+    # -t 40 \
+    # -o $wd/quast \
+    # --silent $wd/all_fasta/*.fasta
+###############################################################################

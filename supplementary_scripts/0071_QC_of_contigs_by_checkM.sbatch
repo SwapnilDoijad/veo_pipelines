@@ -26,7 +26,7 @@
             log "RUNNING : $pipeline : $i"
             (mkdir -p $wd/fasta/$i) > /dev/null 2>&1
 
-            cp $fasta_path/"$i"*.fasta $wd/fasta/$i/
+            cp $fasta_path/"$i".*.fasta $wd/fasta/$i/
             rm $wd/fasta/$i/*.tooShort.* > /dev/null 2>&1
             rm $wd/fasta/$i/*.unbinned.* > /dev/null 2>&1
 

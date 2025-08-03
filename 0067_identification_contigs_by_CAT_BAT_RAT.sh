@@ -6,16 +6,8 @@
 ###############################################################################
 ## step-01: file and directory preparation
 
-    if [ -f list.fasta.txt ]; then 
-        list=list.fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
+    awk '/^##sample-ids/ {flag=1; next} flag && NF==0 {flag=0} flag' $parameters | awk '{print $1}' > list.$pipeline.txt
+    list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
     split_list $wd $list

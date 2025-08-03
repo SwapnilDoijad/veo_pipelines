@@ -21,7 +21,7 @@
             
             mkdir $raw_files/$i 
 
-            /home/groups/VEO/tools/metabat/v2/bin/metabat2 \
+            $tools/metabat/v2/bin/metabat2 \
             -i $fasta_path/$i.fasta \
             -o $raw_files/$i/$i \
             --minContig 1500 \
@@ -47,17 +47,26 @@
 
     done
 
-    echo -e "IDs\tnumber_of_contigs" > $wd/summary.tsv
-    mkdir $wd/all_fasta > /dev/null 2>&1
+    ## copy fasta to all_fasta directory
     for i in $(cat $sublist); do
-        if [ ! -f $wd/all_fasta/$i.1.fasta ] ; then
-            cp $raw_files/$i/$i.*.fa $wd/all_fasta/$i.*.fasta
+        for i2 in $(ls $raw_files/$i/ | grep -v 'tooShort' | grep -v unbinned | grep -v 'metaquast' | sed 's/.fa//g') ; do
+            echo $i2
+            cp $raw_files/$i/$i2.fa \
+            $wd/all_fasta/$i2.fasta
 
-            number_of_contigs=$( grep -c ">" $raw_files/$i/$i.contigs.fa )
+
+            number_of_contigs=$( grep -c ">" $raw_files/$i/$i2.fa )
             echo -e "$i\t$number_of_contigs" >> $wd/summary.tsv
-            else 
-            echo -e "$i\tNA" >> $wd/summary.tsv
-        fi 
+
+        done
+    done
+
+    echo -e "IDs\tnumber_of_contigs" > $wd/summary.tsv
+    for i in $(cat $sublist); do
+        for i2 in $(ls $raw_files/$i/ | grep -v 'metaquast' | sed 's/.fa//g') ; do
+            number_of_contigs=$( grep -c ">" $raw_files/$i/$i2.fa )
+            echo -e "$i\t$i2\t$number_of_contigs" >> $wd/summary.tsv
+        done
     done
 ###############################################################################
 ## footer

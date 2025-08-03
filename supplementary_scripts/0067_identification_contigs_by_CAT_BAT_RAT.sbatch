@@ -23,17 +23,18 @@
     for i in $(cat $sublist); do
         log "RUNNING : $pipeline for $i"
 
-        mkdir $wd/raw_files/$i/CAT/ > /dev/null 2>&1
+        mkdir $raw_files/$i/CAT/ > /dev/null 2>&1
         file_path=$(grep -w "$i" $parameters | awk '{print $2}')
         bin_path=$(grep bins $parameters  | grep -v "#" | awk '{print $2}')
-        read_path=$(grep paired_fastq_reads $parameters | grep -v "#" | awk '{print $2}')
+        read_path=$(grep paired_fastq_read_path $parameters | grep -v "#" | awk '{print $2}')
 
         if [ "$choise" = "all" ] || [ "$choise" = "CAT" ]; then
-        if [ ! -f $wd/raw_files/$i/CAT/$i.contig2classification.txt ] ; then 
+        if [ ! -f $raw_files/$i/CAT/$i.contig2classification.txt ] ; then 
             log  "RUNNING : $pipeline : $i"
-            mkdir -p $wd/raw_files/$i/CAT
+            mkdir -p $raw_files/$i/CAT
 
-            /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack contigs \
+            /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack \
+            contigs \
             -f 0.1 \
             -c $file_path \
             -d $nr_database \
@@ -41,18 +42,18 @@
             --path_to_prodigal $prodigal \
             --path_to_diamond $diamond \
             -n $SLURM_CPUS_PER_TASK \
-            --out_prefix $wd/raw_files/$i/CAT/$i
+            --out_prefix $raw_files/$i/CAT/$i
 
             /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack add_names \
-            -i $wd/raw_files/$i/CAT/$i.contig2classification.txt \
-            -o $wd/raw_files/$i/CAT/$i.contig2classification.official_names.txt \
+            -i $raw_files/$i/CAT/$i.contig2classification.txt \
+            -o $raw_files/$i/CAT/$i.contig2classification.official_names.txt \
             -t $tax_database \
             --only_official
 
             /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack summarise \
             -c $file_path \
-            -i $wd/raw_files/$i/CAT/$i.contig2classification.official_names.txt \
-            -o $wd/raw_files/$i/CAT/$i.summary.txt
+            -i $raw_files/$i/CAT/$i.contig2classification.official_names.txt \
+            -o $raw_files/$i/CAT/$i.summary.txt
 
             log "FINISHED : $pipeline : $i"
             else
@@ -61,39 +62,40 @@
         fi
 
         if [ "$choise" = "all" ] || [ "$choise" = "BAT" ]; then
-        if [ ! -d $wd/raw_files/$i/BAT ] ; then 
+        if [ ! -d $raw_files/$i/BAT ] ; then 
             log "STARTED : $pipeline : $i : BAT "
-            mkdir -p $wd/raw_files/$i/BAT > /dev/null 2>&1
+            mkdir -p $raw_files/$i/BAT > /dev/null 2>&1
 
             /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack bins \
             -f 0.1 \
             -b $bin_path/raw_files/$i/ \
             -d $nr_database \
             -t $tax_database \
-            -s .fasta \
-            -p $wd/raw_files/$i/CAT/$i.predicted_proteins.faa \
-            -a $wd/raw_files/$i/CAT/$i.alignment.diamond \
-            -o $wd/raw_files/$i/BAT/$i
+            -s .fa \
+            -p $raw_files/$i/CAT/$i.predicted_proteins.faa \
+            -a $raw_files/$i/CAT/$i.alignment.diamond \
+            -o $raw_files/$i/BAT/$i
 
             /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack add_names \
-            -i $wd/raw_files/$i/BAT/$i.bin2classification.txt \
-            -o $wd/raw_files/$i/BAT/$i.contig2classification.official_names.txt \
+            -i $raw_files/$i/BAT/$i.bin2classification.txt \
+            -o $raw_files/$i/BAT/$i.contig2classification.official_names.txt \
             -t $tax_database \
             --only_official
 
             /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack summarise \
-            -i $wd/raw_files/$i/BAT/$i.contig2classification.official_names.txt \
-            -o $wd/raw_files/$i/BAT/$i.summary.txt
+            -i $raw_files/$i/BAT/$i.contig2classification.official_names.txt \
+            -o $raw_files/$i/BAT/$i.summary.txt
 
             else
             log "ALREADY FINISHED : $pipeline : $i : BAT "
         fi
+        fi
 
         if [ "$choise" = "all" ] || [ "$choise" = "RAT" ]; then
-        if [ ! -d $wd/raw_files/$i/RAT ] ; then
+        if [ ! -d $raw_files/$i/RAT ] ; then
             log "RUNNING : RAT for $i"
 
-            mkdir -p $wd/raw_files/$i/RAT > /dev/null 2>&1
+            mkdir -p $raw_files/$i/RAT > /dev/null 2>&1
             
             /home/groups/VEO/tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack reads \
             --mode mcr \
@@ -103,14 +105,14 @@
             -2 $read_path/"$i"_R2.fastq.gz \
             -d $nr_database \
             -t $tax_database \
-            -s .fasta \
+            -s .fa \
             --path_to_bwa /home/groups/VEO/tools/bwa/v0.7.17/bwa \
             --path_to_samtools /home/groups/VEO/tools/samtools/v1.17/bin/samtools \
             --path_to_prodigal $prodigal \
             --path_to_diamond $diamond \
-            --c2c $wd/raw_files/$i/CAT/$i.contig2classification.txt \
-            --b2c $wd/raw_files/$i/BAT/$i.bin2classification.txt \
-            -o $wd/raw_files/$i/RAT/$i
+            --c2c $raw_files/$i/CAT/$i.contig2classification.txt \
+            --b2c $raw_files/$i/BAT/$i.bin2classification.txt \
+            -o $raw_files/$i/RAT/$i
             else
                 log "ALREADY FINISHED : RAT for $i"
         fi
