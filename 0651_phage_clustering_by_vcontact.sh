@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 ## header
-    pipeline=0651_phage_clustering_by_vcontact2
+    pipeline=0651_phage_clustering_by_vcontact
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################
@@ -11,7 +11,7 @@
 
     create_directories_structure_1 $wd
 
-	sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/0651_phage_clustering_by_vcontact2.sbatch
+	sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/0651_phage_clustering_by_vcontact.sbatch
 ###############################################################################
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################

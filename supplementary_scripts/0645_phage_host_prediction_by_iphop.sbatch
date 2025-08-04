@@ -21,7 +21,7 @@
 
 		for i in $(cat $sublist); do
 			if [ ! -d $raw_files/$i ]; then
-				log "RUNNING : checkV for $i"
+				log "RUNNING : $pipeline for $i"
 
 				(mkdir $raw_files/$i) > /dev/null 2>&1
 				
@@ -33,7 +33,7 @@
 
 				log "FINISHED: $pipeline for $sublist"
 				else
-				log "ALREADY FINISHED: checkV for $i"
+				log "ALREADY FINISHED: $pipeline for $i"
 			fi
 		done 
 

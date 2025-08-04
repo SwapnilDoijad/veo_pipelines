@@ -1,7 +1,17 @@
-## This is a parameter file for 0651_phage_clustering_by_vcontact2 pipeline
+## This is a parameter file for 0651_phage_clustering_by_vcontact pipeline
 ## please give a path of a single folder in which all fasta files are stored
-## note that all files should end with .fasta
-## example path is given below (change the path accordingto your data):
+
+## v2 or v3? 
+## v2 accept .faa 
+## v3 accept nucleotides (recommended) 
+my_vcontact_version	v3
+
+## for v3
+## give a single file path containing all your sequences, for e.g. 
+my_fasta_path	data/cluster_fasta_2/representative_sequences.filtered1000.fasta
+
+## for v2
+## give a folder path containing .faa files, for e.g. 
 my_faa_path	/vast/xa73pav/projects/p_yin_phage/results/0083_annotation_prophage_by_pharokka/faa
 
 ## choose one of the database
@@ -23,4 +33,4 @@ my_faa_path	/vast/xa73pav/projects/p_yin_phage/results/0083_annotation_prophage_
 # 	ArchaeaViralRefSeq207-Merged
 # 	ArchaeaViralRefSeq211-Merged
 
-my_database ProkaryoticViralRefSeq85-ICTV
+my_database	ProkaryoticViralRefSeq85-ICTV

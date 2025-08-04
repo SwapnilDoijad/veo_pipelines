@@ -28,6 +28,7 @@
         bin_path=$(grep bins $parameters  | grep -v "#" | awk '{print $2}')
         read_path=$(grep paired_fastq_read_path $parameters | grep -v "#" | awk '{print $2}')
 
+        ## CAT
         if [ "$choise" = "all" ] || [ "$choise" = "CAT" ]; then
         if [ ! -f $raw_files/$i/CAT/$i.contig2classification.txt ] ; then 
             log  "RUNNING : $pipeline : $i"
