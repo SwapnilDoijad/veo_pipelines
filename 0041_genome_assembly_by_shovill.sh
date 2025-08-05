@@ -7,7 +7,7 @@
 ## step-01: preparations
 
     fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
-    ls $fastq_path/ | sed 's/\.fastq\.gz//g' | sort | uniq | sed 's/_R1_001//g' | sed 's/_R2_001//g' > list.$pipeline.txt
+    ls $fastq_path/ | awk -F'_' '{print $1}' | sort | uniq  > list.$pipeline.txt
     list=list.$pipeline.txt
 
     create_directories_structure_1 $wd

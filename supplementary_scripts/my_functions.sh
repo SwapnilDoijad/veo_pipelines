@@ -122,6 +122,14 @@ get_fasta_lengths() {
     }' "$fasta_file"
 }
 
+get_suffix() {
+    case "$1" in
+        *.fastq.gz) echo ".fastq.gz" ;;
+        *.fq.gz) echo ".fq.gz" ;;
+        *) echo "unknown" ;;
+    esac
+}
+
 # Function to get accumulated length of all sequences in FASTA
 fasta_length() {
     local fasta_file="$1"
