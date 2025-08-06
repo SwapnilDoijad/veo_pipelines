@@ -1,16 +1,14 @@
-## This is a parameter file for 0067_identification_contigs_by_CAT pipeline
-## please give a path of every file that you would like to analyse
-## example sample-ids and their path given below (change according to your data):
-##sample-ids	file_path
-MCS221	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/MCS221.fasta
-MCS224	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/MCS224.fasta
-MCS231	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/MCS231.fasta
-MCS234	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta/MCS234.fasta
+## This is a parameter file for 0067_identification_contigs_by_CAT_BAT_RAT pipeline
+## please give a path of a singel folder containing fasta files (files should end with .fasta)
+## example path given below (change according to your data):
+my_fasta_path	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/dataset_challenge
 
 ## if binning is carried out, you can also run BAT 
-## please provide the path of the binning folder
+## please provide the path of the binning folder 
+## if your files are /vast/xa73pav/projects/p_bhagwan_metagenome/results/0059_metagenome_binning_by_metabat_metaspades/raw_files/MCS221/*.fa 
+## then provide only /vast/xa73pav/projects/p_bhagwan_metagenome/results/0059_metagenome_binning_by_metabat_metaspades
 ## for e.g. 
-bins	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0059_metagenome_binning_by_metabat_for_megahit_assemblies
+bins	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0059_metagenome_binning_by_metabat_metaspades
 
 ## fastq file path for RAT
 paired_fastq_read_path	/vast/xa73pav/projects/p_bhagwan_metagenome/results/0025_QC_of_paired_fastq_by_fastp/raw_files

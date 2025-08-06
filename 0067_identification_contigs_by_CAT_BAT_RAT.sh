@@ -5,8 +5,8 @@
     log "STARTED : 0067_identification_contigs_by_CAT -------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
-
-    awk '/^##sample-ids/ {flag=1; next} flag && NF==0 {flag=0} flag' $parameters | awk '{print $1}' > list.$pipeline.txt
+    fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
+    ls $fasta_directory | sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.txt
     list=list.$pipeline.txt
 
     create_directories_structure_1 $wd

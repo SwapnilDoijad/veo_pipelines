@@ -1,9 +1,9 @@
 #!/bin/bash
 ###############################################################################
 ## header
-	pipeline=0059_metagenome_binning_by_metabat_for_megahit_assemblies
+	pipeline=0059_metagenome_binning_by_metabat
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-	log "STARTED : 0059_metagenome_binning_by_metabat_for_megahit_assemblies started ------------------------------------"
+	log "STARTED : 0059_metagenome_binning_by_metabat started ------------------------------------"
 ###############################################################################
 ## step-01: preparation
 

@@ -26,8 +26,11 @@ sublist=$wd/tmp/lists/ABC
                 -t $SLURM_CPUS_PER_TASK \
 				-d /veodata/03/databases/checkv/v1.5 
 
-				awk 'NR>1 {print $0}' $wd/raw_files/$i/quality_summary.tsv | sed -e 's/^/'"$i\t"'/g ' > $wd/raw_files/$i/quality_summary.tsv.tmp
-				cat "$wd/raw_files/$i/quality_summary.tsv.tmp" >> "$wd/summary.tsv"
+				awk 'NR>1 {print $0}' $wd/raw_files/$i/quality_summary.tsv | sed -e 's/^/'"$i\t"'/g ' \
+				> $wd/raw_files/$i/quality_summary.tsv.tmp
+
+				cat "$wd/raw_files/$i/quality_summary.tsv.tmp" \
+				>> "$wd/summary.tsv"
 				else
 				log "already finished: checkV for $i"
 			fi 

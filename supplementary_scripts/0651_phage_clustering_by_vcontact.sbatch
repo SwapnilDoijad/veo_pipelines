@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=0651_phage_clustering_by_vcontact
-#SBATCH --partition=short,long
+#SBATCH --partition=standard,long
 #SBATCH --output=results/0651_phage_clustering_by_vcontact/tmp/slurm/%j.out
 #SBATCH --error=results/0651_phage_clustering_by_vcontact/tmp/slurm/%j.err
 #SBATCH --mem=200G
-#SBATCH --cpus-per-task=80
+#SBATCH --cpus-per-task=40
 ###############################################################################
 ## step-00: preparation
     pipeline=0651_phage_clustering_by_vcontact
@@ -85,7 +85,9 @@
         -e graphml cytoscape \
         --db-path /veodata/03/databases/vcontact3/v20250721 \
         -o $raw_files/results \
-        -t $SLURM_CPUS_PER_TASK
+        -t $SLURM_CPUS_PER_TASK \
+        & my_pid=$!
+        get_resource_stat $my_pid $wd/tmp/resource_log/vcontact3.run.tsv 
 
     fi
 

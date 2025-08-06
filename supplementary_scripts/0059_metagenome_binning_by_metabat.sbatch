@@ -1,17 +1,17 @@
 #!/bin/bash
-#SBATCH --job-name=0059_metagenome_binning_by_metabat_for_megahit_assemblies
+#SBATCH --job-name=0059_metagenome_binning_by_metabat
 #SBATCH --partition=gpu-veo,standard,long,gpu,gpu-test
-#SBATCH --output=results/0059_metagenome_binning_by_metabat_for_megahit_assemblies/tmp/slurm/%j.out
-#SBATCH --error=results/0059_metagenome_binning_by_metabat_for_megahit_assemblies/tmp/slurm/%j.err
+#SBATCH --output=results/0059_metagenome_binning_by_metabat/tmp/slurm/%j.out
+#SBATCH --error=results/0059_metagenome_binning_by_metabat/tmp/slurm/%j.err
 #SBATCH --mem=200G
 #SBATCH --cpus-per-task=80
 ###############################################################################
 ## header
-    pipeline=0059_metagenome_binning_by_metabat_for_megahit_assemblies
+    pipeline=0059_metagenome_binning_by_metabat
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
     fasta_path=$(grep "my_fasta_dir" $parameters | awk '{print $2}')
-    log "SBATCH STARTED : 0059_metagenome_binning_by_metabat_for_megahit_assemblies -----------------------------------"
+    log "SBATCH STARTED : 0059_metagenome_binning_by_metabat -----------------------------------"
 ###############################################################################
     sublist=$wd/tmp/lists/ABC
 
@@ -70,7 +70,7 @@
     done
 ###############################################################################
 ## footer
-    log "SBATCH ENDED : 0059_metagenome_binning_by_metabat_for_megahit_assemblies" && clean
+    log "SBATCH ENDED : 0059_metagenome_binning_by_metabat" && clean
 ###############################################################################
 
 
