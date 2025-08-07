@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0067_identification_contigs_by_CAT_BAT_RAT
-#SBATCH --partition=standard,long
+#SBATCH --partition=gpu-veo,gpu,gpu-test,standard,long
 #SBATCH --output=results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.out
 #SBATCH --error=results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.err
 #SBATCH --mem=220G

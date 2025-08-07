@@ -6,7 +6,7 @@
 ###############################################################################
 ## step-01: file and directory preparation
     fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
-    ls $fasta_directory | sed 's/.fasta//g' | sed 's/.fna//g' | sed 's/.fa//g' > list.$pipeline.txt
+    basename -a $fasta_directory/*.fasta | sed 's/\.fasta$//' > list.$pipeline.txt
     list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
