@@ -15,7 +15,9 @@
     && conda activate ncbi_dataset_v17.0.0 
 
     log "Downloading genomes for all strains for $name : Will take a while"
-    datasets download genome accession --inputfile data/ncbi_datasets/"$name"_all_strains.accessions.txt --filename  data/ncbi_datasets/multiple_genomes.zip
+    datasets download genome accession \
+    --inputfile data/ncbi_datasets/"$name"_all_strains.accessions.txt \
+    --filename  data/ncbi_datasets/multiple_genomes.zip
 
     log "Unzipping genomes for all strains for $name"
     unzip data/ncbi_datasets/multiple_genomes.zip -d data/ncbi_datasets/fasta

@@ -495,7 +495,7 @@ summarize_log() {
         print "Total Runtime (HH:MM:SS):", runtime_hms;
     }' "$log_file" > "$(dirname "$log_file")/$(basename "$log_file" .tsv).summary.tsv"
 
-    echo "Summary written to summary.$log_file"
+    # echo "Summary written to summary.$log_file"
 }
 
 ## log_usage

@@ -1,0 +1,22 @@
+## This is a parameter file for 0657_phage_taxonomy_by_virTaxonomer pipeline
+## please give a path of a fasta folder containing fasta files (ending with .fasta)
+## example path
+my_fasta_dir	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/comabined_fasta
+
+## for which level you would like to identify? 
+my_taxa_level	genus
+
+## general information: 
+## two strategies - bottomup and highest - will be used and each will give you different results 
+## results are produced for each strategy in respective folder
+	# bottomup – This strategy starts at the most specific rank (genus) and moves upward.  
+		# It returns a result only if a prediction at a given rank exceeds the confidence threshold; otherwise, 
+		# it stops without assigning a deeper classification.  Because of this early‑exit behaviour,
+		# it tends to be conservative – you only get a classification when the model is confident enough. 
+		# In the example results provided in the repository, both “Result 1” and “Result 2” use the bottomup 
+		# strategy, suggesting the authors regard it as the default/safer option.
+	# highest – This strategy runs models for all ranks and simply picks the rank with the highest raw prediction score. 
+		# It does not require the score to cross a threshold, so you always get some taxonomic assignment, but there \
+		# is a greater chance of a spurious match if the scores are generally low. \
+		# This may be useful when you want the most specific possible assignment regardless of confidence,
+		# but it can lead to less reliable species/genus calls on borderline sequences.

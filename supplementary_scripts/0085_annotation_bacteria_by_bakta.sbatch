@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=0085_annotation_bateria_by_bakta
+#SBATCH --job-name=0085_annotation_bacteria_by_bakta
 #SBATCH --partition=short,long,standard
-#SBATCH --output=results/0085_annotation_bateria_by_bakta/tmp/slurm/%j.out
-#SBATCH --error=results/0085_annotation_bateria_by_bakta/tmp/slurm/%j.err
+#SBATCH --output=results/0085_annotation_bacteria_by_bakta/tmp/slurm/%j.out
+#SBATCH --error=results/0085_annotation_bacteria_by_bakta/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=80
 #SBATCH --mem=100G
 ###############################################################################
 ## 00: preparations
-    pipeline=0085_annotation_bateria_by_bakta
+    pipeline=0085_annotation_bacteria_by_bakta
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
     fasta_path=$(grep "my_fasta_dir" $parameters | awk '{print $2}')

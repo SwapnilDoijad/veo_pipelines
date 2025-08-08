@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 ## header
-    pipeline=0085_annotation_bateria_by_bakta
+    pipeline=0085_annotation_bacteria_by_bakta
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     log "STARTED : $pipeline ------------------------"
 ###############################################################################
