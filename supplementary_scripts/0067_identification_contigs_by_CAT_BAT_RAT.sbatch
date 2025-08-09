@@ -3,6 +3,7 @@
 #SBATCH --partition=gpu-veo,gpu,gpu-test,standard,long
 #SBATCH --output=results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.out
 #SBATCH --error=results/0067_identification_contigs_by_CAT_BAT_RAT/tmp/slurm/%j.err
+#SBATCH --exclusive
 #SBATCH --mem=220G
 #SBATCH --cpus-per-task=40
 ###############################################################################
@@ -19,6 +20,9 @@
     prodigal=$tools/prodigal/v2.6.3/prodigal
 
     fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
+    bin_path=$(grep my_bins $parameters | awk '{print $2}')
+    read_path=$(grep my_paired_fastq_read_path $parameters | awk '{print $2}')
+
     sfx=$(get_suffix $(ls $fasta_directory | head -1))
 ###############################################################################
     log "SBATCH STARTED : $pipeline for $sublist"
@@ -29,8 +33,6 @@
         log "RUNNING : $pipeline for $i"
 
         mkdir $raw_files/$i/CAT/ > /dev/null 2>&1
-        bin_path=$(grep bins $parameters  | grep -v "#" | awk '{print $2}')
-        read_path=$(grep paired_fastq_read_path $parameters | grep -v "#" | awk '{print $2}')
 
         ## CAT
         if [ "$choise" = "all" ] || [ "$choise" = "CAT" ]; then
@@ -64,7 +66,7 @@
             > $raw_files/$i/CAT/$i.contig2classification.official_names.cleaned.txt
 
             $tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack summarise \
-            -c $fasta_directory \
+            -c $fasta_directory/$i.fasta \
             -i $raw_files/$i/CAT/$i.contig2classification.official_names.cleaned.txt \
             -o $raw_files/$i/CAT/$i.summary.txt \
 			& my_pid=$!
@@ -77,7 +79,7 @@
         fi
 
         if [ "$choise" = "all" ] || [ "$choise" = "BAT" ]; then
-        if [ ! -f  $raw_files/$i/BAT/$i.summary.txt ] ; then 
+        if [ ! -f $raw_files/$i/BAT/$i.summary.txt ] ; then 
             log "STARTED : $pipeline : $i : BAT "
             mkdir -p $raw_files/$i/BAT > /dev/null 2>&1
 
@@ -120,33 +122,36 @@
 
         if [ "$choise" = "all" ] || [ "$choise" = "RAT" ]; then
         if [ ! -d $raw_files/$i/RAT ] ; then
-            log "RUNNING : RAT for $i"
+            log "STARTED : $pipeline : $i : RAT "
 
             mkdir -p $raw_files/$i/RAT > /dev/null 2>&1
-            
-            ## --mode classification mode. 
-                # "mcr": integrate annotations from  MAGs, contigs, and reads
-                # "cr": integrate annotations from contigs and reads 
-                # "mr": integrate annotations from MAGs and reads.
-            $tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack \
-            reads \
-            --mode mcr \
-            -b $bin_path/raw_files/$i/ \
-            -c $fasta_directory \
-            -1 $read_path/"$i"_R1.fastq.gz \
-            -2 $read_path/"$i"_R2.fastq.gz \
-            -d $nr_database \
-            -t $tax_database \
-            -s .fa \
-            --path_to_bwa $tools/bwa/v0.7.17/bwa \
-            --path_to_samtools $tools/samtools/v1.17/bin/samtools \
-            --path_to_prodigal $prodigal \
-            --path_to_diamond $diamond \
-            --c2c $raw_files/$i/CAT/$i.contig2classification.txt \
-            --b2c $raw_files/$i/BAT/$i.bin2classification.txt \
-            -o $raw_files/$i/RAT/$i \
-			& my_pid=$!
-			get_resource_stat $my_pid $wd/tmp/resource_log/$i.RAT.tsv
+
+                ## --mode classification mode. 
+                    # "mcr": integrate annotations from  MAGs, contigs, and reads
+                    # "cr": integrate annotations from contigs and reads 
+                    # "mr": integrate annotations from MAGs and reads.
+
+                ## -s is only for bins fasta
+                $tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack \
+                reads \
+                --mode mcr \
+                -b $bin_path/raw_files/$i/ \
+                -c $fasta_directory/$i.fasta \
+                -1 $read_path/"$i"_R1.fastq.gz \
+                -2 $read_path/"$i"_R2.fastq.gz \
+                -d $nr_database \
+                -t $tax_database \
+                -s .fa \
+                --path_to_bwa $tools/bwa/v0.7.17/bwa \
+                --path_to_samtools $tools/samtools/v1.17/bin/samtools \
+                --path_to_prodigal $prodigal \
+                --path_to_diamond $diamond \
+                --c2c $raw_files/$i/CAT/$i.contig2classification.txt \
+                --b2c $raw_files/$i/BAT/$i.bin2classification.txt \
+                -o $raw_files/$i/RAT/$i \
+                & my_pid=$!
+                get_resource_stat $my_pid $wd/tmp/resource_log/$i.RAT.tsv
+
             else
                 log "ALREADY FINISHED : RAT for $i"
         fi
@@ -158,14 +163,11 @@
 ###############################################################################
     log "SBATCH FINISHED : $pipeline for $sublist" && clean
 ###############################################################################
-
 ## 20240409
 ## notes: This set up worked
     # nr_database=/veodata/03/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/2021-01-07_CAT_database/
     # tax_database=/veodata/03/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/2021-01-07_taxonomy/
     # diamond=/veodata/03/databases/cat_bat_rat/v20210107/CAT_prepare_20210107/Diamond_2.0.6/diamond
-
-
 
 # $tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack reads \
 # --mode mcr -b results/0059_metagenome_binning_by_metabat_for_megahit_assemblies/raw_files/zr11465-01/ \

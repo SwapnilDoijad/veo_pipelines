@@ -4,5 +4,5 @@
 ## example path is given below (change the path according to your data):
 my_data_dir	results/0041_genome_assembly_by_shovill/all_fasta
 
-## Classification based on fasta (f) or raw reads (r) or filted-reads (s), type f or r or s
-my_input_file_type	f
+## Classification based on fasta (f) or raw reads (r), type f or r
+my_input_file_type	r

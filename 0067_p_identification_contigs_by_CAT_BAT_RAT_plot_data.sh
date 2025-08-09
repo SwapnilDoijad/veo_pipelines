@@ -13,7 +13,7 @@
         mkdir $wd/tmp/tmp_files > /dev/null 2>&1
         for i in $(cat $list); do
             log "extracting contigs from CAT for $i"
-            cat $wd/raw_files/$i/CAT/$i.summary.txt \
+            cat $raw_files/$i/CAT/$i.summary.txt \
             | sed 's/ /_/g' | sed 's/NA/unknown/g' | grep -v '#' | awk '{print $1, $2, $3}'| sed 's/ /\t/g' \
             > $wd/tmp/tmp_files/$i.CAT.txt
 
@@ -34,7 +34,7 @@
         python3 $suppl_scripts/$pipeline.plot.py \
         -i $wd/tmp/tmp_files/combined_table.csv \
         -r $rank \
-        -o $wd/raw_files/$rank.plot.png
+        -o $raw_files/$rank.plot.png
     done
     deactivate
 ###############################################################################
