@@ -41,7 +41,6 @@ log "database: $database"
             for F1 in $(cat $sublist ); do
                 if [ ! -f $raw_files/$F1/report.txt ]; then
                     log "running kraken2 (raw_reads) for $F1"
-                    ( mkdir -p $raw_files/$F1/split_reports ) > /dev/null 2>&1
 
                     ( $tools/kraken2/v2.1.2/kraken2 \
                     --db $database \
@@ -50,34 +49,8 @@ log "database: $database"
                     --use-names \
                     --paired $data_dir/"$F1"_R1.fastq.gz $data_dir/"$F1"_R2.fastq.gz ) > /dev/null 2>&1
 
-                    python $suppl_scripts/$pipeline.split.py \
-                    -i $raw_files/$F1/report.txt \
-                    -o $raw_files/$F1/split_reports \
-
                 fi
 
-                head -3 $raw_files/$F1/report.txt > $raw_files/$F1/report.tmp
-                for domain in $(basename -a $raw_files/$F1/split_reports/*_report.txt | sed 's/_report.txt//g'); do
-                    cat $raw_files/$F1/report.tmp $raw_files/$F1/split_reports/${domain}_report.txt \
-                    > $raw_files/$F1/split_reports/${domain}_report.2.txt 
-                    mv $raw_files/$F1/split_reports/${domain}_report.2.txt $raw_files/$F1/split_reports/${domain}_report.txt
-
-                    for level in $levels; do
-                        log "running bracken for $F1 at level $level"
-                        mkdir -p $raw_files/$F1/bracken/$domain/$level
-
-                        $tools/bracken/v3.1/Bracken/bracken \
-                        -d $database \
-                        -i $raw_files/$F1/split_reports/${domain}_report.txt \
-                        -o $raw_files/$F1/bracken/$domain/$level.bracken \
-                        -l $level
-                    done
-
-                done 
-                
-                head -1 $raw_files/$F1/split_reports/*.txt \
-                | grep -v '^==>' | sed '/^$/d' \
-                > $raw_files/$F1/domain.tsv
             done
 
         A1=$(awk -F'\t' ' $4=="S" {print $0}' $raw_files/$F1/report.txt | head -1 | sed 's/                  //g' | sed 's/ /_/g' )
@@ -87,36 +60,6 @@ log "database: $database"
 
 ###############################################################################
     log "FINISHED: $pipeline : $sublist" && clean
-###############################################################################
-## post-processing
-	# database=/veodata/03/databases/kraken2/v20250204
-	# pipeline=0062_identification_by_kraken2
-	# source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-
-	# source /home/groups/VEO/tools/biopython/myenv/bin/activate
-    # levels="P C O F G S S1"
-
-    # for level in $levels; do
-    #     mkdir -p $raw_files/bracken/$level
-	# 	for F1 in $(cat list.0062_identification_by_kraken2.txt ); do
-	# 		awk -F'\t' '{OFS="\t"; if ($7 != 0) print $1, $7}' $raw_files/$F1/bracken/$level.bracken \
-	# 		| tr ' ' '_' > $raw_files/bracken/$level/$F1.$level.bracken
-	# 	done
-
-	# 		$tools/bracken/v3.1/Bracken/bracken \
-	# 		-d $database \
-	# 		-i $raw_files/$F1/report.txt \
-	# 		-o $raw_files/$F1/bracken/$level.bracken \
-	# 		-l $level
-
-	# 	python $suppl_scripts/0062_identification_by_kraken2.matrix.py \
-	# 	-i $raw_files/bracken/$level \
-	# 	-o $raw_files/bracken/$level/$level.tsv
-
-	# 	python $suppl_scripts/0062_identification_by_kraken2.plot.py \
-	# 	-i $raw_files/bracken/$level/$level.tsv \
-	# 	-o $raw_files/bracken/$level/$level.png
-    # done
 ###############################################################################
     #( kraken2 --db $database --threads 8 --unclassified-out $raw_files/$F1/"unclassified#".fastq --classified-out $raw_files/$F1/"$F1"_"classified#".fastq --report $raw_files/$F1/report.txt --use-names --output $raw_files/$F1/results.txt --paired $path/data/illumina/final_reads/"$F1"_*R1*.gz $path/data/illumina/final_reads/"$F1"_*R2*.gz ) > /dev/null 2>&1 
     #gzip -c $raw_files/$F1/"unclassified#".fastq > $raw_files/$F1/"unclassified#".fastq.gz

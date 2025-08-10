@@ -62,6 +62,9 @@ def main():
     # Reverse legend order so it matches top-to-bottom stack
     ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1.02, 1), loc="upper left", title="Taxa")
 
+    # Tilt x-axis labels to 45 degrees
+    plt.xticks(rotation=45, ha="right")
+
     plt.tight_layout()
     plt.savefig(args.output, dpi=200, bbox_inches="tight")
 
