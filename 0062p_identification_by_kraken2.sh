@@ -11,59 +11,59 @@
 ###############################################################################
     log "STARTED: $pipeline"
 ###############################################################################
-	# for F1 in $(cat list.$pipeline.txt ); do
-	# 	( mkdir -p $raw_files/$F1/split_reports ) > /dev/null 2>&1
+	for F1 in $(cat list.$pipeline.txt ); do
+		( mkdir -p $raw_files/$F1/split_reports ) > /dev/null 2>&1
 
-	# 	python3 $suppl_scripts/$pipeline.split.py \
-	# 	-i $raw_files/$F1/report.txt \
-	# 	-o $raw_files/$F1/split_reports \
+		python3 $suppl_scripts/$pipeline.split.py \
+		-i $raw_files/$F1/report.txt \
+		-o $raw_files/$F1/split_reports \
 
-	# 	head -3 $raw_files/$F1/report.txt > $raw_files/$F1/report.tmp
+		head -3 $raw_files/$F1/report.txt > $raw_files/$F1/report.tmp
 
-	# 	for domain in $domains; do
-	# 		if [ -f $raw_files/$F1/split_reports/${domain}_report.txt ]; then
-	# 			mkdir -p $raw_files/$F1/bracken/$domain
+		for domain in $domains; do
+			if [ -f $raw_files/$F1/split_reports/${domain}_report.txt ]; then
+				mkdir -p $raw_files/$F1/bracken/$domain
 
-	# 			cat $raw_files/$F1/report.tmp $raw_files/$F1/split_reports/${domain}_report.txt \
-	# 			> $raw_files/$F1/split_reports/${domain}_report.2.txt 
-	# 			mv $raw_files/$F1/split_reports/${domain}_report.2.txt $raw_files/$F1/split_reports/${domain}_report.txt
+				cat $raw_files/$F1/report.tmp $raw_files/$F1/split_reports/${domain}_report.txt \
+				> $raw_files/$F1/split_reports/${domain}_report.2.txt 
+				mv $raw_files/$F1/split_reports/${domain}_report.2.txt $raw_files/$F1/split_reports/${domain}_report.txt
 
-	# 			for level in $levels; do
-	# 				log "running bracken for $F1 : $domain : $level"
+				for level in $levels; do
+					log "running bracken for $F1 : $domain : $level"
 
-	# 				( $tools/bracken/v3.1/Bracken/bracken \
-	# 				-d $database \
-	# 				-i $raw_files/$F1/split_reports/${domain}_report.txt \
-	# 				-o $raw_files/$F1/bracken/$domain/$level.bracken \
-	# 				-l $level ) > /dev/null 2>&1
+					( $tools/bracken/v3.1/Bracken/bracken \
+					-d $database \
+					-i $raw_files/$F1/split_reports/${domain}_report.txt \
+					-o $raw_files/$F1/bracken/$domain/$level.bracken \
+					-l $level ) > /dev/null 2>&1
 
-	# 				mkdir -p $wd/combined/$domain/$level > /dev/null 2>&1
-	# 				awk -F'\t' '{OFS="\t"; if ($7 != 0) print $1, $7}' $raw_files/$F1/bracken/$domain/$level.bracken \
-	# 				| tr ' ' '_' > $wd/combined/$domain/$level/$F1.$level.bracken
+					mkdir -p $wd/combined/$domain/$level > /dev/null 2>&1
+					awk -F'\t' '{OFS="\t"; if ($7 != 0) print $1, $7}' $raw_files/$F1/bracken/$domain/$level.bracken \
+					| tr ' ' '_' > $wd/combined/$domain/$level/$F1.$level.bracken
 
-	# 			done
+				done
 				
-	# 		fi 
-	# 	done 
-	# 	rm -rf $raw_files/$F1/report.tmp  > /dev/null 2>&1
-	# done 
+			fi 
+		done 
+		rm -rf $raw_files/$F1/report.tmp  > /dev/null 2>&1
+	done 
 ###############################################################################
-	# for domain in $domains; do
-	# 	for level in $levels; do
-	# 		rm $wd/combined/$domain/$level/*.tsv > /dev/null 2>&1
-	# 		rm $wd/combined/$domain/$level/*.png > /dev/null 2>&1
+	for domain in $domains; do
+		for level in $levels; do
+			rm $wd/combined/$domain/$level/*.tsv > /dev/null 2>&1
+			rm $wd/combined/$domain/$level/*.png > /dev/null 2>&1
 
-	# 		log "creating matrix and plot : $domain : $level"
+			log "creating matrix and plot : $domain : $level"
 
-	# 		python $suppl_scripts/$pipeline.matrix.py \
-	# 		-i $wd/combined/$domain/$level \
-	# 		-o $wd/combined/$domain/$level/$level.tsv
+			python $suppl_scripts/$pipeline.matrix.py \
+			-i $wd/combined/$domain/$level \
+			-o $wd/combined/$domain/$level/$level.tsv
 
-	# 		python $suppl_scripts/$pipeline.plot.py \
-	# 		-i $wd/combined/$domain/$level/$level.tsv \
-	# 		-o $wd/combined/$domain/$level/$level.png
-	# 	done
-	# done
+			python $suppl_scripts/$pipeline.plot.py \
+			-i $wd/combined/$domain/$level/$level.tsv \
+			-o $wd/combined/$domain/$level/$level.png
+		done
+	done
 
 ###############################################################################
 	## calculate root fractions

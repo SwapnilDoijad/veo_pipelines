@@ -1,0 +1,4 @@
+## This is a parameter file for 0659_phage_taxonomy_by_vclust pipeline
+## please give a path of a fasta folder containing fasta files (ending with .fasta)
+## example path
+my_fasta_dir	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data

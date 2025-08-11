@@ -23,15 +23,19 @@
 	prefilter \
 	-i $raw_files/all.fna \
 	-o $raw_files/fltr.txt \
-	-t $SLURM_CPUS_PER_TASK 
+	-t $SLURM_CPUS_PER_TASK  \
+	& my_pid=$!
+	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.prefilter.tsv
 
-	## Align similar genome sequence pairs and calculate pairwise ANI measures.
+## Align similar genome sequence pairs and calculate pairwise ANI measures.
 	python3.9 /home/groups/VEO/tools/vclust/v1.0.0/vclust.py \
 	align \
 	-i $raw_files/all.fna  \
 	-o $raw_files/ani.tsv \
 	--filter $raw_files/fltr.txt \
-	-t $SLURM_CPUS_PER_TASK
+	-t $SLURM_CPUS_PER_TASK \
+	& my_pid=$!
+	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.align.tsv
 
 	## Cluster genome sequences based on given ANI measure and minimum threshold.
 	python3.9 /home/groups/VEO/tools/vclust/v1.0.3/vclust.py \
@@ -40,9 +44,10 @@
 	-o $raw_files/clusters.tsv \
 	--ids $raw_files/ani.ids.tsv \
 	--metric ani \
-	--ani 0.95 
-	## -t is not available 
-
+	--ani 0.95 \
+	& my_pid=$!
+	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.cluster.tsv
+	## -t is not available
 
 	## Create a heatmap
 	if [ figure == "yes" ]; then

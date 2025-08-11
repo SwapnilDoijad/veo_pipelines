@@ -12,6 +12,7 @@ tools="/home/groups/VEO/tools"
 scripts_for_users_path="/home/groups/VEO/scripts_for_users"
 parameters="tmp/parameters/$pipeline.*"
 files_in_data_directory="tmp/parameters/files_in_data_directory.txt"
+resource_log="$wd/tmp/resource_log"
 
 if [ -f tmp/parameters/$pipeline.txt ]; then 
     fasta_dir_path=$(grep "my_fasta_dir" tmp/parameters/$pipeline.txt | awk '{print $NF}')
