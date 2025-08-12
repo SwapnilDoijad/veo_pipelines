@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0655_phage_chracterisation_by_phaBOX
-#SBATCH --partition=gpu-veo,gpu,gpu-test,standard,long
+#SBATCH --partition=standard,long
 #SBATCH --output=results/0655_phage_chracterisation_by_phaBOX/tmp/slurm/%j.out
 #SBATCH --error=results/0655_phage_chracterisation_by_phaBOX/tmp/slurm/%j.err
 #SBATCH --mem=100G
@@ -33,7 +33,7 @@
         --contigs $fasta_directory/$i.fasta \
         --threads $SLURM_CPUS_PER_TASK \
 		& my_pid=$! 
-		get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.phabox2.$task.tsv
+		get_resource_stat $my_pid $resource_log/$i.phabox2.$task.tsv
 
 	done
 

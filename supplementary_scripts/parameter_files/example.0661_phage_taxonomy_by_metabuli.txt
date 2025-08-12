@@ -1,0 +1,33 @@
+## This is a parameter file for 0660_phage_taxonomy_by_metabuli pipeline
+## please give a path of a fasta folder containing fasta files (ending with .fasta)
+## tab seperated
+## example path
+my_fasta_dir	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/combined_fasta
+
+## parameters (see below for details), if you dont know then dont change anything (best parameters are already there!)
+my_seq-mode	1
+my_min-score	0.150
+my_min-sp-score	0.500
+my_tie-ratio	0.950
+###############################################################################
+## all parameters (pipeline is not configured for only three paramteres!)
+	options: prefilter:              
+	--mask INT               Mask sequences in k-mer stage: 0: w/o low complexity masking, 1: with low complexity masking [0]
+	--mask-prob FLOAT        Mask sequences is probablity is above threshold [0.900]
+	misc:                   
+	--seq-mode INT           Single-end: 1, Paired-end: 2, Long read: 3 [2]
+	--min-score FLOAT        Min. sequence similarity score (0.0-1.0) [0.000]
+	--min-cov FLOAT          Min. query coverage (0.0-1.0) [0.000]
+	--min-cons-cnt INT       Min. number of consecutive matches for prokaryote/virus classification [4]
+	--min-cons-cnt-euk INT   Min. number of consecutive matches for eukaryote classification [9]
+	--min-sp-score FLOAT     Min. score for species- or lower-level classification. [0.000]
+	--hamming-margin INT     It allows extra Hamming distance than the minimum distance. [0]
+	--taxonomy-path STR      Directory where the taxonomy dump files are stored []
+	--match-per-kmer INT     Num. of matches per query k-mer. Larger values assign more memory for storing k-mer matches.  [4]
+	--accession-level INT    Build or search a database for accession-level classification [0]
+	--tie-ratio FLOAT        Best * --tie-ratio is considered as a tie [0.950]
+	--skip-redundancy INT    Not storing k-mer's redundancy. [0]
+	--lineage INT            Print lineage information [0]
+	common:                 
+	--threads INT            Number of CPU-cores used (all by default) [144]
+###############################################################################
