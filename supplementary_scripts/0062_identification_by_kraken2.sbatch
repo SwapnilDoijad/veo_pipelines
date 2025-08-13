@@ -34,6 +34,13 @@ log "database: $database"
             --report $raw_files/$F1/report.txt \
             --use-names $data_dir/$F1.fasta ) > /dev/null 2>&1 
 
+            python3 $suppl_scripts/$pipeline.summarise.py \
+            -i $raw_files/$F1/report.txt \
+            -o $raw_files/$F1/report.sp.tsv \
+            -r S \
+            -n 3
+
+
         done
         
         elif [ "$input_file_type" == "r" ] ; then

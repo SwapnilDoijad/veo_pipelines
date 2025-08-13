@@ -37,7 +37,8 @@
 	-o $raw_files/ani.tsv \
 	--filter $raw_files/fltr.txt \
 	-t $SLURM_CPUS_PER_TASK \
-	--out-gani 0.7 --threads $SLURM_CPUS_PER_TASK \
+	--out-gani 0.7 \
+	--threads $SLURM_CPUS_PER_TASK \
 	& my_pid=$!
 	get_resource_stat $my_pid $resource_log/vclust.align.tsv
 

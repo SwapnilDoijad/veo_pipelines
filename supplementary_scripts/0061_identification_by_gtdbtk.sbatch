@@ -3,7 +3,7 @@
 #SBATCH --partition=gpu,gpu-veo,standard,long
 #SBATCH --output results/0061_identification_by_gtdbtk/tmp/slurm/%j.out.0061_identification_by_gtdbtk.txt
 #SBATCH --error results/0061_identification_by_gtdbtk/tmp/slurm/%j.err.0061_identification_by_gtdbtk.txt
-#SBATCH --mem=100G
+#SBATCH --mem=200G
 #SBATCH --cpus-per-task=40
 ###############################################################################
 ## header

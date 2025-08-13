@@ -76,6 +76,13 @@ parser.add_argument(
     default="vclust_results.tsv",
     help="Path to the output TSV file (default: %(default)s).",
 )
+# Input list of queries
+parser.add_argument(
+    "--input-list",
+    type=Path,
+    required=True,
+    help="Path to the file containing the list of queries to retain",
+)
 
 # Parse arguments
 args = parser.parse_args()
@@ -96,6 +103,11 @@ ani_data = pd.read_csv(
     args.input_ani, sep="\t", usecols=["query", "reference", "gani"]
 )
 print(f"  * Total genome pairs loaded: {len(ani_data):,}")
+
+print("ANI data after loading:")
+print(ani_data.head())
+print(f"Total rows: {len(ani_data)}")
+print("Unique values in 'query':", ani_data["query"].unique()[:10])
 
 # 3. Filter Vclust ANI data
 print_section(3, "Filtering Genome Pairs")
@@ -154,4 +166,28 @@ out_data = out_data.sort_values(by='tmp').drop(columns=['tmp'])
 out_data = out_data.astype("object").fillna("NA")
 out_data.to_csv(args.output_tsv, sep='\t', index=False)
 print("- Status     : Done! Results saved.")
-# print()
+
+print("Final output data:")
+print(out_data.head())
+print(f"Total rows: {len(out_data)}")
+
+# 6. Load query list for final filtering
+print_section(6, "Loading Query List for Final Filtering")
+query_list = pd.read_csv(args.input_list, header=None, names=["query"])
+print(f"- Input file: {args.input_list}")
+print(f"  * Queries loaded: {len(query_list):,}")
+print("Loaded query list:", list(query_list["query"])[:10])
+
+# 7. Filter results to retain only the selected queries
+print_section(7, "Filtering Results by Query List")
+final_data = out_data[out_data["SequenceID"].isin(query_list["query"])]
+print(f"  * Filtered results: {len(final_data):,}")
+
+# 8. Save final results to CSV
+print_section(8, "Saving Final Results")
+final_output_file = args.output_tsv.replace(".tsv", "_final.tsv")
+final_data.to_csv(final_output_file, sep='\t', index=False)
+print(f"- Output file: {final_output_file}")
+print("- Status     : Done! Final results saved.")
+
+print(f"Rows matching input list: {ani_data['query'].isin(query_list).sum()}")
