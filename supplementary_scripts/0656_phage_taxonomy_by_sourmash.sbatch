@@ -13,40 +13,59 @@
 	fasta_directory=$( grep my_fasta_dir $parameters | awk '{print $2}' )
 	task=$(grep my_task $parameters | awk '{print $2}')
 	sublist=$wd/tmp/lists/ABC
+
 ###############################################################################
 	log "STARTED: $pipeline -----------------------------"
 ###############################################################################
-## run sourmash
+## run sourmash	
 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh 
 	conda activate sourmash_v4.9.4
 
-	for i in $(cat $sublist); do
-		log "STARTED: $i"
+	python3 $tools/sourmash/2024-ictv-challenge-sourmash/scripts/challengedir-to-csvinput.py \
+	$fasta_directory \
+	$raw_files/dataset_challenge.fromfile.csv \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/challengedir-to-csvinput.tsv
 
-		mkdir -p $raw_files/$i
+	sourmash \
+	scripts \
+	manysketch \
+	$raw_files/dataset_challenge.fromfile.csv \
+	-p skipm2n3,k=24,scaled=50,abund \
+	-o $raw_files/ictv-challenge.zip \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/sourmash.scripts.manysketch.tsv
 
-		sourmash \
-		sketch \
-		dna \
-		$fasta_directory/$i.fasta \
-		--singleton \
-		--name-from-first \
-		-p k=21,scaled=100 \
-		-o $raw_files/$i/phage.k21.s100.zip \
-		& my_pid=$! 
-		get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.sourmash.sketch.tsv
+	sourmash \
+	scripts \
+	fastmultigather \
+	$raw_files/ictv-challenge.zip \
+	/veodata/03/databases/sourmash/vmr_MSL39_v4 \
+	-m skipm2n3 \
+	-k 24 \
+	--scaled 50 \
+	--threshold-bp 200 \
+	-o $raw_files/ictv-challenge.fmg.csv \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/sourmash.scripts.fastmultigather.tsv
 
-		sourmash gather phage.k21.s100.zip viral-db.k21.s100.zip \
-		--threshold-bp 3000 \
-		-o $raw_files/$i/phage.k21.s100.gather.csv
+  	sourmash \
+	tax \
+	genome \
+	-t $tools/sourmash/2024-ictv-challenge-sourmash/vmr_MSL39_v4.lineages.csv.gz \
+	-g $raw_files/ictv-challenge.fmg.csv \
+	--ictv -F csv_summary \
+    --ani-threshold 0.75 \
+	--output-base ictv-challenge \
+    --output-dir $raw_files \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/sourmash.tax.genome.tsv
 
-		sourmash tax genome \
-		--gather-csv phage.k21.s100.gather.csv \
-		--taxonomy viral-db.tax.csv \
-		--output-format csv_summary \
-		-o $raw_files/$i/phage.k21.s100.tax.csv
-
-	done
+	python3 $tools/sourmash/2024-ictv-challenge-sourmash/scripts/tg-to-challengeformat.py \
+	$raw_files/ictv-challenge.classifications.csv \
+	$raw_files/ictv-challenge.sourmash.csv \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/tg-to-challengeformat.tsv
 
 	conda deactivate
 ###############################################################################

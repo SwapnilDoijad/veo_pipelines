@@ -6,15 +6,15 @@
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
-    faa_path=$( grep my_faa_path $parameters | awk '{print $2}' )
-	ls $faa_path/ | sed 's/\.faa//g ' > list.$pipeline.txt
+	fasta_directory=$( grep my_fasta_dir $parameters | awk '{print $2}' )
+	ls $fasta_directory/ | sed 's/\.fasta//g ' > list.$pipeline.txt
 
     create_directories_structure_1 $wd
 
-    cp /home/groups/VEO/scripts_for_users/supplementary_scripts/0651_phage_clustering_by_vcontact.sbatch \
-    $wd/tmp/slurm/0651_phage_clustering_by_vcontact.sbatch
-    
-	sbatch $wd/tmp/slurm/0651_phage_clustering_by_vcontact.sbatch
+    cp /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.sbatch \
+    $wd/tmp/sbatch/$pipeline.sbatch
+
+	sbatch $wd/tmp/sbatch/$pipeline.sbatch
 ###############################################################################
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################

@@ -3,3 +3,14 @@
 ## note that all files should end with .fasta
 ## example path is given below (change the path accordingto your data):
 my_fasta_path	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complete_high
+
+## mode? fast or normal? normal is recommended 
+my_mode	fast
+
+## fast mode 
+	•	Uses Prodigal for fast gene prediction (instead of phanotate)
+	•	Skips:
+		•	tRNA/tmRNA search (tRNAscan-SE, Aragorn)
+		•	CRISPR detection (MinCED)
+		•	Mash (taxonomy match to INPHARED)
+		•	Still outputs .faa and .fna

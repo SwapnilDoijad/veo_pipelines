@@ -20,7 +20,7 @@ tool=$(grep my_tool $parameters | awk '{print $2}')
 if [ "$database" = "silva" ]; then
 		database_path=/veodata/03/databases/emu/v240807_silva
 	elif [ "$database" = "emu" ]; then
-		database_path=/veodata/02/databases/emu/v240807
+		database_path=/veodata/03/databases/emu/v240807
 	else
 		log "invalid database name: $database"
 fi
