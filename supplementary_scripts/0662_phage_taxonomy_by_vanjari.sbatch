@@ -19,27 +19,47 @@
 ###############################################################################
 ## step-01: file and directory preparation
 
-	# Generage results for single models
+	## normal mode 
 	vanjari \
 	--input $fasta_directory/ \
 	--output-csv $raw_files/vanjari-0.1.csv \
 	--memmap-array-path $raw_files/embeddings.npy \
 	--memmap-index $raw_files/embeddings.txt \
 	& my_pid=$!
-	get_resource_stat $my_pid $resource_log/$i.vanjari.tsv
+	get_resource_stat $my_pid $resource_log/vanjari.tsv
 
+	vanjari-tools \
+	increase-threshold \
+	--input $raw_files/vanjari-0.1.csv \
+	--output $raw_files/vanjari-0.1-threshold0.5.csv \
+	--threshold 0.5
+
+	## fast mode 
 	vanjari-fast \
 	--input $fasta_directory/ \
 	--output-csv $raw_files/vanjari-fast-0.1.csv \
 	& my_pid=$!
-	get_resource_stat $my_pid $resource_log/$i.vanjari.fast.tsv
-	# # Generate results for ensemble
-	# vanjari-tools ensemble-csvs --input ictv-challenge/vanjari-0.1.csv --input ictv-challenge/vanjari-fast-0.1.csv --output ictv-challenge/vanjari-ensemble-0.1.csv
+	get_resource_stat $my_pid $resource_log/vanjari.fast.tsv
+	
+	## Generate results for ensemble
+	vanjari-tools \
+	ensemble-csvs \
+	--input $raw_files/vanjari-fast-0.1.csv \
+	--output $raw_files/vanjari-ensemble-0.1.csv \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/vanjari.fast.tsv
 
-	# # Set the threshold for the all results to 0.5
-	# vanjari-tools increase-threshold --input ictv-challenge/vanjari-0.1.csv --output ictv-challenge/vanjari-0.1-threshold0.5.csv --threshold 0.5
-	# vanjari-tools increase-threshold --input ictv-challenge/vanjari-fast-0.1.csv --output ictv-challenge/vanjari-fast-0.1-threshold0.5.csv --threshold 0.5
-	# vanjari-tools increase-threshold --input ictv-challenge/vanjari-ensemble-0.1.csv --output ictv-challenge/vanjari-ensemble-0.1-threshold0.5.csv --threshold 0.5
+	vanjari-tools \
+	increase-threshold \
+	--input $raw_files/vanjari-fast-0.1.csv \
+	--output $raw_files/vanjari-fast-0.1-threshold0.5.csv \
+	--threshold 0.5
+
+	vanjari-tools \
+	increase-threshold \
+	--input $raw_files/vanjari-ensemble-0.1.csv \
+	--output $raw_files/vanjari-ensemble-0.1-threshold0.5.csv \
+	--threshold 0.5
 
 
 ###############################################################################
