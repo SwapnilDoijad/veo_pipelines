@@ -149,7 +149,7 @@
         ## phylogeny may not be a good idea for unrelated genomes
         ## rather, clustering methods (for e.g. PCA and heatmap) is more logical
 
-    if [ ! -f $raw_files/ANI.tab.UPGMA.nwk] ; then 
+    if [ ! -f $raw_files/ANI.tab.UPGMA.nwk ] ; then 
         source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
         conda activate R
 
@@ -204,19 +204,25 @@
 ###############################################################################
 ## clustering
     if [ ! -f $raw_files/plots/SGC_ANI.tab.heatmap.pdf ]; then
+    
         source /home/groups/VEO/tools/biopython/myenv/bin/activate
+
+            log "RUNNING : heatmap_cluster for SGC_ANI.tab"
             python $utilities/heatmap_cluster.py \
             -i $raw_files/SGC_ANI.tab \
             -o $raw_files/plots/SGC_ANI.tab.heatmap.pdf
 
+            log "RUNNING : pca_cluster for SGC_ANI.tab"
             python $utilities/pca_cluster.py \
             -i $raw_files/SGC_ANI.tab \
             -o $raw_files/plots/SGC_ANI.tab.pca.pdf
 
+            log "RUNNING : heatmap_cluster for ANI.tab"
             python $utilities/heatmap_cluster.py \
             -i $raw_files/ANI.tab \
             -o $raw_files/plots/ANI.tab.heatmap.pdf
 
+            log "RUNNING : pca_cluster for ANI.tab"
             python $utilities/pca_cluster.py \
             -i $raw_files/ANI.tab \
             -o $raw_files/plots/ANI.tab.pca.pdf

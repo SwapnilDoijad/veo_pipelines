@@ -18,14 +18,16 @@
 	cat	$fasta_directory/*.fasta | sed 's/:/_/g' | sed 's/,//g' > $raw_files/all.fna
 	cat /veodata/03/databases/ictv/VMR_MSL39.v4_20241106.fna >> $raw_files/all.fna
 
-	## Prefilter similar genome sequence pairs before conducting pairwise alignments.
+## Prefilter similar genome sequence pairs before conducting pairwise alignments.
 	log "Prefiltering similar genome sequence pairs..."
 	$vclust \
 	prefilter \
 	-i $raw_files/all.fna \
 	-o $raw_files/fltr.txt \
 	-t $SLURM_CPUS_PER_TASK \
-	--k 21 --min-kmers 1 --min-ident 0.74 \
+	--k 21 \
+	--min-kmers 1 \
+	--min-ident 0.74 \
 	& my_pid=$!
 	get_resource_stat $my_pid $resource_log/vclust.prefilter.tsv
 

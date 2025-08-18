@@ -67,7 +67,10 @@
         -p $raw_files/for_vcontact2.csv \
         --c1-bin /home/groups/VEO/tools/anaconda3/bin/cluster_one-1.0.jar \
         -o $raw_files/results \
-        -t $SLURM_CPUS_PER_TASK
+        -t $SLURM_CPUS_PER_TASK \
+        & my_pid=$!
+        get_resource_stat $my_pid $wd/tmp/resource_log/vcontact2.run.tsv
+
     fi
 
 ###############################################################################
@@ -95,3 +98,4 @@
 ###############################################################################
 	log "FINISHED : $pipeline for $sublist" && clean
 ###############################################################################
+        
