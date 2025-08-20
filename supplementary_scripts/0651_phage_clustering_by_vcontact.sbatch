@@ -92,19 +92,6 @@
         & my_pid=$!
         get_resource_stat $my_pid $wd/tmp/resource_log/vcontact3.run.tsv 
 
-        # realms=("Monodnaviria" "Duplodnaviria" "Adnaviria" "Varidnaviria")
-        # for realm in "${realms[@]}"; do
-        #     vcontact3 \
-        #     run \
-        #     -n $fasta \
-        #     -e graphml cytoscape \
-        #     --db-path /veodata/03/databases/vcontact3/v20250721 \
-        #     -o $raw_files/results \
-        #     --default-realm $realm \
-        #     -t $SLURM_CPUS_PER_TASK \
-        #     & my_pid=$!
-        #     get_resource_stat $my_pid $wd/tmp/resource_log/vcontact3.run.tsv
-        # done
     fi
 
 ###############################################################################

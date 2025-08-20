@@ -91,14 +91,18 @@
 	# aria2c -x 4 "https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.gz" --check-certificate=false
 
 	## log "DOWNLOADING: faa files for viruses"
-	mkdir -p /veodata/03/databases/ictv/0064_protein
-	python3 $suppl_scripts/$pipeline.ncbi_download.py \
-	--refseq /veodata/03/databases/ictv/0664_assembly_summary_genbank.tsv \
-	--genbank /veodata/03/databases/ictv/0664_assembly_summary_refseq.tsv \
-	--output /veodata/03/databases/ictv/0064_proteins \
-	--threads 6
+	# mkdir -p /veodata/03/databases/ictv/0064_protein
+	# python3 $suppl_scripts/$pipeline.ncbi_download.py \
+	# --refseq /veodata/03/databases/ictv/0664_assembly_summary_genbank.tsv \
+	# --genbank /veodata/03/databases/ictv/0664_assembly_summary_refseq.tsv \
+	# --output /veodata/03/databases/ictv/0064_proteins \
+	# --threads 6
 
-
+	log "STARTING: 0664_phage_taxonomy_by_protein_custom_database.ProcessProteinSeq"
+	python $suppl_scripts/$pipeline.ProcessProteinSeq \
+	--proteins_dir /veodata/03/databases/ictv/0064_proteins \
+	--output_fasta /veodata/03/databases/ictv/0064_concatenated_proteins.fasta \
+	--output_tsv /veodata/03/databases/ictv/0064_virus.accession2taxid.tsv
 ###############################################################################
 	log "FINISHED: $pipeline -----------------------------" ## && clean
 ###############################################################################

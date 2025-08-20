@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=0657_phage_taxonomy_by_virTaxonomer
-#SBATCH --partition=standard,long
+#SBATCH --partition=gpu,gpu-veo,gpu-test
 #SBATCH --output=results/0657_phage_taxonomy_by_virTaxonomer/tmp/slurm/%j.out
 #SBATCH --error=results/0657_phage_taxonomy_by_virTaxonomer/tmp/slurm/%j.err
 #SBATCH --mem=200G
 #SBATCH --cpus-per-task=40
+#SBATCH --gres=gpu:1
 ###############################################################################
 ## header
 	pipeline=0657_phage_taxonomy_by_virTaxonomer
@@ -40,6 +41,7 @@
 		mkdir -p $raw_files/$i/bottomup
 		
 		log "Running VirTaxonomer for $i : bottomup"
+		export CUDA_VISIBLE_DEVICES=0
 		python /home/groups/VEO/tools/virTaxonomer/v250808/VirTaxonomer/code/main.py \
 		--input $fasta_dir/$i.fasta \
 		--model /veodata/03/databases/virTaxonomer/v250808 \
