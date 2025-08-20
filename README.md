@@ -1,5 +1,5 @@
 ## Introduction
-This is the repository for the VEO group (FSU, Jena). It contains hardcoded scripts designed to run on the Draco server.
+This is the repository created by the Viral Ecology and Omics (VEO) group (FSU, Jena). It contains hardcoded scripts designed to run on the Draco server.
 
 ## Index
 - [Prerequisites](#prerequisites)
