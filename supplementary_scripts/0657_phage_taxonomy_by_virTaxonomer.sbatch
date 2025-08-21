@@ -27,30 +27,30 @@
 
 		mkdir -p $raw_files/$i/highest
 
-		# log "Running VirTaxonomer for $i : highest"
-		# python /home/groups/VEO/tools/virTaxonomer/v250808/VirTaxonomer/code/main.py \
-		# --input $fasta_dir/$i.fasta \
-		# --model /veodata/03/databases/virTaxonomer/v250808 \
-		# --output $raw_files/$i/highest \
-		# --ML highest \
-		# --restrict $taxa_level \
-		# --batchsize 128 \
-		# & my_pid=$! 
-		# get_resource_stat $my_pid $wd/tmp/resource_log/$i.virTaxonomer.highest.tsv
-
-		mkdir -p $raw_files/$i/bottomup
-		
-		log "Running VirTaxonomer for $i : bottomup"
-		export CUDA_VISIBLE_DEVICES=0
+		log "Running VirTaxonomer for $i : highest"
 		python /home/groups/VEO/tools/virTaxonomer/v250808/VirTaxonomer/code/main.py \
 		--input $fasta_dir/$i.fasta \
 		--model /veodata/03/databases/virTaxonomer/v250808 \
-		--output $raw_files/$i/bottomup \
-		--ML bottomup \
+		--output $raw_files/$i/highest \
+		--ML highest \
 		--restrict $taxa_level \
 		--batchsize 128 \
 		& my_pid=$! 
-		get_resource_stat $my_pid $wd/tmp/resource_log/$i.virTaxonomer.bottomup.tsv
+		get_resource_stat $my_pid $wd/tmp/resource_log/$i.virTaxonomer.highest.tsv
+
+		# mkdir -p $raw_files/$i/bottomup
+		
+		# log "Running VirTaxonomer for $i : bottomup"
+		# export CUDA_VISIBLE_DEVICES=0
+		# python /home/groups/VEO/tools/virTaxonomer/v250808/VirTaxonomer/code/main.py \
+		# --input $fasta_dir/$i.fasta \
+		# --model /veodata/03/databases/virTaxonomer/v250808 \
+		# --output $raw_files/$i/bottomup \
+		# --ML bottomup \
+		# --restrict $taxa_level \
+		# --batchsize 128 \
+		# & my_pid=$! 
+		# get_resource_stat $my_pid $wd/tmp/resource_log/$i.virTaxonomer.bottomup.tsv
 
 	done
 	conda deactivate

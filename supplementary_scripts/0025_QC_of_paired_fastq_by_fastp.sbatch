@@ -48,3 +48,14 @@
 ###############################################################################
 	log "FINISHED : $pipeline for $sublist" && clean
 ###############################################################################
+# data_folder="my_path/to/data"
+
+# mkdir -p 001_fastp_results
+# for i in $(ls $data_folder); do
+#     fastp --thread 8 \
+#     -i $data_folder/"$i"_*R1*fastq.gz \
+#     -I $data_folder/"$i"_*R2*fastq.gz \
+#     -o 001_fastp_results/$i/"$i"_R1.fastq.gz \
+#     -O 001_fastp_results/$i/"$i"_R2.fastq.gz \
+#     --html 001_fastp_results/$i.html
+# done

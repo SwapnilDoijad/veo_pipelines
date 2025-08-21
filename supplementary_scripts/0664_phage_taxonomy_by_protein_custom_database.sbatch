@@ -89,6 +89,8 @@
 
 	## log "DOWNLOADING: prot.accession2taxid.FULL.gz"
 	# aria2c -x 4 "https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.gz" --check-certificate=false
+	# gunzip -c prot.accession2taxid.FULL.gz > /veodata/03/databases/ictv/0064_protein/prot.accession2taxid.FULL
+
 
 	## log "DOWNLOADING: faa files for viruses"
 	# mkdir -p /veodata/03/databases/ictv/0064_protein
@@ -99,7 +101,7 @@
 	# --threads 6
 
 	log "STARTING: 0664_phage_taxonomy_by_protein_custom_database.ProcessProteinSeq"
-	python $suppl_scripts/$pipeline.ProcessProteinSeq \
+	python $suppl_scripts/$pipeline.ProcessProteinSeq.py \
 	--proteins_dir /veodata/03/databases/ictv/0064_proteins \
 	--output_fasta /veodata/03/databases/ictv/0064_concatenated_proteins.fasta \
 	--output_tsv /veodata/03/databases/ictv/0064_virus.accession2taxid.tsv

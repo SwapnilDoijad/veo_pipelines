@@ -1,23 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name 0223_gene_detection_virulence_VFDB_by_blast
-#SBATCH --partition=gpu
-#SBATCH --output results/0223_gene_detection_virulence_VFDB_by_blast/tmp/slurm/%j.out
-#SBATCH --error  results/0223_gene_detection_virulence_VFDB_by_blast/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=10
+#SBATCH --job-name=0223_gene_detection_virulence_VFDB_by_blast
+#SBATCH --partition=standard,long
+#SBATCH --output=results/0223_gene_detection_virulence_VFDB_by_blast/tmp/slurm/%j.out
+#SBATCH --error=results/0223_gene_detection_virulence_VFDB_by_blast/tmp/slurm/%j.err
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=100G
 ###############################################################################
 ## step-01: preparation
-    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     pipeline=0223_gene_detection_virulence_VFDB_by_blast
-    wd=results/$pipeline
-    cpus=$SLURM_CPUS_PER_TASK
-
-    sublist=$wd/tmp/lists/ABC
-    parameter_file=tmp/parameters/$pipeline.*
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
     annotation_file=/veodata/03/databases/VFDB/v2021/VFDB-annotations.txt
-
 	blastn=/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/blastn
-    fasta_path=$(grep my_fasta_path $parameter_file | awk '{print $2}')
+    fasta_path=$(grep my_fasta_path $parameters | awk '{print $2}')
+    cpus=$SLURM_CPUS_PER_TASK
+    sublist=$wd/tmp/lists/ABC
+###############################################################################
+	log "STARTED: $pipeline -----------------------------" && clean
 ###############################################################################
 ## step-02: 
 	for i in $(cat $sublist); do
@@ -65,4 +64,6 @@
 
 
     done
+###############################################################################
+	log "STARTED: $pipeline -----------------------------" && clean
 ###############################################################################

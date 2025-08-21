@@ -1,10 +1,11 @@
 #!/bin/bash
 #SBATCH --job-name=0662_phage_taxonomy_by_vanjari
-#SBATCH --partition=standard,long
+#SBATCH --partition=gpu,gpu-test,gpu-veo
 #SBATCH --output=results/0662_phage_taxonomy_by_vanjari/tmp/slurm/%j.out
 #SBATCH --error=results/0662_phage_taxonomy_by_vanjari/tmp/slurm/%j.err
 #SBATCH --mem=100G
 #SBATCH --cpus-per-task=40
+#SBATCH --gres=gpu:1
 ###############################################################################
 ## header
 	pipeline=0662_phage_taxonomy_by_vanjari
@@ -20,46 +21,47 @@
 ## step-01: file and directory preparation
 
 	## normal mode 
-	vanjari \
-	--input $fasta_directory/ \
-	--output-csv $raw_files/vanjari-0.1.csv \
-	--memmap-array-path $raw_files/embeddings.npy \
-	--memmap-index $raw_files/embeddings.txt \
-	& my_pid=$!
-	get_resource_stat $my_pid $resource_log/vanjari.tsv
+		vanjari \
+		--input $fasta_directory/ \
+		--output-csv $raw_files/vanjari-0.1.csv \
+		--memmap-array-path $raw_files/embeddings.npy \
+		--memmap-index $raw_files/embeddings.txt \
+		& my_pid=$!
+		get_resource_stat $my_pid $resource_log/vanjari.tsv
 
-	vanjari-tools \
-	increase-threshold \
-	--input $raw_files/vanjari-0.1.csv \
-	--output $raw_files/vanjari-0.1-threshold0.5.csv \
-	--threshold 0.5
+		vanjari-tools \
+		increase-threshold \
+		--input $raw_files/vanjari-0.1.csv \
+		--output $raw_files/vanjari-0.1-threshold0.5.csv \
+		--threshold 0.5
+
 
 	## fast mode 
-	vanjari-fast \
-	--input $fasta_directory/ \
-	--output-csv $raw_files/vanjari-fast-0.1.csv \
-	& my_pid=$!
-	get_resource_stat $my_pid $resource_log/vanjari.fast.tsv
-	
-	## Generate results for ensemble
-	vanjari-tools \
-	ensemble-csvs \
-	--input $raw_files/vanjari-fast-0.1.csv \
-	--output $raw_files/vanjari-ensemble-0.1.csv \
-	& my_pid=$!
-	get_resource_stat $my_pid $resource_log/vanjari.fast.tsv
+		vanjari-fast \
+		--input $fasta_directory/ \
+		--output-csv $raw_files/vanjari-fast-0.1.csv \
+		& my_pid=$!
+		get_resource_stat $my_pid $resource_log/vanjari.fast.tsv
+		
+		## Generate results for ensemble
+		vanjari-tools \
+		ensemble-csvs \
+		--input $raw_files/vanjari-fast-0.1.csv \
+		--output $raw_files/vanjari-ensemble-0.1.csv \
+		& my_pid=$!
+		get_resource_stat $my_pid $resource_log/vanjari.fast.tsv
 
-	vanjari-tools \
-	increase-threshold \
-	--input $raw_files/vanjari-fast-0.1.csv \
-	--output $raw_files/vanjari-fast-0.1-threshold0.5.csv \
-	--threshold 0.5
+		vanjari-tools \
+		increase-threshold \
+		--input $raw_files/vanjari-fast-0.1.csv \
+		--output $raw_files/vanjari-fast-0.1-threshold0.5.csv \
+		--threshold 0.5
 
-	vanjari-tools \
-	increase-threshold \
-	--input $raw_files/vanjari-ensemble-0.1.csv \
-	--output $raw_files/vanjari-ensemble-0.1-threshold0.5.csv \
-	--threshold 0.5
+		vanjari-tools \
+		increase-threshold \
+		--input $raw_files/vanjari-ensemble-0.1.csv \
+		--output $raw_files/vanjari-ensemble-0.1-threshold0.5.csv \
+		--threshold 0.5
 
 
 ###############################################################################

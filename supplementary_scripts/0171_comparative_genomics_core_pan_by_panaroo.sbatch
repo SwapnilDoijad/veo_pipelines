@@ -8,7 +8,6 @@
 ###############################################################################
     pipeline=0171_comparative_genomics_core_pan_by_panaroo
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-
     mkdir -p "results/0171_comparative_genomics_core_pan_by_panaroo/raw_files"
 
     sequence_identity_threshold=$( grep "my_sequence_identity_threshold" $parameters | awk '{print $2}' )
@@ -22,7 +21,6 @@
 
     source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
     conda activate panaroo_v1.2.10
-
 
     log "Running panaroo pipeline"
     panaroo \
@@ -54,3 +52,6 @@
     # -s 4 \
     # --threads 20 \
     # -o scoary_results 
+###############################################################################
+    log "SBATCH ENDED : $pipeline ----------------------" && clean
+###############################################################################
