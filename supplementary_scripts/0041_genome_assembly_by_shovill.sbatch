@@ -21,12 +21,12 @@
         log "--------------------------------------------------------------------------------"
             for i in $(cat $sublist) ; do
                 if [ ! -d $raw_files/$i ] ; then 
-                    if [ -f $fastq_path/"$i"_R1_001.fastq.gz ] && [ -f $fastq_path/"$i"_R2_001.fastq.gz ]; then 
+                    if [ -f $fastq_path/"$i"_R1.fastq.gz ] && [ -f $fastq_path/"$i"_R2.fastq.gz ]; then 
                         if [ ! -d $raw_files/$i ] ; then 
                             log "running: shovill assembly for $i"
                             shovill --trim --outdir $raw_files/$i \
-                            --R1 $fastq_path/"$i"_R1_001.fastq.gz \
-                            --R2 $fastq_path/"$i"_R2_001.fastq.gz \
+                            --R1 $fastq_path/"$i"_R1.fastq.gz \
+                            --R2 $fastq_path/"$i"_R2.fastq.gz \
                             --cpus $SLURM_CPUS_PER_TASK --ram 200 \
                             --opts --isolate \
                             --minlen 500 --mincov 10 --keepfiles

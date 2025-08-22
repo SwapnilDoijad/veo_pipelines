@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0664_phage_taxonomy_by_protein_custom_database
-#SBATCH --partition=standard,long
+#SBATCH --partition=long,short
 #SBATCH --output=results/0664_phage_taxonomy_by_protein_custom_database/tmp/slurm/%j.out
 #SBATCH --error=results/0664_phage_taxonomy_by_protein_custom_database/tmp/slurm/%j.err
 #SBATCH --mem=100G
@@ -66,45 +66,79 @@
 	# mv ictv.names.txt /veodata/03/databases/ictv/0664_ictv.names.txt
 
 	# log "DOWNLOADING: taxdump.tar.gz"
-	# mkdir -p /veodata/03/databases/ictv/0064_taxdump
+	# mkdir -p /veodata/03/databases/ictv/0664_taxdump
 	# aria2c -x 4 -o taxdump.tar.gz  ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz
-	# tar -xzf taxdump.tar.gz -C /veodata/03/databases/ictv/0064_taxdump
+	# tar -xzf taxdump.tar.gz -C /veodata/03/databases/ictv/0664_taxdump
 
 	# log "CREATING: ictv-taxdump"
-	# export TAXONKIT_DB=/veodata/03/databases/ictv/0064_taxdump
+	# export TAXONKIT_DB=/veodata/03/databases/ictv/0664_taxdump
 	# taxonkit create-taxdump -K 1 -P 3 -C 5 -O 7 -F 9 -G 11 -S 13 -T 15 \
     # --rank-names "realm","kingdom","phylum","class","order","family","genus","species" \
 	# /veodata/03/databases/ictv/0664_ictv.taxonomy.tsv \
-	# --out-dir /veodata/03/databases/ictv/0064_taxdump/ictv-taxdump --force
+	# --out-dir /veodata/03/databases/ictv/0664_taxdump/ictv-taxdump --force
 
 	# python3 $suppl_scripts/$pipeline.fix_taxdump.py \
-	# --input-dir /veodata/03/databases/ictv/0064_taxdump/ictv-taxdump \
-	# --output-dir /veodata/03/databases/ictv/0064_taxdump/ictv-taxdump
+	# --input-dir /veodata/03/databases/ictv/0664_taxdump/ictv-taxdump \
+	# --output-dir /veodata/03/databases/ictv/0664_taxdump/ictv-taxdump
 
 	# log "DOWNLOADING: taxdump.tar.gz"
-	# mkdir -p /veodata/03/databases/ictv/0064_taxdump/ncbi-taxdump
+	# mkdir -p /veodata/03/databases/ictv/0664_taxdump/ncbi-taxdump
 	# aria2c -x 4 "ftp://ftp.ncbi.nih.gov/pub/taxonomy/taxdump.tar.gz" --check-certificate=false
-	# tar zxfv taxdump.tar.gz -C /veodata/03/databases/ictv/0064_taxdump/ncbi-taxdump
+	# tar zxfv taxdump.tar.gz -C /veodata/03/databases/ictv/0664_taxdump/ncbi-taxdump
 	# rm taxdump.tar.gz
 
-	## log "DOWNLOADING: prot.accession2taxid.FULL.gz"
+	# log "DOWNLOADING: prot.accession2taxid.FULL.gz"
 	# aria2c -x 4 "https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/accession2taxid/prot.accession2taxid.FULL.gz" --check-certificate=false
-	# gunzip -c prot.accession2taxid.FULL.gz > /veodata/03/databases/ictv/0064_protein/prot.accession2taxid.FULL
+	# gunzip -c prot.accession2taxid.FULL.gz > /veodata/03/databases/ictv/0664_prot.accession2taxid.FULL
 
-
-	## log "DOWNLOADING: faa files for viruses"
-	# mkdir -p /veodata/03/databases/ictv/0064_protein
+	# log "DOWNLOADING: faa files for viruses"
+	# mkdir -p /veodata/03/databases/ictv/0664_protein
 	# python3 $suppl_scripts/$pipeline.ncbi_download.py \
 	# --refseq /veodata/03/databases/ictv/0664_assembly_summary_genbank.tsv \
 	# --genbank /veodata/03/databases/ictv/0664_assembly_summary_refseq.tsv \
-	# --output /veodata/03/databases/ictv/0064_proteins \
+	# --output /veodata/03/databases/ictv/0664_proteins \
 	# --threads 6
 
-	log "STARTING: 0664_phage_taxonomy_by_protein_custom_database.ProcessProteinSeq"
-	python $suppl_scripts/$pipeline.ProcessProteinSeq.py \
-	--proteins_dir /veodata/03/databases/ictv/0064_proteins \
-	--output_fasta /veodata/03/databases/ictv/0064_concatenated_proteins.fasta \
-	--output_tsv /veodata/03/databases/ictv/0064_virus.accession2taxid.tsv
+	# log "STARTING: 0664_phage_taxonomy_by_protein_custom_database.ProcessProteinSeq"
+	# python $suppl_scripts/$pipeline.ProcessProteinSeq.py \
+	# --proteins_dir /veodata/03/databases/ictv/0664_proteins \
+	# --output_fasta /veodata/03/databases/ictv/0664_concatenated_proteins.fasta \
+	# --output_tsv /veodata/03/databases/ictv/0664_virus.accession2taxid.tsv
+
+	# log "CREATING: /veodata/03/databases/ictv/0664_virus_taxid.list"
+	# awk '{print $2}' \
+	# /veodata/03/databases/ictv/0664_prot.accession2taxid.FULL \
+    # | sort -u \
+    # | taxonkit \
+	# --data-dir /veodata/03/databases/ictv/0664_taxdump/ncbi-taxdump \
+	# lineage \
+    # | rg "\tViruses;" \
+    # | awk '{print $1}' \
+    # > /veodata/03/databases/ictv/0664_virus_taxid.list \
+	# & my_pid=$!
+	# get_resource_stat $my_pid $resource_log/0664_virus_taxid.tsv
+
+	# log "CREATING: /veodata/03/databases/ictv/0664_virus.accession2taxid"
+	# csvtk grep --quiet -t -f 2 \
+	# -P /veodata/03/databases/ictv/0664_virus_taxid.list \
+	# /veodata/03/databases/ictv/0664_prot.accession2taxid.FULL \
+	# > /veodata/03/databases/ictv/0664_virus.accession2taxid \
+	# & my_pid=$!
+	# get_resource_stat $my_pid $resource_log/0664_virus.accession2taxid.tsv
+
+	log "STARTING: $pipeline.virus.accession2taxid.ictv"
+	python $suppl_scripts/$pipeline.virus.accession2taxid.ictv.py \
+    --ictv_names /veodata/03/databases/ictv/0664_ictv.names.txt \
+    --ncbi_nodes /veodata/03/databases/ictv/0664_taxdump/ncbi-taxdump/nodes.dmp \
+    --ncbi_names /veodata/03/databases/ictv/0664_taxdump/ncbi-taxdump/names.dmp \
+    --ncbi_merged /veodata/03/databases/ictv/0664_taxdump/ncbi-taxdump/merged.dmp \
+    --ictv_nodes /veodata/03/databases/ictv/0664_taxdump/ictv-taxdump/nodes.dmp \
+    --ictv_names_dmp /veodata/03/databases/ictv/0664_taxdump/ictv-taxdump/names.dmp \
+    --accession_file /veodata/03/databases/ictv/0664_virus.accession2taxid.tsv \
+    --output_file /veodata/03/databases/ictv/0664_virus.accession2taxid.ictv \
+	& my_pid=$!
+	get_resource_stat $my_pid $resource_log/0664_virus.accession2taxid.ictv.tsv
+
 ###############################################################################
 	log "FINISHED: $pipeline -----------------------------" ## && clean
 ###############################################################################

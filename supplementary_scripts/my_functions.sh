@@ -387,10 +387,7 @@ log_usage() {
     local log_file="$2"
     local num_cores=$(nproc)
 
-    # Check if log file exists; if not, add header
-    if [ ! -f "$log_file" ]; then
-        echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
-    fi
+    echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
 
     while kill -0 "$pid" 2>/dev/null; do
         # Get CPU and memory usage
@@ -419,6 +416,10 @@ log_usage() {
 
 summarize_log() {
     local log_file="$1"
+
+    # Create a blank summary file to avoid overwriting
+    local summary_file="$(dirname "$log_file")/$(basename "$log_file" .tsv).summary.tsv"
+    : > "$summary_file"  # This creates or clears the file
 
     # Extract start time and end time from the log file, replacing underscores with spaces for correct date parsing
     local start_time=$(awk 'NR==2 {print $1}' "$log_file" | sed 's/_/ /g')  # Replace underscore with space
@@ -494,7 +495,7 @@ summarize_log() {
         print "Process Start Time:", start;
         print "Process End Time:", end;
         print "Total Runtime (HH:MM:SS):", runtime_hms;
-    }' "$log_file" > "$(dirname "$log_file")/$(basename "$log_file" .tsv).summary.tsv"
+    }' "$log_file" > "$summary_file"
 
     # echo "Summary written to summary.$log_file"
 }
