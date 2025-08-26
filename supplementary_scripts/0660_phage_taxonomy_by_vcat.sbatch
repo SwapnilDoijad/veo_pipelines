@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0660_phage_taxonomy_by_vcat
-#SBATCH --partition=short,standard,long,interactive,gpu-test,gpu
+#SBATCH --partition=standard,long
 #SBATCH --output=results/0660_phage_taxonomy_by_vcat/tmp/slurm/%j.out
 #SBATCH --error=results/0660_phage_taxonomy_by_vcat/tmp/slurm/%j.err
 #SBATCH --mem=100G
