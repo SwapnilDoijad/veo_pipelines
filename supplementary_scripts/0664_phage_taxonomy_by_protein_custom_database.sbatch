@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0664_phage_taxonomy_by_protein_custom_database
-#SBATCH --partition=long,standard
+#SBATCH --partition=short,long,standard
 #SBATCH --output=results/0664_phage_taxonomy_by_protein_custom_database/tmp/slurm/%j.out
 #SBATCH --error=results/0664_phage_taxonomy_by_protein_custom_database/tmp/slurm/%j.err
 #SBATCH --mem=240G
@@ -225,29 +225,29 @@
 
 ###############################################################################
 ## step-02: actual taxonomical classificatio steps 
-		find $fasta_directory/ -name "*.fasta" -print0 \
-		| xargs -0 /home/groups/VEO/tools/seqkit/v2.8.2/seqkit stats \
-		> $raw_files/stats.info \
-		& my_pid=$!
-		get_resource_stat $my_pid $resource_log/0664.seqkit.stats.tsv
+		# find $fasta_directory/ -name "*.fasta" -print0 \
+		# | xargs -0 /home/groups/VEO/tools/seqkit/v2.8.2/seqkit stats \
+		# > $raw_files/stats.info \
+		# & my_pid=$!
+		# get_resource_stat $my_pid $resource_log/0664.seqkit.stats.tsv
 
-		$mmseqs \
-		createdb data/combined_fasta/all59907.fasta \
-		$raw_files/mmdb \
-		& my_pid=$!
-		get_resource_stat $my_pid $resource_log/0664.mmseq.createdb.all59907.tsv
+		# $mmseqs \
+		# createdb data/combined_fasta/all59907.fasta \
+		# $raw_files/mmdb \
+		# & my_pid=$!
+		# get_resource_stat $my_pid $resource_log/0664.mmseq.createdb.all59907.tsv
 
-		mkdir $raw_files/taxonomy_results
-		$mmseqs \
-		taxonomy \
-		$raw_files/mmdb \
-		/veodata/03/databases/ictv/0664_ictv/virus_tax_db \
-		$raw_files/taxonomy_results/resdb2 \
-		tmp -e 0.001 -s 7 --blacklist "" \
-		--tax-lineage 1 --threads 14 \
-		--lca-ranks superkingdom,kingdom,subkingdom,superphylum,phylum,subphylum,class,subclass,order,suborder,family,subfamily,genus,subgenus,species \
-		& my_pid=$!
-		get_resource_stat $my_pid $resource_log/0664.mmseq.taxonomy.all59907.tsv
+		# mkdir $raw_files/taxonomy_results
+		# $mmseqs \
+		# taxonomy \
+		# $raw_files/mmdb \
+		# /veodata/03/databases/ictv/0664_ictv/virus_tax_db \
+		# $raw_files/taxonomy_results/resdb2 \
+		# tmp -e 0.001 -s 7 --blacklist "" \
+		# --tax-lineage 1 --threads 14 \
+		# --lca-ranks superkingdom,kingdom,subkingdom,superphylum,phylum,subphylum,class,subclass,order,suborder,family,subfamily,genus,subgenus,species \
+		# & my_pid=$!
+		# get_resource_stat $my_pid $resource_log/0664.mmseq.taxonomy.all59907.tsv
 
 			# depreceated
 				# $mmseqs \
@@ -258,14 +258,14 @@
 				# get_resource_stat $my_pid $resource_log/0664.mmseq.createtsv.all59907.tsv
 			# above did not work, so run below, as suggested by chatGPT
 
-		$mmseqs \
-		createtsv \
-		$raw_files/mmdb \
-		/veodata/03/databases/ictv/0664_ictv/virus_tax_db \
-		$raw_files/taxonomy_results/resdb2 \
-		$raw_files/taxonomyResult.tsv \
-		& my_pid=$!
-		get_resource_stat $my_pid $resource_log/0664.mmseq.createtsv.all59907.tsv
+		# $mmseqs \
+		# createtsv \
+		# $raw_files/mmdb \
+		# /veodata/03/databases/ictv/0664_ictv/virus_tax_db \
+		# $raw_files/taxonomy_results/resdb2 \
+		# $raw_files/taxonomyResult.tsv \
+		# & my_pid=$!
+		# get_resource_stat $my_pid $resource_log/0664.mmseq.createtsv.all59907.tsv
 
 		python3 $suppl_scripts/0664_phage_taxonomy_by_protein_custom_database.format.py \
 		--taxonomy-result $raw_files/taxonomyResult.tsv \
