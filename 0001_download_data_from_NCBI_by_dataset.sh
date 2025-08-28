@@ -12,7 +12,7 @@
   type_strains=$(grep my_type_strains $parameters | awk '{print $2}')
 
 ###############################################################################
-## for Type Strains
+## for Type Strains 
 
   if [ $type_strains == "Y" ]; then
     log "Downloading Type Strains for $name"
