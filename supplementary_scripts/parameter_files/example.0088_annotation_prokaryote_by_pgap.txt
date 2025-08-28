@@ -3,3 +3,9 @@
 ## note that all files should end with .fasta
 ## example path is given below (change the path according to your data):
 my_fasta_dir	results/ragatag_fasta/all_fasta
+
+## organims name 
+## PGAP requires some metadata about the organism in addition to the FASTA sequence, even if you don’t know the exact scientific name.
+## You can write "Enterobacter spp.", "Unknown bacterium", or just "Enterobacter".
+"Enterobacter spp.", "Unknown bacterium", or just "Enterobacter".
+my_organism	Enterobacter

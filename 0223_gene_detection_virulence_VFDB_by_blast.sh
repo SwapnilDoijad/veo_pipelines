@@ -1,82 +1,73 @@
 #!/bin/bash
 ###############################################################################
 ## header
+    pipeline=0223_gene_detection_virulence_VFDB_by_blast
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-    echo "STARTED : 0223_gene_detection_virulence_VFDB_by_blast ---------------------------------"
+    log "STARTED SUBMISSION: $pipeline "
 ###############################################################################
 ## step-01: file and directory preparation
+    fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
+	ls $fasta_directory | sed 's/\.fasta//g' > list.$pipeline.txt
+    list=list.$pipeline.txt
 
-    pipeline=0223_gene_detection_virulence_VFDB_by_blast
-    wd=results/$pipeline
-	makeblastdb=/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/makeblastdb
-
-    if [ -f list.fasta.txt ]; then 
-        list=list.fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
-
-    # create_directories_structure_1 $wd
-    # split_list $wd $list
-    # submit_jobs $wd $pipeline
-exit
+    create_directories_structure_1 $wd
+    split_list $wd $list
+    submit_jobs $wd $pipeline
+	echo -e 'sseqid\tqseqid\tsstart\tsend\tqstart\tqend\tslen\tqlen\tevalue\tbitscore\tlength\tmismatch\tgaps\tpident\tqcovs\ttotal-query-coverage\tgene\tprotein\tgroup\toriginated-from\tscovs' > $wd/VFDB-blast.tsv
+###############################################################################
+    log "ENDED: $pipeline "
 ###############################################################################
 ## step-02: database creation
-	if [ ! -f /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas.phr ] ; then
-		echo "creating blast database"
-		$makeblastdb -in /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas -parse_seqids -dbtype prot
-		else
-		echo "-------------------------------------------------------------------------------"
-		echo "VFDB Database version"
-		stat /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas.phr | awk 'NR >= 5 && NR <= 7'
-		echo "-------------------------------------------------------------------------------"
-	fi
+	# if [ ! -f /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas.phr ] ; then
+	# 	echo "creating blast database"
+	# 	$makeblastdb -in /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas -parse_seqids -dbtype prot
+	# 	else
+	# 	echo "-------------------------------------------------------------------------------"
+	# 	echo "VFDB Database version"
+	# 	stat /veodata/03/databases/VFDB/v2021/VFDB_setB_pro.fas.phr | awk 'NR >= 5 && NR <= 7'
+	# 	echo "-------------------------------------------------------------------------------"
+	# fi
 ###############################################################################
 ## step-03 calcualte Abr-gene frequency
 
-	echo "summarising virulence gene blast analysis"
+# 	echo "summarising virulence gene blast analysis"
 
-	awk 'FNR>1' $wd/all_results/*.VFDB-blast.csv > $wd/all.VFDB-blast.tab
-	ex -sc '1i|sseqid	qseqid	sstart	send	qstart	qend	slen	qlen	evalue	bitscore	length	mismatch	gaps	pident	qcovs	total-query-coverage	gene	protein	group	originated-from' -cx $wd/all.VFDB-blast.tab
-	#unoconv -i FilterOptions=09,,system,1 -f xls $wd/all.VFDB-blast.tab
+# 	awk 'FNR>1' $wd/all_results/*.VFDB-blast.csv > $wd/all.VFDB-blast.tab
+# 	ex -sc '1i|sseqid	qseqid	sstart	send	qstart	qend	slen	qlen	evalue	bitscore	length	mismatch	gaps	pident	qcovs	total-query-coverage	gene	protein	group	originated-from' -cx $wd/all.VFDB-blast.tab
+# 	#unoconv -i FilterOptions=09,,system,1 -f xls $wd/all.VFDB-blast.tab
 
-	cp $wd/all.VFDB-blast.tab $wd/all.VFDB-blast.tab.tmp1
-	cp $wd/all.VFDB-blast.tab.tmp1 $wd/all.txt.1.tmp
-	sed -i 's/ /\t/g' $wd/all.VFDB-blast.tab
+# 	cp $wd/all.VFDB-blast.tab $wd/all.VFDB-blast.tab.tmp1
+# 	cp $wd/all.VFDB-blast.tab.tmp1 $wd/all.txt.1.tmp
+# 	sed -i 's/ /\t/g' $wd/all.VFDB-blast.tab
 
-	sed -i 's/ /_/g' $wd/all.txt.1.tmp
-	awk -F'\t' 'FNR >1 {print $17}' $wd/all.txt.1.tmp > $wd/all.txt.2.tmp
-	sed -i 's/  /===/' $wd/all.txt.2.tmp
-	sed -i 's/  /===/' $wd/all.txt.2.tmp
-	cat $wd/all.txt.2.tmp | sort | uniq > $wd/all.txt.3.tmp 
+# 	sed -i 's/ /_/g' $wd/all.txt.1.tmp
+# 	awk -F'\t' 'FNR >1 {print $17}' $wd/all.txt.1.tmp > $wd/all.txt.2.tmp
+# 	sed -i 's/  /===/' $wd/all.txt.2.tmp
+# 	sed -i 's/  /===/' $wd/all.txt.2.tmp
+# 	cat $wd/all.txt.2.tmp | sort | uniq > $wd/all.txt.3.tmp 
 
-	(rm $wd/Virulence_gene_frequency.csv.1.tmp) > /dev/null 2>&1 
-	for F2 in $(cat $wd/all.txt.3.tmp); do
-		V1=$(grep -c "$F2" $wd/all.txt.2.tmp)
-		echo $F2 $V1 >> $wd/Virulence_gene_frequency.csv.1.tmp
-	done
+# 	(rm $wd/Virulence_gene_frequency.csv.1.tmp) > /dev/null 2>&1 
+# 	for F2 in $(cat $wd/all.txt.3.tmp); do
+# 		V1=$(grep -c "$F2" $wd/all.txt.2.tmp)
+# 		echo $F2 $V1 >> $wd/Virulence_gene_frequency.csv.1.tmp
+# 	done
 
-	cat $wd/Virulence_gene_frequency.csv.1.tmp | sort -k 2,2rn $wd/Virulence_gene_frequency.csv.1.tmp > $wd/Virulence_gene_frequency.csv.2.tmp
+# 	cat $wd/Virulence_gene_frequency.csv.1.tmp | sort -k 2,2rn $wd/Virulence_gene_frequency.csv.1.tmp > $wd/Virulence_gene_frequency.csv.2.tmp
 
-	awk -f /home/groups/VEO/scripts_for_users/supplementary_scripts/vlookup-VFDB.2.awk /veodata/03/databases/VFDB/v2021/VFDB-annotations.2.txt $wd/Virulence_gene_frequency.csv.2.tmp > $wd/Virulence_gene_frequency.csv.3.tmp
+# 	awk -f /home/groups/VEO/scripts_for_users/supplementary_scripts/vlookup-VFDB.2.awk /veodata/03/databases/VFDB/v2021/VFDB-annotations.2.txt $wd/Virulence_gene_frequency.csv.2.tmp > $wd/Virulence_gene_frequency.csv.3.tmp
 
-	paste $wd/Virulence_gene_frequency.csv.2.tmp $wd/Virulence_gene_frequency.csv.3.tmp > $wd/Virulence_gene_frequency.csv
+# 	paste $wd/Virulence_gene_frequency.csv.2.tmp $wd/Virulence_gene_frequency.csv.3.tmp > $wd/Virulence_gene_frequency.csv
 
-	ex -sc '1i|Virulence-gene frequency protein group originated-from' -cx $wd/Virulence_gene_frequency.csv
-	sed -i 's/ /\t/g' $wd/Virulence_gene_frequency.csv
+# 	ex -sc '1i|Virulence-gene frequency protein group originated-from' -cx $wd/Virulence_gene_frequency.csv
+# 	sed -i 's/ /\t/g' $wd/Virulence_gene_frequency.csv
 
-	sed -i 's/===/ /g' $wd/Virulence_gene_frequency.csv
-	sed -i 's/_/ /g' $wd/Virulence_gene_frequency.csv
-	sed -i 's/_/ /g' $wd/Virulence_gene_frequency.csv
-	#unoconv -i FilterOptions=09,,system,1 -f xls $wd/Virulence_gene_frequency.csv
+# 	sed -i 's/===/ /g' $wd/Virulence_gene_frequency.csv
+# 	sed -i 's/_/ /g' $wd/Virulence_gene_frequency.csv
+# 	sed -i 's/_/ /g' $wd/Virulence_gene_frequency.csv
+# 	#unoconv -i FilterOptions=09,,system,1 -f xls $wd/Virulence_gene_frequency.csv
 
-	echo "summarising virulence gene blast analysis completed"
-exit
+# 	echo "summarising virulence gene blast analysis completed"
+# exit
 # ###############################################################################
 # ## step-04: Creating matrix out of VFDB blast results
 

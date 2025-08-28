@@ -11,27 +11,25 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
     fasta_dir=$(grep "my_fasta_dir" tmp/parameters/$pipeline.* | awk '{print $2}')
+    organism=$(grep "my_organism" tmp/parameters/$pipeline.* | awk '{print $2}')
 ###############################################################################
 	log "SBATCH STARTED : $pipeline : $sublist"
 ###############################################################################
 ## 01: run phold
-    source /home/groups/VEO/tools/pgap/v2025-05-06.build7983/pgap/pgap-env/bin/activate
+    source /home/groups/VEO/tools/pgap/v2025-05-06.build7983/pgap-env/bin/activate
     export PGAP_INPUT_DIR=/veodata/03/databases/pgap/
-    export http_proxy=http://internet4nzm.rz.uni-jena.de:3128
-    export https_proxy=http://internet4nzm.rz.uni-jena.de:3128
     for i in $(cat $sublist); do
         log "STARTED : $pipeline : $i"
 
         ## cpus: by default will use maxiumum available CPUS.
         python /home/groups/VEO/tools/pgap/v2025-05-06.build7983/pgap/scripts/pgap.py \
+        --container-path /home/groups/VEO/tools/pgap/v2025-05-06.build7983/pgap_2025-05-06.build7983.sif \
+        --no-internet \
+        --no-self-update \
         -g $fasta_dir/$i.fasta \
-        -s "Escherichia coli" \
-        --taxcheck \
-        --auto-correct-tax \
+        -s $organism \
         --prefix $i \
-        -m 100G \
-        -n -v -d \
-        --container-path /vast/xa73pav/projects/p_swapnil_Enterobacter/pgap_2025-05-06.build7983.sif \
+        -n \
         -o $raw_files/$i \
         & my_pid=$!
         get_resource_stat $my_pid $wd/tmp/resource_log/$i.pgap.tsv 

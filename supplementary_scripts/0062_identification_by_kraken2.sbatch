@@ -48,13 +48,14 @@ log "database: $database"
             for F1 in $(cat $sublist ); do
                 if [ ! -f $raw_files/$F1/report.txt ]; then
                     log "running kraken2 (raw_reads) for $F1"
+                    ( mkdir $raw_files/$F1 ) > /dev/null 2>&1  
 
-                    ( $tools/kraken2/v2.1.2/kraken2 \
+                    $tools/kraken2/v2.1.2/kraken2 \
                     --db $database \
                     --threads $SLURM_CPUS_PER_TASK \
                     --report $raw_files/$F1/report.txt \
                     --use-names \
-                    --paired $data_dir/"$F1"_R1.fastq.gz $data_dir/"$F1"_R2.fastq.gz ) > /dev/null 2>&1
+                    --paired $data_dir/"$F1"_R1.fastq.gz $data_dir/"$F1"_R2.fastq.gz #) > /dev/null 2>&1
 
                 fi
 
