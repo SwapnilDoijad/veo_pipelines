@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0171_comparative_genomics_core_pan_by_panaroo
-#SBATCH --partition=interactive,short
+#SBATCH --partition=gpu-veo,gpu,gpu-test,long,standard
 #SBATCH --output results/0171_comparative_genomics_core_pan_by_panaroo/tmp/slurm/%j.out.0171_comparative_genomics_core_pan_by_panaroo
 #SBATCH --error results/0171_comparative_genomics_core_pan_by_panaroo/tmp/slurm/%j.err.0171_comparative_genomics_core_pan_by_panaroo
 #SBATCH --mem=200G
@@ -24,7 +24,7 @@
 
     log "Running panaroo pipeline"
     panaroo \
-        -i $gff_dir/*.gff3 \
+        -i $gff_dir/*.gff \
         -o "$raw_files" \
         -t 80 \
         -c "$sequence_identity_threshold" \
@@ -33,7 +33,9 @@
         --clean-mode strict \
         --merge_paralogs \
         -a "$alignment_type" \
-        --remove-invalid-genes
+        --remove-invalid-genes  \
+        & my_pid=$!
+        get_resource_stat $my_pid $resource_log/panaroo.tsv 
 
     log "ENDED: 0171_comparative_genomics_core_pan_by_panaroo pipeline"
 

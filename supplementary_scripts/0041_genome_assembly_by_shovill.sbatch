@@ -29,7 +29,9 @@
                             --R2 $fastq_path/"$i"_R2.fastq.gz \
                             --cpus $SLURM_CPUS_PER_TASK --ram 200 \
                             --opts --isolate \
-                            --minlen 500 --mincov 10 --keepfiles
+                            --minlen 500 --mincov 10 --keepfiles \
+                            & my_pid=$!
+                            get_resource_stat $my_pid $wd/tmp/resource_log/$i.shovill.tsv 
                             log "finished: shovill assembly for $i" 
                             else
                             log "fastq not found for $i"

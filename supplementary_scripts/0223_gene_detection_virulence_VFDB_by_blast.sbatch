@@ -78,9 +78,22 @@
 ###############################################################################
 	log "STARTED: $pipeline -----------------------------" && clean
 ###############################################################################
-	# awk 'NR>1' $wd/all_results/$i.VFDB-blast.tsv >> $wd/VFDB-blast.tsv
+# awk 'NR>1' $wd/all_results/$i.VFDB-blast.tsv >> $wd/VFDB-blast.tsv
 
-	python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.matrix.py \
-	--gcol protein \
-	-i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.tsv \
-	-o /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.tsv \
+# source /home/groups/VEO/tools/biopython/myenv/bin/activate
+
+# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.gene_collapse.py \
+# -i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.tsv \
+# -o /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.tsv \
+# --report /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.report.tsv
+
+# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.add_species.py \
+# -i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.tsv \
+# -s /vast/xa73pav/projects/p_swapnil_Enterobacter/id_species.tsv \
+# -o /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.with_species.tsv
+
+# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.species_association.py \
+# -i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.with_species.tsv \
+# -o /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/sp_comparison/out \
+# --mode pairwise --global_permutations 500 --seed 7 --min_occurence_of_gene 5 --drop Unknown --min_occurence_of_gene 5 --drop_species unclassified
+
