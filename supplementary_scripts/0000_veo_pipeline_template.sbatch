@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0000_veo_pipeline
-#SBATCH --partition=short,long,interactive,standard
+#SBATCH --partition=long,standard,gpu-veo,gpu-test,gpu
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G

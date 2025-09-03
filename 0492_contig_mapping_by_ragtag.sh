@@ -15,7 +15,11 @@
     split_list $wd $list
     submit_jobs $wd $pipeline
     mkdir -p $wd/all_fasta
+
+    echo -e "fasta_id\tunordered_contigs\tordered_contigs\tlength(bp)" > $wd/summary.tsv
+    
+    # echo "PID of this job script: $USER $$"
 ###############################################################################
 ## footer
-    log "ENDED : $pipeline ----------------------"
+    log "ENDED : $pipeline ----------------------" && report
 ###############################################################################

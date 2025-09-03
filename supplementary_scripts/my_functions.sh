@@ -137,6 +137,66 @@ fasta_length() {
     awk '/^>/ { next } { total_length += length($0) } END { print total_length }' "$fasta_file"
 }
 
+get_fasta_contigs_length_individual() {
+    local fasta_file="$1"
+
+    if [[ ! -f "$fasta_file" ]]; then
+        echo "Error: FASTA file not found!"
+        return 1
+    fi
+
+    awk '/^>/ {
+        if (seqlen) { 
+            print contig_name, seqlen 
+        }
+        contig_name = substr($0, 2)  # Remove the ">" from the contig name
+        seqlen = 0
+        next
+    } 
+    {
+        seqlen += length($0)
+    } 
+    END {
+        if (seqlen) {
+            print contig_name, seqlen
+        }
+    }' "$fasta_file"
+}
+
+get_fasta_contigs_length_all() {
+    local fasta_file="$1"
+
+    if [[ ! -f "$fasta_file" ]]; then
+        echo "Error: FASTA file not found!"
+        return 1
+    fi
+
+    # Extract the file ID by removing the last dot and everything after it
+    local file_id=$(basename "$fasta_file" | sed 's/\.[^.]*$//')
+
+    awk -v file_id="$file_id" '
+    BEGIN {
+        total_contigs = 0;
+        total_length = 0;
+    }
+    /^>/ {
+        total_contigs++;
+        if (seqlen) {
+            total_length += seqlen;
+        }
+        seqlen = 0;
+        next;
+    }
+    {
+        seqlen += length($0);
+    }
+    END {
+        if (seqlen) {
+            total_length += seqlen;
+        }
+        print file_id, total_contigs, total_length;
+    }' "$fasta_file"
+}
 
 # Function to check if the files exist
 barcode_files_exist() {
@@ -236,7 +296,6 @@ wait_for_file_existence_and_completion() {
     done
 }
 
-
 # Function to check the number of running jobs and wait if more than the specified number
 ## e.g., wait_for_jobs_to_complete 100
 wait_for_jobs_to_complete() {
@@ -249,7 +308,6 @@ wait_for_jobs_to_complete() {
     running_jobs=$(squeue -u $USER | wc -l)
   done
 }
-
 
 ## wait till file is complete written
 wait_until_written() {
@@ -516,6 +574,48 @@ get_resource_stat() {
     summarize_log "$log_file"
 }
 
+report() {
+  local user_id="$USER"
+  local job_name="$pipeline"
+  local wd="results/${pipeline}"
+
+  local job_count
+  while :; do
+    job_count=$(squeue --noheader -u "$user_id" -n "$job_name" -o "%i" | wc -l)
+    if [ "$job_count" -le 1 ]; then
+      echo "Now only $job_count job(s) with name '$job_name' remain for user '$user_id'."
+      break
+    fi
+    echo "More than one job with name '$job_name' running for user '$user_id'. Waiting for one minute..."
+    sleep 60
+  done
+
+  # Optional: check input file
+  if [ ! -f "$wd/summary.tsv" ]; then
+    echo "ERROR: Input file not found: $wd/summary.tsv" >&2
+    return 1
+  fi
+
+    source /home/groups/VEO/tools/biopython/myenv/bin/activate
+    python "$suppl_scripts/report_file/${pipeline}.report.py" \
+        -i "$wd/summary.tsv" \
+        -o "$wd/report.pdf"
+    deactivate
+
+    if [ -f "$wd/report.pdf" ]; then
+        user=$(whoami)
+        user_name=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $2}')
+        user_email=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $3}')
+
+        source /home/groups/VEO/tools/email/myenv/bin/activate
+            python "$suppl_scripts/emails/report.py" \
+            -e ${user_email} \
+            -p ${pipeline} \
+            -w ${wd}
+        deactivate
+    fi
+
+}
 
 log "$pipeline : $(whoami) : $(hostname)" >> /vast/groups/VEO/.veo_pipeline_usage.log
 

@@ -3,7 +3,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 # Read data from the input file
-with open('tmp/logs/002/users_activity.tsv', 'r') as file:
+with open('/home/xa73pav/scripts/general_maintainance/tmp/logs/002/users_activity.tsv', 'r') as file:
     lines = file.readlines()
 
 # Process the data
@@ -50,7 +50,7 @@ plt.yscale('log')
 
 # Save the figure
 plt.tight_layout()
-plt.savefig('tmp/logs/002/users_activity.png')
+plt.savefig('/home/xa73pav/scripts/general_maintainance/tmp/logs/002/users_activity.png')
 
 # Show the plot
 plt.show()
