@@ -2,5 +2,5 @@
 ## please give a path of a single folder in which all fasta files are stored
 ## note that all files should end with .fasta
 ## example path is given below (change the path according to your data):
-my_fasta_path	data/my_fasta
-ref_fasta_path	data/refseq/fasta
+my_data_dir	data/my_fasta
+

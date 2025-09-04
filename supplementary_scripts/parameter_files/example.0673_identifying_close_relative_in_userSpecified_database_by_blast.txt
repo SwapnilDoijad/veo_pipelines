@@ -1,0 +1,14 @@
+## This is a parameter file for 0672_identifying_close_relative_in_nr_by_blast pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_query_fasta_dir	data/millard
+
+## fasta to create a database 
+my_database_fasta	/veodata/03/databases/genomes_phage_millardlab/9Aug2025/9Aug2025_genomes.fa
+
+## query_coverage
+my_query_coverage	60
+
+## identity
+my_identity	90

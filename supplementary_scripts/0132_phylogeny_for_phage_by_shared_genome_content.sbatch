@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0132_phylogeny_for_phage_by_shared_genome_content
-#SBATCH --partition=interactive,standard,long
+#SBATCH --partition=interactive,standard,long,gpu-veo,gpu,gpu-test
 #SBATCH --output=results/0132_phylogeny_for_phage_by_shared_genome_content/tmp/slurm/%j.out
 #SBATCH --error=results/0132_phylogeny_for_phage_by_shared_genome_content/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40

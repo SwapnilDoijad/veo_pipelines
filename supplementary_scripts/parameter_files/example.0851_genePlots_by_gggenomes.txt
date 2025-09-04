@@ -1,0 +1,6 @@
+## This is a parameter file for 0851_genePlots_by_gggenomes pipeline
+## please give a path of a folder in which gff or .gff3 or .fasta files are stored
+## note that all files should end with gff or .gff3 or .fasta
+## example path is given below (change the path according to your data):
+my_fasta_path	data/my_fasta
+
