@@ -12,8 +12,10 @@
     list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
-    split_list $wd $list
-    submit_jobs $wd $pipeline
+
+    cp $suppl_scripts/0851_genePlots_by_gggenomes.sbatch $wd/tmp/sbatch
+
+    sbatch $wd/tmp/sbatch/0851_genePlots_by_gggenomes.sbatch
 
 ###############################################################################
     echo "FINISHED : $pipeline ---------------------------------"
