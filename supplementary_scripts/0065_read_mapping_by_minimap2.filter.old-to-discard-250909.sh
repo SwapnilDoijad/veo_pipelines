@@ -27,10 +27,9 @@ if [[ -z "$input_file" || -z "$output_file" ]]; then
 fi
 
 # Output header to the output file
-# Added AA_Change column (HGVS.p)
-echo -e "#ID\tCHROM\tPOS\tREF\tALT\tQUAL\tTotal_Reads_Mapped\tReads_Supporting_ALT\tReads_Supporting_REF\tSNP_Type\tAllele_Frequency\tRead_Depth_per_Base\tQualRef\tQualAllel\tAA_Change\tSNP_Annotation" > "$output_file"
+echo -e "#ID\tCHROM\tPOS\tREF\tALT\tQUAL\tTotal_Reads_Mapped\tReads_Supporting_ALT\tReads_Supporting_REF\tSNP_Type\tAllele_Frequency\tRead_Depth_per_Base\tQualRef\tQualAllel\tSNP_Annotation" > "$output_file"
 
-# Parse VCF file to extract relevant fields, including simplified SNP annotation and AA change
+# Parse VCF file to extract relevant fields, including simplified SNP annotation
 grep -v '^#' "$input_file" | awk -v OFS="\t" '
 {
     # Extract basic information from each VCF line
@@ -56,7 +55,6 @@ grep -v '^#' "$input_file" | awk -v OFS="\t" '
     QR="NA"
     QA="NA"
     ANN="NA"
-    AA_CHANGE="NA"
 
     # Loop through INFO fields to find relevant information
     for (i in info_fields) {
@@ -86,29 +84,12 @@ grep -v '^#' "$input_file" | awk -v OFS="\t" '
         }
         if (info_fields[i] ~ /^ANN=/) {
             # Extract the first annotation from the ANN field
-            ann_str = substr(info_fields[i], 5)
-            split(ann_str, ann_fields, ",")
+            split(substr(info_fields[i], 5), ann_fields, ",")
             split(ann_fields[1], ann_details, "|")
-
-            # Build a simple annotation: Allele|Effect|Impact|Gene
-            # (keeps your original 4 fields)
-            if (length(ann_details) >= 4) {
-                ANN = ann_details[1] "|" ann_details[2] "|" ann_details[3] "|" ann_details[4]
-            } else {
-                ANN = "NA"
-            }
-
-            # HGVS.p is the 11th pipe-delimited field in SnpEff ANN
-            # If present, use it as the amino acid change; else NA
-            if (length(ann_details) >= 11 && ann_details[11] != "") {
-                AA_CHANGE = ann_details[11]
-            } else {
-                AA_CHANGE = "NA"
-            }
+            ANN=ann_details[1] "|" ann_details[2] "|" ann_details[3] "|" ann_details[4]
         }
     }
 
     # Output the columns in the desired format
-    # Added AA_CHANGE before the simplified ANN
-    print chrom, pos, ref, alt, qual, DP, AO, RO, TYPE, AF, DPB, QR, QA, AA_CHANGE, ANN
+    print chrom, pos, ref, alt, qual, DP, AO, RO, TYPE, AF, DPB, QR, QA, ANN
 }' >> "$output_file"

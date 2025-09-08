@@ -11,7 +11,6 @@
 	source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     data_directory=$( grep my_data_dir $parameters | awk '{print $2}' )
 
-	mash_tool_path=/home/groups/VEO/tools/mash/v2.3
 ###############################################################################
 	log "STARTED :SBATCH : $pipeline -----------------------------"
 ###############################################################################

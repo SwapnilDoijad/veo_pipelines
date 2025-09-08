@@ -23,7 +23,10 @@
         if [ ! -f $wd/raw_files/$i/$i.gbk ]; then
 			log "STARTED : $pipeline : $mode : $i "
 
-            id=$(echo $i | cut -f 1 -d '_')
+            # id=$(echo $i | cut -f 1 -d '_')
+            ## Note that, if you use id then NC_0056677 wil get to NC_
+            ## and then all cds will have NC_001, NC_002, ...
+            ## which will be a problem for downstream analysis
 
             if [ $mode == "normal" ]; then
 
@@ -32,7 +35,7 @@
                 -o $raw_files/$i \
                 -d /veodata/03/databases/pharokka/v1.7.1 \
                 -t $SLURM_CPUS_PER_TASK \
-                -f -p $i -l $id \
+                -f -p $i -l $i \
                 & my_pid=$!
                 get_resource_stat $my_pid $wd/tmp/resource_log/$i.pharokka.normal.tsv 
 

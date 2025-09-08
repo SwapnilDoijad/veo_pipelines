@@ -45,7 +45,17 @@
                 # -d /veodata/03/databases/phold/v240724/ \
                 # & my_pid=$!
                 # get_resource_stat $my_pid $wd/tmp/resource_log/$i.phold.cpu.tsv 
-            
+
+            ## plots
+            phold plot \
+            -i $raw_files/$i/$i.gbk  \
+            -o $raw_files/$i/plots \
+            -t $i
+
+            python $suppl_scripts/utilities/gbk2gff.py \
+            -i $raw_files/$i/$i.gbk \
+            -o $raw_files/$i/$i.gff
+
 			log "FINISHED : $pipeline : $i"
             else
             log "ALREADY FINISHED : $pipeline : $i"
