@@ -7,7 +7,7 @@
 ## data type: single or paired
 my_data_type	single 
 
-## read type: illumina or nanpore or pacbio 
+## read type: illumina or nanopore or pacbio 
 my_read_type	nanopore
 
 ## SNP_analysis:  "Yes" or "No" ## SNPs will be extracted 

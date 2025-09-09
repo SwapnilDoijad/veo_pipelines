@@ -30,7 +30,6 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
     # exit
 
     while IFS= read -r line; do
-
         assembly_id_path=$( echo $line | awk '{print $1}' | xargs -I{} dirname {} | sort | uniq )
         assembly_id=$( echo $line | awk '{print $1}' | awk -F'/' '{print $NF}' | sed 's/\.fasta//g' | sort | uniq )
         fastq_id_path=$( echo $line | awk '{print $2}' | xargs -I{} dirname {} | tr ' ' '\n' | sort | uniq )
@@ -99,7 +98,9 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
 
                     fwd_reads=$(echo $line | awk '{print $2}')
-                    rev_reads=$(grep $line | awk '{print $3}')
+                    rev_reads=$(echo $line | awk '{print $3}')
+                    echo "fwd_reads: $fwd_reads"
+                    echo "rev_reads: $rev_reads"
 
                     # Run minimap2 for paired-end reads
                     ## for paired end sequencing, -x sr is used (as long reads are not in paired-end format)
