@@ -42,6 +42,7 @@
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.align.tsv
 
 	## Cluster genome sequences based on given ANI measure and minimum threshold.
+		## Dont care for the length-coverage (thus,fragment or complete phage belong to single phage in cluster)
 	log "Clustering genome sequences..."
 	python3.9 /home/groups/VEO/tools/vclust/v1.0.3/vclust.py \
 	cluster \

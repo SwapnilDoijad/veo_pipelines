@@ -6,3 +6,6 @@ my_fasta_path	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complet
 
 ## do you need a figure? Yes or No. if more than 200 phages it takes more than 1 hour
 my_figure   No
+
+## ani
+my_ani	0.95

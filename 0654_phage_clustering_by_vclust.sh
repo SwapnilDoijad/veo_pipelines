@@ -12,7 +12,8 @@
 
     create_directories_structure_1 $wd
 
-	sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/0654_phage_clustering_by_vclust.sbatch
+    cp /home/groups/VEO/scripts_for_users/supplementary_scripts/0654_phage_clustering_by_vclust.sbatch $wd/tmp/sbatch/
+	sbatch $wd/tmp/sbatch/0654_phage_clustering_by_vclust.sbatch
 ###############################################################################
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################

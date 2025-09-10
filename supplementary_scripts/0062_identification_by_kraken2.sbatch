@@ -12,7 +12,7 @@ source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 sublist=$wd/tmp/lists/ABC
 data_dir=$(grep "my_data_dir" $parameters | awk -F'\t' '{print $2}')
 input_file_type=$( grep "my_input_file_type" $parameters | awk -F'\t' '{print $2}')
-database=/veodata/03/databases/kraken2/v20250204
+database=$(grep "my_database" $parameters | awk -F'\t' '{print $2}')
 levels="P C O F G S S1"
 source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate perl_v5.32.1
 ###############################################################################
@@ -39,7 +39,6 @@ log "database: $database"
             -o $raw_files/$F1/report.sp.tsv \
             -r S \
             -n 3
-
 
         done
         

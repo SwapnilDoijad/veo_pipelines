@@ -6,3 +6,8 @@ my_data_dir	results/0041_genome_assembly_by_shovill/all_fasta
 
 ## Classification based on fasta (f) or raw reads (r), type f or r
 my_input_file_type	r
+
+## database
+## kraken2 database: /veodata/03/databases/kraken2/v20250204
+## refseq: /veodata/03/databases/kraken2/kraken2_Bracken_RefSeq_indexex_v202401
+my_database /veodata/03/databases/kraken2/kraken2_Bracken_RefSeq_indexex_v202401
