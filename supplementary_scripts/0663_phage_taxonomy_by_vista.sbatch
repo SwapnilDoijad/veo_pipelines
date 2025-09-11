@@ -52,14 +52,20 @@
 				# & my_pid=$!
 				# get_resource_stat $my_pid $resource_log/$i.vista.awk.blast_filtered.tsv
 
-			source /home/groups/VEO/tools/biopython/myenv/bin/activate
-			python $vista/Get_family_name.py \
-			-i $raw_files/blast_out.csv \
-			-o $raw_files/family_names.tsv  \
-			& my_pid=$!
-			get_resource_stat $my_pid $resource_log/$i.vista.Get_family_name.tsv
-			deactivae
+			# source /home/groups/VEO/tools/biopython/myenv/bin/activate
+			# python $vista/Get_family_name.py \
+			# -i $raw_files/blast_out.csv \
+			# -o $raw_files/family_names.tsv  \
+			# & my_pid=$!
+			# get_resource_stat $my_pid $resource_log/$i.vista.Get_family_name.tsv
+			# deactivae
 
+			$vista/Classify_fasta.sh \
+			-d $raw_files/family_names.tsv \
+			-i $raw_files/blast \
+			-o $raw_files/classify_fasta \
+			& my_pid=$!
+			get_resource_stat $my_pid $resource_log/$i.vista.Classify_fasta.tsv
 	done
 
 ###############################################################################

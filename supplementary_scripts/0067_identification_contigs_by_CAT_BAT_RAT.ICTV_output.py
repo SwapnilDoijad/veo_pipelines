@@ -59,43 +59,91 @@ def make_ncbi2ictv_dict(input_file):
     return ncbi2ictv
 
 
+# def make_c2c_dict(c2c_file):
+#     c2c={}
+    
+#     tmp=open(c2c_file).read().strip().split('\n')[1:]
+    
+#     for contig in tmp:
+#         contig=contig.replace('*','').split('\t')
+#         contig_id=contig[0]
+#         c2c[contig_id]={'lineage': [],
+#                      'ranks': [],
+#                      'scores': [],
+#                      'names': []}
+        
+#         if contig[1]!='no taxid assigned':
+#             lineage=contig[3].split(';')
+#             scores=contig[4].split(';')
+            
+#             names_ranks=contig[5:]
+#             names=[]
+#             ranks=[]
+#             for r in names_ranks:
+#                 try:
+#                     name = r.split(' (')[0]
+#                     rank = r.split(' (')[1].split('):')[0]
+#                     names.append(name)
+#                     ranks.append(rank)
+#                 except IndexError:
+#                     print(f"Warning: Unexpected format in names_ranks: {r}")
+#                     continue
+            
+#             c2c[contig_id]['lineage']=lineage
+#             c2c[contig_id]['scores']=scores
+#             c2c[contig_id]['ranks']=ranks
+#             c2c[contig_id]['names']=names
+            
+#     return c2c
+        
 def make_c2c_dict(c2c_file):
-    c2c={}
-    
-    tmp=open(c2c_file).read().strip().split('\n')[1:]
-    
-    for contig in tmp:
-        contig=contig.replace('*','').split('\t')
-        contig_id=contig[0]
-        c2c[contig_id]={'lineage': [],
-                     'ranks': [],
-                     'scores': [],
-                     'names': []}
-        
-        if contig[1]!='no taxid assigned':
-            lineage=contig[3].split(';')
-            scores=contig[4].split(';')
-            
-            names_ranks=contig[5:]
-            names=[]
-            ranks=[]
-            for r in names_ranks:
-                try:
-                    name = r.split(' (')[0]
-                    rank = r.split(' (')[1].split('):')[0]
-                    names.append(name)
-                    ranks.append(rank)
-                except IndexError:
-                    print(f"Warning: Unexpected format in names_ranks: {r}")
+    c2c = {}
+    with open(c2c_file) as fh:
+        lines = [ln.rstrip('\n') for ln in fh if ln.strip()]
+
+    header = lines[0].split('\t')
+    # columns: 0 contig, 1 classification, 2 reason, 3 lineage, 4 lineage scores, 5.. ranks
+    rank_cols = header[5:]  # e.g., superkingdom, phylum, class, ...
+
+    for line in lines[1:]:
+        cols = line.replace('*', '').split('\t')
+        contig_id = cols[0]
+        c2c[contig_id] = {
+            'lineage': [],
+            'ranks': rank_cols[:],   # take from header
+            'scores': [],            # lineage scores (the semicolon list)
+            'names': []              # taxon names aligned to rank_cols
+        }
+
+        if len(cols) > 1 and cols[1] != 'no taxid assigned':
+            # lineage + lineage scores
+            if len(cols) > 3 and cols[3]:
+                c2c[contig_id]['lineage'] = cols[3].split(';')
+            if len(cols) > 4 and cols[4]:
+                c2c[contig_id]['scores'] = cols[4].split(';')
+
+            # per-rank cells: "Name: score" or "NA"/"no support"
+            names = []
+            per_rank_cells = cols[5:]
+            for cell in per_rank_cells:
+                cell = cell.strip()
+                if not cell or cell.lower() == 'na' or cell.lower() == 'no support':
+                    names.append(None)
                     continue
-            
-            c2c[contig_id]['lineage']=lineage
-            c2c[contig_id]['scores']=scores
-            c2c[contig_id]['ranks']=ranks
-            c2c[contig_id]['names']=names
-            
+                # usual form is "TaxonName: number"
+                if ':' in cell:
+                    name, _score = cell.split(':', 1)
+                    names.append(name.strip())
+                else:
+                    # fallback: keep whatever is there
+                    names.append(cell)
+            # pad or trim to match rank columns, just in case
+            if len(names) < len(rank_cols):
+                names += [None] * (len(rank_cols) - len(names))
+            c2c[contig_id]['names'] = names[:len(rank_cols)]
+
     return c2c
-        
+
 def find_LCA(list_of_lineages):
     lca=[]
     overlap = set.intersection(*map(set, list_of_lineages))
