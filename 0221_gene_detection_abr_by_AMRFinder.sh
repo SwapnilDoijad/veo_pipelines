@@ -7,8 +7,15 @@
 ###############################################################################
 ## step-01: file and directory preparation
     fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
-    basename -a $fasta_directory/*.fasta > list.$pipeline.txt
-    list=list.$pipeline.txt
+    input_file_type=$(ls $fasta_directory | head -1 |  awk -F'.' '{print $NF}')
+
+    if [ "$input_file_type" = "faa" ] ; then
+        basename -a $fasta_directory/*.faa > list.$pipeline.txt
+        list=list.$pipeline.txt
+    elif [ "$input_file_type" = "fasta" ] || [ "$input_file_type" = "fa" ] || [ "$input_file_type" = "fna" ]; then
+        basename -a $fasta_directory/*.fasta > list.$pipeline.txt
+        list=list.$pipeline.txt
+    fi
 
     create_directories_structure_1 $wd
     split_list $wd $list

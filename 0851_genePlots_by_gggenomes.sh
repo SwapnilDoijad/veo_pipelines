@@ -7,9 +7,9 @@
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
-    data_directory=$( grep my_data_dir $parameters | awk '{print $2}' )
-    ls $data_directory | sed 's/\.fasta$//' > list.$pipeline.txt
-    list=list.$pipeline.txt
+    # data_directory=$( grep my_data_dir $parameters | awk '{print $2}' )
+    # ls $data_directory | sed 's/\.fasta$//' > list.$pipeline.txt
+    # list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
 

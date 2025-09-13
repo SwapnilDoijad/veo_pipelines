@@ -4,3 +4,5 @@
 ## example path is given below (change the path according to your data):
 my_data_dir	data/my_fasta
 
+## panaroo file for synteny blocks (optional)
+my_panaroo_file	results/0171_comparative_genomics_core_pan_by_panaroo_AY657002/raw_files/gene_presence_absence.csv
