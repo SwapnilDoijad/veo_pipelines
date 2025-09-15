@@ -127,6 +127,8 @@ get_suffix() {
     case "$1" in
         *.fastq.gz) echo ".fastq.gz" ;;
         *.fq.gz) echo ".fq.gz" ;;
+        *.fastq) echo ".fastq" ;;
+        *.txt) echo ".txt" ;;
         *) echo "unknown" ;;
     esac
 }
