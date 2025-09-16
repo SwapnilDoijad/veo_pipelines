@@ -1,0 +1,6 @@
+## This is a parameter file for 0052_metagenome_assembly_by_flye pipeline
+## tab seperated
+## files should end with .fastq.gz 
+## please give a path of a single folder in which all fastq.gz files are stored
+## example path is given below (change the path according to your data):
+my_fastq_path	data/raw_reads

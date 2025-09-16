@@ -1,0 +1,5 @@
+## This is a parameter file for 0022_QC_of_nanopore_fastq_by_nanoplot pipeline
+## please give a path of a single folder in which all .fastq.gz files are stored
+## example path is given below (change the path accordingto your data):
+my_fastq_path	data/fastq
+
