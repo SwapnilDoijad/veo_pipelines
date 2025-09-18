@@ -2,6 +2,9 @@
 
 ## 20240203: worked with multifasta file with 25M fasta sequences
 
+mkdir -p "$PWD/parallel_tmp"
+export TMPDIR="$PWD/parallel_tmp"
+
 # Check if correct number of arguments is provided
 if [ "$#" -ne 4 ]; then
     echo "Usage: $0 -i input_fasta_file -o output_folder"
@@ -45,8 +48,8 @@ export -f write_fasta_file
 export -f process_chunk
 
 # Split the input file into chunks and process them in parallel
-split --numeric-suffixes=1 -n l/80 -a 4 "$input_file" temp_chunk_
-ls temp_chunk_* | /home/groups/VEO/tools/parallel/v20230822/src/parallel -j 80 process_chunk {}
+split --numeric-suffixes=1 -n l/40 -a 4 "$input_file" temp_chunk_
+ls temp_chunk_* | /home/groups/VEO/tools/parallel/v20230822/src/parallel -j 40 process_chunk {}
 
 # Remove temporary files
 rm -f temp_chunk_*
