@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0552_genome_assembly_comparison_by_quast
-#SBATCH --partition=interactive
+#SBATCH --partition=gpu-veo,gpu,gpu-test,standard,long
 #SBATCH --output=results/0552_genome_assembly_comparison_by_quast/tmp/slurm/%j.out
 #SBATCH --error=results/0552_genome_assembly_comparison_by_quast/tmp/slurm/%j.err
 #SBATCH --mem=100G

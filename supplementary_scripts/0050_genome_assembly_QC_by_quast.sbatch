@@ -10,7 +10,6 @@ pipeline=0050_genome_assembly_QC_by_quast
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 sublist=$wd/tmp/lists/ABC
 fasta_directory=$(grep -w "my_fasta_directory" $parameters | awk -F'\t' '{print $2}')
-result_choise=$(grep -w "my_result_choise" $parameters | awk -F'\t' '{print $2}')
 
 ###############################################################################
     log "STARTED : $pipeline for $sublist"

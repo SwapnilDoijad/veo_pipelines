@@ -166,8 +166,19 @@ def make_challenge_output_direct(c2c_dict, output_file):
                 c2c_index=c2c_dict[contig]['ranks'].index(rank)
                 output_index=ICTV_ranks.index(rank)
                 
-                output_dict[contig]['names'][output_index]=c2c_dict[contig]['names'][c2c_index]
-                output_dict[contig]['scores'][output_index]=c2c_dict[contig]['scores'][c2c_index]
+                # safe-access names and scores (some contigs may have empty lists)
+                names_list = c2c_dict[contig].get('names', [])
+                scores_list = c2c_dict[contig].get('scores', [])
+                
+                name_val = 'NA'
+                score_val = 'NA'
+                if c2c_index < len(names_list) and names_list[c2c_index] is not None:
+                    name_val = names_list[c2c_index]
+                if c2c_index < len(scores_list) and scores_list[c2c_index] is not None:
+                    score_val = scores_list[c2c_index]
+                
+                output_dict[contig]['names'][output_index] = name_val
+                output_dict[contig]['scores'][output_index] = score_val
                 
     
     with open(output_file, 'w') as outf:
@@ -178,7 +189,7 @@ def make_challenge_output_direct(c2c_dict, output_file):
         
         for contig in output_dict:
             outf.write(contig)
-            for i in range(0,15):
+            for i in range(0, len(ICTV_ranks)):
                 outf.write(f",{output_dict[contig]['names'][i]},{output_dict[contig]['scores'][i]}")
             outf.write('\n')
         
@@ -195,12 +206,24 @@ def make_challenge_output_mapped(c2c_dict, ncbi2ictv,output_file):
         output_dict[contig]={'names': len(ICTV_ranks)*['NA'],
                              'scores': len(ICTV_ranks)*['NA']}
         mapped=False
-        for i in range(1,len(c2c_dict[contig]['ranks'])+1):
-            if not mapped and c2c_dict[contig]['ranks'][-i] in ICTV_ranks:
+        # iterate from most specific rank backwards
+        for i in range(1, len(c2c_dict[contig]['ranks'])+1):
+            if mapped:
+                break
+            # use negative index once, but ensure lineage has that element
+            rank_idx = -i
+            if c2c_dict[contig]['ranks'][rank_idx] in ICTV_ranks:
+                # ensure lineage is long enough to have the corresponding element
+                if len(c2c_dict[contig]['lineage']) < i:
+                    # no taxid available at this depth; skip
+                    continue
                 mapped=True
-                taxid=c2c_dict[contig]['lineage'][-i]
+                taxid=c2c_dict[contig]['lineage'][rank_idx]
                 
                 if taxid in ncbi2ictv:
+                    # ensure there is data to compute LCAs
+                    if not ncbi2ictv[taxid].get('ictv') or not ncbi2ictv[taxid].get('ncbi'):
+                        continue
                     ictv_lineage=find_LCA(ncbi2ictv[taxid]['ictv'])
                     ncbi_lineage=find_LCA(ncbi2ictv[taxid]['ncbi'])
                     ncbi_tmp=find_LCA(ncbi2ictv[taxid]['ncbi_ranks'])
@@ -211,7 +234,6 @@ def make_challenge_output_mapped(c2c_dict, ncbi2ictv,output_file):
                         if ICTV_rank in ncbi_ranks:
                             output_dict[contig]['names'][ICTV_ranks.index(ICTV_rank)]=ictv_lineage[ICTV_ranks.index(ICTV_rank)]
                            
-    
     print('Writing output file...')
     with open(output_file, 'w') as outf:
         outf.write('SequenceID,realm,realm_score,subrealm,subrealm_score')
@@ -221,7 +243,7 @@ def make_challenge_output_mapped(c2c_dict, ncbi2ictv,output_file):
         
         for contig in output_dict:
             outf.write(contig)
-            for i in range(0,15):
+            for i in range(0, len(ICTV_ranks)):
                 outf.write(f",{output_dict[contig]['names'][i]},{output_dict[contig]['scores'][i]}")
             outf.write('\n')
         

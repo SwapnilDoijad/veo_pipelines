@@ -5,6 +5,7 @@
 my_fasta_path	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complete_high
 
 ## do you need a figure? Yes or No. if more than 200 phages it takes more than 1 hour
+## Keep No for metagenomes, as image generation will take long time
 my_figure   No
 
 ## ani

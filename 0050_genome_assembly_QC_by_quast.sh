@@ -7,7 +7,7 @@
 ###############################################################################
 ## step-01: preparation
     fasta_directory=$(grep -w "my_fasta_directory" $parameters | awk -F'\t' '{print $2}')
-    ls $fasta_directory | grep .fasta | grep -v "samtools" | grep -v ".fai" | sed 's/\.fasta//g' > list.fasta.txt
+    ls $fasta_directory | grep .fasta | grep -v "samtools" | grep -v ".fai" | sed 's/\.fasta//g' > list.$pipeline.txt
     result_choise=$(grep -w "my_result_choise" $parameters | awk -F'\t' '{print $2}')
 
     create_directories_structure_1 $wd

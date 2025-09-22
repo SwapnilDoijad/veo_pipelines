@@ -11,6 +11,7 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
 	fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
+	ani=$( grep my_ani $parameters | awk '{print $2}' )
 	figure=$( grep my_figure $parameters | awk '{print $2}' )
     list=list.$pipeline.txt
 ###############################################################################
@@ -50,7 +51,7 @@
 	-o $raw_files/clusters.tsv \
 	--ids $raw_files/ani.ids.tsv \
 	--metric ani \
-	--ani 0.95 \
+	--ani $ani \
 	& my_pid=$!
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.cluster.tsv
 	## -t is not available

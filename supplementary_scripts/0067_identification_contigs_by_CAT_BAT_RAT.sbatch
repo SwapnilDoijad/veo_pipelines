@@ -169,10 +169,10 @@
 ## For phage classification, use the following command:
     python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0067_identification_contigs_by_CAT_BAT_RAT.ICTV_output.py \
     --ictv_file /veodata/03/databases/ictv/ICTV39_NCBI202412_per_accession.for_CAT.tsv \
-    --c2c_file /vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/results/0067_identification_contigs_by_CAT_BAT_RAT/raw_files/all.59907/CAT/all.59907.contig2classification.official_names.cleaned.txt \
-    --output_file1 /vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/results/0067_identification_contigs_by_CAT_BAT_RAT/raw_files/all.59907/CAT/all.59907.phage_direct_challenge.txt \
-    --output_file2 /vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/results/0067_identification_contigs_by_CAT_BAT_RAT/raw_files/all.59907/CAT/all.59907.phage_mapped_challenge.txt
-    
+    --c2c_file /vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/results/0067_identification_contigs_by_CAT_BAT_RAT/raw_files/all59907/CAT/all59907.contig2classification.official_names.cleaned.txt \
+    --output_file1 /vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/results/0067_identification_contigs_by_CAT_BAT_RAT/raw_files/all59907/CAT/all59907.phage_direct_challenge.txt \
+    --output_file2 /vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/results/0067_identification_contigs_by_CAT_BAT_RAT/raw_files/all59907/CAT/all59907.phage_mapped_challenge.txt
+
     parser.add_argument('--ictv_file', type=str, required=True, help='Path to ICTV39_NCBI202412_per_accession.tsv file')
     parser.add_argument('--c2c_file', type=str, required=True, help='Path to 20241217_cat.c2c.names.txt file')
     parser.add_argument('--output_file1', type=str, required=True, help='Path to output file for direct challenge')
