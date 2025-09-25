@@ -1,4 +1,4 @@
 ## This is a parameter file for 0139_phylogeny_by_ViPTreeGen pipeline
-## please give a path of a single file (end with .fasta) in which all seqeucnes are stored
+## please give a path of a single file (end with .fasta) in which all sequences are stored
 ## example path is given below (change the path according to your data):
 my_fasta_file	results/0642_phage_detection_by_jaeger_gpu/extracted_fasta_combined/phage.combined.fasta
