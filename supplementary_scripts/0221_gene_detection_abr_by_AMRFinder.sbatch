@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name 0221_gene_detection_abr_by_AMRFinder
-#SBATCH --partition=standard,long
-#SBATCH --output results/0221_gene_detection_abr_by_AMRFinder/tmp/slurm/%j.out
-#SBATCH --error  results/0221_gene_detection_abr_by_AMRFinder/tmp/slurm/%j.err
+#SBATCH --job-name=0221_gene_detection_abr_by_AMRFinder
+#SBATCH --partition=short,gpu-veo,gpu,gpu-test,standard,long
+#SBATCH --output=results/0221_gene_detection_abr_by_AMRFinder/tmp/slurm/%j.out
+#SBATCH --error=results/0221_gene_detection_abr_by_AMRFinder/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=10
 ###############################################################################
 ## step-01: preparation
@@ -28,14 +28,14 @@
                     (amrfinder \
                     -p $fasta_directory/$fasta \
                     -o $raw_files/$fasta.csv \
-                    --threads 10 )> /dev/null 2>&1
+                    --threads $SLURM_CPUS_PER_TASK )> /dev/null 2>&1
 
                     elif [ "$input_file_type" = "fasta" ] || [ "$input_file_type" = "fa" ] || [ "$input_file_type" = "fna" ]; then
                     log "Input file type detected as .fasta/.fa/.fna"
 			        (amrfinder \
                     -n $fasta_directory/$fasta \
                     -o $raw_files/$fasta.csv \
-                    --threads 10 )> /dev/null 2>&1
+                    --threads $SLURM_CPUS_PER_TASK )> /dev/null 2>&1
 
                 fi
 

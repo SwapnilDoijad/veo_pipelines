@@ -19,7 +19,7 @@
 
     create_directories_structure_1 $wd
     split_list $wd $list
-    # submit_jobs $wd $pipeline
+    submit_jobs $wd $pipeline
 
     mkdir -p $raw_files/tmp > /dev/null 2>&1
 
