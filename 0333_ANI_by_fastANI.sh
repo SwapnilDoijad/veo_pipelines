@@ -6,38 +6,40 @@
 ###############################################################################
 echo "started.... step-41 pyANI ----------------------------------------------"
 ###############################################################################
-    #source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-    #conda activate fastani
-
+    pipeline=0333_ANI_by_fastANI
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
+    
+    fasta_dir=data
+    ls $fasta_dir | sed 's/\.fasta//g' > list.0333_ANI_by_fastANI.txt
+    list=list.0333_ANI_by_fastANI.txt
+    
     (mkdir results) > /dev/null 2>&1
     (mkdir results/041_fastANI) > /dev/null 2>&1
     (mkdir results/041_fastANI/tmp) > /dev/null 2>&1
-#------------------------------------------------------------------------------
-    if [ -f list.bacterial_fasta.txt ]; then 
-        list=list.bacterial_fasta.txt
-        else
-        echo "provide list file (for e.g. all)"
-        echo "---------------------------------------------------------------------"
-        ls list.*.txt | awk -F'.' '{print $2}'
-        echo "---------------------------------------------------------------------"
-        read l
-        list=$(echo "list.$l.txt")
-    fi
-# #------------------------------------------------------------------------------
-# cp $list results/041_fastANI/tmp/list.fastANI.txt
-# sed -i '/^\s*$/d' results/041_fastANI/tmp/list.fastANI.txt
-# sed -i "s/^/results\/0040_assembly\/all_fasta\//" results/041_fastANI/tmp/list.fastANI.txt
-# sed -i "s/$/\.fasta/" results/041_fastANI/tmp/list.fastANI.txt
+    (mkdir results/041_fastANI/all_fasta) > /dev/null 2>&1
 
-# echo "runnig fastANI..."
-# /home/groups/VEO/tools/fastANI/v1.33/fastANI --ql results/041_fastANI/tmp/list.fastANI.txt --rl results/041_fastANI/tmp/list.fastANI.txt -o results/041_fastANI/tmp/output.csv -t 60 --matrix #) > /dev/null 2>&1
-# echo "fastANI finished, will create matrix and tree"
+    for i in $(cat $list); do
+        cp $fasta_dir/$i.fasta results/041_fastANI/all_fasta/
+    done
 
-# sed -i -e 's/results\/0040_assembly\/all_fasta\///g' results/041_fastANI/tmp/output.csv.matrix
-# sed -i "s/\.fasta//g" results/041_fastANI/tmp/output.csv.matrix
+        cp $list results/041_fastANI/tmp/list.fastANI.txt
+        sed -i '/^\s*$/d' results/041_fastANI/tmp/list.fastANI.txt
+        sed -i "s/^/results\/041_fastANI\/all_fasta\//" results/041_fastANI/tmp/list.fastANI.txt
+        sed -i "s/$/\.fasta/" results/041_fastANI/tmp/list.fastANI.txt
 
-# sed -i "s/results\/0040_assembly\/all_fasta\///g" results/041_fastANI/tmp/output.csv
-# sed -i "s/\.fasta//g" results/041_fastANI/tmp/output.csv
+        echo "runnig fastANI..."
+        /home/groups/VEO/tools/fastANI/v1.33/fastANI \
+        --ql results/041_fastANI/tmp/list.fastANI.txt \
+        --rl results/041_fastANI/tmp/list.fastANI.txt \
+        -o results/041_fastANI/tmp/output.csv \
+        -t 60 --matrix 
+        echo "fastANI finished, will create matrix and tree"
+
+        sed -i -e 's/results\/041_fastANI\/all_fasta\///g' results/041_fastANI/tmp/output.csv.matrix
+        sed -i "s/\.fasta//g" results/041_fastANI/tmp/output.csv.matrix
+
+        sed -i "s/results\/041_fastANI\/all_fasta\///g" results/041_fastANI/tmp/output.csv
+        sed -i "s/\.fasta//g" results/041_fastANI/tmp/output.csv
 
 #------------------------------------------------------------------------------
 ## matrix-creation step

@@ -1,6 +1,7 @@
 ## need to sallo --cpus-per-task=40
 ## for biopython, need to "source /home/groups/VEO/tools/python/biopython/bin/activate"
 ## python script_name.py -i input_file.fasta -o output_folder -H header_file.txt
+## partial match (KT319620 for >KT319620 UNVERIFIED: Listeria phage WIL-3 genomic sequence.) is possible
 
 import argparse
 from Bio import SeqIO
