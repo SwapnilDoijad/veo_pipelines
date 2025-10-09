@@ -1,7 +1,11 @@
 ## This is a parameter file for 0067_identification_contigs_by_CAT_BAT_RAT pipeline
 ## please give a path of a singel folder containing fasta files (files should end with .fasta)
+## tab seperated
 ## example path given below (change according to your data):
 my_fasta_path	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/dataset_challenge
+
+## database (NCBI or GTDB)
+my_database	NCBI
 
 ## if binning is carried out, you can also run BAT 
 ## please provide the path of the binning folder 

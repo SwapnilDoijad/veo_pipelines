@@ -13,9 +13,16 @@
     
     sublist=$wd/tmp/lists/ABC
     choise=$(grep my_choise $parameters | awk '{print $2}')
+    database=$(grep my_databases $parameters | awk '{print $2}')
 
-    nr_database=/veodata/03/databases/cat_bat_rat/v20240405/db/
-    tax_database=/veodata/03/databases/cat_bat_rat/v20240405/tax/
+    if [ "$database" == "NCBI" ]; then
+        nr_database=/veodata/03/databases/cat_bat_rat/v20240405/db/
+        tax_database=/veodata/03/databases/cat_bat_rat/v20240405/tax/
+        elif [ "$database" == "GTDB" ]; then
+        nr_database=/veodata/03/databases/cat_bat_rat/v20250923_gtdbtk/db/db
+        tax_database=/veodata/03/databases/cat_bat_rat/v20250923_gtdbtk/db/tax
+    fi
+
     diamond=$tools/cat_bat_rat/diamond_v2.1.8.162
     prodigal=$tools/prodigal/v2.6.3/prodigal
 
@@ -25,8 +32,8 @@
 
     sfx=$(get_suffix $(ls $fasta_directory | head -1))
 
-    CAT_pack="$tools/cat_bat_rat/CAT_pack_ICTV/ICTV_TaxonomyChallenge_CAT/CAT_pack/CAT_pack"
-    # CAT_pack="$tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack
+    # CAT_pack="$tools/cat_bat_rat/CAT_pack_ICTV/ICTV_TaxonomyChallenge_CAT/CAT_pack/CAT_pack"
+    CAT_pack="$tools/cat_bat_rat/CAT_pack/CAT_pack/CAT_pack"
 ###############################################################################
     log "SBATCH STARTED : $pipeline for $sublist"
 ###############################################################################
