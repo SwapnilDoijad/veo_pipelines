@@ -9,7 +9,7 @@
 
 
     fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
-    ls $fastq_path/ | sed 's/\.fastq\.gz//g' | sed 's/_R1//g' | sed 's/_R2//g' | sort | uniq  > list.$pipeline.txt
+    ls $fastq_path/ | sed 's/\.fastq//g' | sed 's/\.gz//g' | sed 's/_R1//g' | sed 's/_R2//g' | sort | uniq  > list.$pipeline.txt
     list=list.$pipeline.txt
     # fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
     # ls $fastq_path/ | sed 's/\.fastq//g' | sed 's/_R1//g' | sed 's/_R2//g' | sort | uniq  > list.$pipeline.txt

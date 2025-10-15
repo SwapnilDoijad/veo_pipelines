@@ -36,6 +36,7 @@
 
             mv $fasta_path/$i.fasta.tmp $fasta_path/$i.fasta
 
+            ## testing model 
             jaeger predict \
             -i $fasta_path/$i.fasta \
             -o $raw_files/phage/$i \
@@ -43,6 +44,14 @@
             --batch 100 \
             & my_pid=$!
             get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
+
+            # jaeger predict \
+            # -i $fasta_path/$i.fasta \
+            # -o $raw_files/phage/$i \
+            # -m jaeger_57341_1.5M_fragment \
+            # --batch 100 \
+            # & my_pid=$!
+            # get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.prophage.tsv 
 
             log "FINISHED : $pipeline : sbatch for $sublist : $i "
         else

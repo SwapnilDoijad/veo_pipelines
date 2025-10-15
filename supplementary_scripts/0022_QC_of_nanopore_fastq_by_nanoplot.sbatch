@@ -23,12 +23,16 @@
         if [ ! -f $raw_files/$i/NanoStats.txt ] ; then
             log "STARTED : Nanoplot for $i"
             if [ -f $fastq_file_path/$i.fastq.gz ] ; then 
+                log "Using compressed fastq file for $i"
+
                 NanoPlot \
                 -t $SLURM_CPUS_PER_TASK \
                 --fastq $fastq_file_path/$i.fastq.gz \
                 -o $raw_files/$i
 
                 elif [ -f $fastq_file_path/$i.fastq ] ; then 
+                log "Using uncompressed fastq file for $i"
+                
                 NanoPlot \
                 -t $SLURM_CPUS_PER_TASK \
                 --fastq $fastq_file_path/$i.fastq \
@@ -40,5 +44,5 @@
     done
 
 ###############################################################################
-	log "ENDED :$pipeline --------------------------------" && clean
+	log "ENDED : $pipeline --------------------------------" && clean
 ###############################################################################
