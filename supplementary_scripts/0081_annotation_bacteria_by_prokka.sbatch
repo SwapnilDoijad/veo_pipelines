@@ -27,11 +27,12 @@
             --outdir $raw_files/$F1 \
             --force \
             --prefix $F1 \
+            --kingdom Bacteria \
             --addgenes \
             --locustag $F1 \
             --cpus $SLURM_CPUS_PER_TASK \
             --fast \
-            --rnammer $fasta_file_dir/"$F1".fasta \
+            --rnammer $fasta_file_dir/"$F1".fna \
             & my_pid=$!
 			get_resource_stat $my_pid $wd/tmp/resource_log/$id.prokka.tsv 
 
