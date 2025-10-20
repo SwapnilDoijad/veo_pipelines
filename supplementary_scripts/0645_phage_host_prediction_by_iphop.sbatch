@@ -16,8 +16,10 @@
 
 	log "RUNNING: $pipeline for $sublist"
 	
-		source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
-		conda activate iphop_v1.3.3 
+		# source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
+		# conda activate iphop_v1.3.3 
+		source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+		conda activate iphop_v1.4.0
 
 		for i in $(cat $sublist); do
 			if [ ! -d $raw_files/$i ]; then
@@ -28,7 +30,7 @@
 				iphop predict \
 				--fa_file $fasta_path/$i.fasta \
 				--num_threads $SLURM_CPUS_PER_TASK \
-				--db_dir /veodata/03/databases/iphop/v20240325/Aug_2023_pub_rw/ \
+				--db_dir /veodata/03/databases/iphop/vJun_2025_pub_rw/Jun_2025_pub_rw/ \
 				--out_dir $raw_files/$i/
 
 				log "FINISHED: $pipeline for $sublist"
