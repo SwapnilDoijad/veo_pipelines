@@ -89,5 +89,40 @@
 	# 	> $raw_files/$i.blastn.ids.hits.out.best
 	# done 
 ###############################################################################
+## annotate MBPD results
+	for i in $(cat $sublist); do
+		# get all query ids
+		awk '{print $1}' $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
+		> $raw_files/$i.query.ids
+
+		awk '{print $2}' $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
+		> $raw_files/$i.blastn.ids
+
+		rm -rf $raw_files/$i.blastn.ids.hits > /dev/null 2>&1
+		for query_id in $(cat $raw_files/$i.query.ids ); do 
+			subject_id=$(grep -w "$query_id" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid | awk '{print $2}' | head -1 )
+			lineage=$(grep $subject_id /veodata/03/databases/MBPD/v251021/pathogen.tax)
+
+			if [ -z $subject_id ]; then 
+				lineage="not_a_pathogen"
+			fi
+
+			echo $lineage | tee -a $raw_files/$i.blastn.ids.hits
+		done 
+
+		paste $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
+		$raw_files/$i.blastn.ids.hits \
+		> $raw_files/$i.blastn.ids.hits.out 
+
+		awk '!seen[$1]++' $raw_files/$i.blastn.ids.hits.out \
+		> $raw_files/$i.blastn.ids.hits.out.best
+
+		awk -F';' '{print $NF}' $raw_files/$i.blastn.ids.hits.out.best \
+		| sed 's/ /_/g' | sed 's/s1__//' \
+		| sort  | uniq -c | grep -v qseqid \
+		| awk '{print $2"\t"$1}' \
+		> $raw_files/$i.blastn.ids.hits.out.best.counts
+	done
+###############################################################################
 log "FINISHED : $pipeline for $sublist" # && clean
 ###############################################################################
