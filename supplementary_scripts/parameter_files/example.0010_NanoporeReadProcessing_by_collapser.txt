@@ -1,0 +1,5 @@
+## This is a parameter file for 0010_NanoporeReadProcessing_by_collapser pipeline
+## please give a path of a folder in which all fastq.gz files are stored
+## note that files should be .fastq.gz (not .fastq)
+## example path is given below (change the path accordingto your data):
+my_fastq_path	data/fastq
