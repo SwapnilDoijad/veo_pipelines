@@ -21,27 +21,27 @@
 
 		mkdir -p $raw_files/$i
 
-		python3.9 /vast/xa73pav/projects/p_swapnil_Collapser/scripts/Collapser.py \
-		$fastq_file_path/$i.fastq.gz \
-		$i \
-		--out-dir $raw_files/$i \
-		--dotplot \
-		--rc-repeats \
-		--direct-repeats \
-		--bin-size 300 \
-		--max-gap 1000 \
-		--min-pct-id 90 \
-		--min-length 2000 \
-		--jobs $SLURM_CPUS_PER_TASK
+		# python3.9 /vast/xa73pav/projects/p_swapnil_Collapser/scripts/Collapser.py \
+		# $fastq_file_path/$i.fastq.gz \
+		# $i \
+		# --out-dir $raw_files/$i \
+		# --dotplot \
+		# --rc-repeats \
+		# --direct-repeats \
+		# --bin-size 300 \
+		# --max-gap 1000 \
+		# --min-pct-id 90 \
+		# --min-length 2000 \
+		# --jobs $SLURM_CPUS_PER_TASK
 
 
-		# python3.9 scripts/cut_sequences.py \
-		# --input $fastq_file_path/$i.fastq.gz \
-		# --coords $raw_files/$i/$i.repeats.cut_coordinates.tsv \
-		# --out-dir $raw_files/$fastq \
-		# --mode fragments \
-		# --single \
-		# --prefix $i
+		python3.9 scripts/cut_sequences.py \
+		--input-type fastq \
+		--input-file $input_dir/$i.fastq.gz \
+		--coords-dir $output_dir/raw_files/$i \
+		--out-dir $output_dir/fastq \
+		--threads 40
+
 		log "FINISHED: $i"
 	done
 
