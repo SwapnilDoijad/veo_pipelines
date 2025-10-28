@@ -19,7 +19,7 @@
 		# source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
 		# conda activate iphop_v1.3.3 
 		source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
-		conda activate iphop_v1.4.0
+		conda activate iPhop_v1.4.1
 
 		for i in $(cat $sublist); do
 			if [ ! -d $raw_files/$i ]; then

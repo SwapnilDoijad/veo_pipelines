@@ -14,6 +14,8 @@
     split_list $wd $list
     submit_jobs $wd $pipeline
 
+    echo "$i $raw_reads $collapsed_reads" | tee -a $raw_files/collapser_summary.txt
+
 ###############################################################################
     log "FINISHED : $pipeline -----------------------------------------------"
 ###############################################################################
