@@ -27,7 +27,7 @@
         -output $query_fasta_id \
         -ref $ref_fasta \
         -draft $query_fasta
- 
+
         cd $WorDir
 
         final_alignment=$(ls /home/groups/VEO/tools/mauve/mauve_snapshot_2015-02-13/$query_fasta_id/ | sort -r | head -1)
@@ -45,4 +45,8 @@
 
 ############################################################################### 
 	log "FINISHED : $pipeline for $sublist" && clean
-############################################################################### 
+###############################################################################
+## example mauve just command: 
+    /home/groups/VEO/tools/mauve/mauve_snapshot_2015-02-13/linux-x64/mauveAligner \
+    --output my_alignment.xmfa \
+    /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results/0492_contig_mapping_by_ragtag/all_fasta_plasmid_esp/plsmd3/*.fasta
