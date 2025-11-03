@@ -6,7 +6,7 @@
     log "STARTED : $pipeline ------------------------"
 ###############################################################################
 ## step-01: file preparations
-    fasta_dir=$(grep "my_fasta_dir" tmp/parameters/$pipeline.* | awk '{print $2}')
+    fasta_dir=$(grep "my_fasta_dir" $parameters | awk '{print $2}')
     ls $fasta_dir/ | sed 's/.fasta//g' > list.$pipeline.txt
     list=list.$pipeline.txt
 

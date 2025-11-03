@@ -32,7 +32,7 @@
             --locustag $F1 \
             --cpus $SLURM_CPUS_PER_TASK \
             --fast \
-            --rnammer $fasta_file_dir/"$F1".fna \
+            --rnammer $fasta_file_dir/"$F1".fasta \
             & my_pid=$!
 			get_resource_stat $my_pid $wd/tmp/resource_log/$id.prokka.tsv 
 

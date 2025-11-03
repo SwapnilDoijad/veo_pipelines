@@ -1,0 +1,7 @@
+## This is a parameter file for 0494_contig_rearrange_from_same_gene_by_circlator pipeline
+## please give a path of a directory containing fasta files to be rearranged
+## example path (change the path according to your data):
+my_fasta_dir	/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results/0492_contig_mapping_by_ragtag/all_fasta_plasmid_esp/plsmd3
+
+## Please give a path of a gene fasta file to be used by circlator to rearrange contigs from the same gene
+my_start_gene	/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/gene/RepA.fasta

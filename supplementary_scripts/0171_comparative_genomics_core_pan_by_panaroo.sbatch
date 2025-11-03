@@ -24,7 +24,7 @@
 
     log "Running panaroo pipeline"
     panaroo \
-        -i $gff_dir/*.gff \
+        -i $gff_dir/*.gff3 \
         -o "$raw_files" \
         -t 80 \
         -c "$sequence_identity_threshold" \

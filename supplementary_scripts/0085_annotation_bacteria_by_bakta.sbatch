@@ -11,6 +11,7 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     sublist=$wd/tmp/lists/ABC
     fasta_path=$(grep "my_fasta_dir" $parameters | awk '{print $2}')
+
 ###############################################################################
 	log "SBATCH STARTED : $pipeline : $sublist"
 ###############################################################################

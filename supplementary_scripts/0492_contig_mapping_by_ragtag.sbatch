@@ -16,19 +16,19 @@
 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate ragtag_v2.1.0 
 	
 	while IFS=$'\t' read -r query ref; do 
-		# if [ ! -f $wd/all_fasta/$query_id.fasta ]; then
-		# 	log "STARTED: $query $ref"
+		if [ ! -f $wd/all_fasta/$query_id.fasta ]; then
+			log "STARTED: $query $ref"
 
 			query_id=$(echo $query | awk -F'/' '{print $NF}' | sed 's/.fasta//g')
 
-		# 	ragtag.py scaffold \
-		# 	$ref $query \
-		# 	-u \
-		# 	-t $SLURM_CPUS_PER_TASK \
-		# 	-o $raw_files/$query_id
+			ragtag.py scaffold \
+			$ref $query \
+			-u \
+			-t $SLURM_CPUS_PER_TASK \
+			-o $raw_files/$query_id
 
-		# 	cp $raw_files/$query_id/ragtag.scaffold.fasta \
-		# 	$wd/all_fasta/$query_id.fasta
+			cp $raw_files/$query_id/ragtag.scaffold.fasta \
+			$wd/all_fasta/$query_id.fasta
 
 			unorganised_contigs=$( get_fasta_contigs_length_all $query | awk '{print $2}' )
 			organised_contigs=$( get_fasta_contigs_length_all $wd/all_fasta/$query_id.fasta | awk '{print $2, $3}' )
@@ -38,10 +38,10 @@
 				echo -e "$query_id\t$unorganised_contigs\t$organised_contigs" | tr ' ' '\t' >> $wd/summary.tsv
 			fi
 
-		# 	log "DONE: $query $ref"
-		# else
-		# 	log "ALREADY FINISHED: $query $ref"
-		# fi
+			log "DONE: $query $ref"
+		else
+			log "ALREADY FINISHED: $query $ref"
+		fi
 	done < $sublist
 
 ############################################################################### 
