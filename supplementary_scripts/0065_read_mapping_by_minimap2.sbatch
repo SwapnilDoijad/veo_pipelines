@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0065_read_mapping_by_minimap2
-#SBATCH --partition=standard,long,gpu,gpu-test
+#SBATCH --partition=standard,long,gpu,gpu-test,gpu-veo
 #SBATCH --output=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.out.txt
 #SBATCH --error=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.err.txt
 #SBATCH --mem=200G
@@ -343,6 +343,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                     | sed "s/genome_id/$assembly_id/g" \
                     > $raw_files/tmp/genome_data/snpEff.$assembly_id.config
 
+                    ## Build the database
                     cur_dir=$(pwd)
                     java -jar /home/groups/VEO/tools/snpeff/v5.2c/snpEff/snpEff.jar build \
                     -gff3 -v \
