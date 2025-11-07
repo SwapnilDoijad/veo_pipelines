@@ -28,7 +28,8 @@ def split_snps(row, metadata_columns):
     # Handle remaining bases if ALT is longer (insertion)
     elif len(alt) > min_len:
         insertion = alt[min_len:]  # Remaining ALT bases
-        insertion_pos = f"{pos}-{int(pos)+1}"  # Position between REF bases
+        # Use midpoint notation (e.g. 12785.5) for inserted bases
+        insertion_pos = f"{pos}.5"
         simple_rows.append([chrom, insertion_pos, ".", "-", insertion] + metadata.tolist() + ["splitted_SNP"])
 
     return simple_rows
