@@ -14,7 +14,7 @@
     length_difference_cutoff=$( grep "my_length_difference_cutoff" $parameters | awk '{print $2}' )
     alignment_type=$( grep "my_alignment_type" $parameters | awk '{print $2}' )
     gff_dir=$( grep "my_gff_dir" $parameters | awk '{print $2}' )
-
+    tree=$( grep "my_tree_choice" $parameters | awk '{print $2}' )
 ###############################################################################
 # Run panaroo
     log "STARTED: 0171_comparative_genomics_core_pan_by_panaroo pipeline"
@@ -24,7 +24,7 @@
 
     log "Running panaroo pipeline"
     panaroo \
-        -i $gff_dir/*.gff3 \
+        -i $gff_dir/*.gff \
         -o "$raw_files" \
         -t 80 \
         -c "$sequence_identity_threshold" \
@@ -38,6 +38,16 @@
         get_resource_stat $my_pid $resource_log/panaroo.tsv 
 
     log "ENDED: 0171_comparative_genomics_core_pan_by_panaroo pipeline"
+
+    if [ "$tree" = "Yes" ]; then
+        log "Building tree based on core gene alignment"
+
+        /home/groups/VEO/tools/fastTreeMP/v2.2.0/FastTree \
+        -nt -gtr \
+        $raw_files/core_gene_alignment.aln \
+        > $raw_files/core_gene_alignment.aln.nwk
+    fi
+
 
 # run the core gene alignment
     # panaroo -i results/0081_annotation_bacteria_by_prokka/all_gff/*.gff \

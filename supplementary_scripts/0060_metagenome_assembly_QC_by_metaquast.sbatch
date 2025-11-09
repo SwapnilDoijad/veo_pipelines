@@ -20,13 +20,21 @@
         log "started : $pipeline for $i"
 
         python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py \
-        --silent \
         --circos \
         --threads $SLURM_CPUS_PER_TASK \
         -o $raw_files/$i \
         $fasta_file_dir/$i.fasta \
         & my_pid=$!
         get_resource_stat $my_pid $wd/tmp/resource_log/$i.tsv
+
+        # python3 /home/groups/VEO/tools/quast/v5.2.0/metaquast.py \
+        # --silent \
+        # --circos \
+        # --threads $SLURM_CPUS_PER_TASK \
+        # -o $raw_files/$i \
+        # $fasta_file_dir/$i.fasta \
+        # & my_pid=$!
+        # get_resource_stat $my_pid $wd/tmp/resource_log/$i.tsv
 
     done
 ###############################################################################

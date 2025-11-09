@@ -13,3 +13,5 @@ my_length_difference_cutoff	0.70
 ## alignment_type: core or pan
 my_alignment_type	core
 
+## need tree based on the core genes? (takes time) Yes or No
+my_tree_choice	Yes

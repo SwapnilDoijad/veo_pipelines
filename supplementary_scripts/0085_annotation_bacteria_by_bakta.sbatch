@@ -34,6 +34,9 @@
             python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/bakta_to_prokka_gff.py \
             -i $wd/raw_files/$i/$i.gff3 \
             -o $wd/raw_files/$i/$i.gff3.cleaned_for_panaroo
+
+            cp $wd/raw_files/$i/$i.gff3.cleaned_for_panaroo \
+            $wd/gff/$i.gff
             
 			log "FINISHED : $pipeline : $i"
             else
