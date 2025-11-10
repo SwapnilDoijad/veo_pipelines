@@ -49,3 +49,7 @@
     # /home/groups/VEO/tools/mauve/mauve_snapshot_2015-02-13/linux-x64/mauveAligner \
     # --output my_alignment.xmfa \
     # /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results/0492_contig_mapping_by_ragtag/all_fasta_plasmid_esp/plsmd3/*.fasta
+
+    # /home/groups/VEO/tools/mauve/mauve_snapshot_2015-02-13/linux-x64/progressiveMauve \
+    # --output=esp_plsmd3.xmfa \
+    # /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results_unarrangend_genome/0492_contig_mapping_by_ragtag/all_fasta_esp_plasmid/plsmd3_mauve/*.fasta
