@@ -19,7 +19,7 @@
     conda activate bakta_v1.9.3
 
     for i in $(cat $sublist); do
-        if [ ! -f $wd/raw_files/$i/$i.gbk ]; then
+        if [ ! -f $wd/raw_files/$i/$i.gbff ]; then
 			log "STARTED : $pipeline : $i"
 
             bakta \
