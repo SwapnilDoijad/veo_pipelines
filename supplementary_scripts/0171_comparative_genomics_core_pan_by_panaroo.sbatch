@@ -45,7 +45,13 @@
         /home/groups/VEO/tools/fastTreeMP/v2.2.0/FastTree \
         -nt -gtr \
         $raw_files/core_gene_alignment.aln \
-        > $raw_files/core_gene_alignment.aln.nwk
+        > $raw_files/core_gene_alignment.aln.fasttree
+
+        ## for bootstrapping use iq-tree
+        /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
+        -s $raw_files/core_gene_alignment.aln \
+        -m GTR+G -bb 1000 -alrt 1000 -nt 80 -pre \
+        $raw_files/core_gene_alignment.aln.iqtree
     fi
 
 
@@ -64,6 +70,10 @@
     # -s 4 \
     # --threads 20 \
     # -o scoary_results 
+
+
+
+
 ###############################################################################
     log "SBATCH ENDED : $pipeline ----------------------" && clean
 ###############################################################################
