@@ -26,7 +26,7 @@
             log "RUNNING : $pipeline : $i"
             (mkdir -p $wd/fasta/$i) > /dev/null 2>&1
 
-            cp $fasta_path/"$i".*.fasta $wd/fasta/$i/
+            cp $fasta_path/"$i"*.fasta $wd/fasta/$i/
             rm $wd/fasta/$i/*.tooShort.* > /dev/null 2>&1
             rm $wd/fasta/$i/*.unbinned.* > /dev/null 2>&1
 
@@ -45,39 +45,43 @@
 ###############################################################################
 ## step-02: post-processing : 
 
-    for i in $(cat list.fastq.txt); do 
+    for i in $(cat $sublist); do 
 
-        ## 95Compl_5Conta_5hetero
-        awk -F'\t' 'NR==1 || ($6>95 && $7<95 && $8<95) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
-        > $raw_files/$i/$i.95Compl_5Conta_5hetero.tsv
+        cat results/0071_QC_of_contigs_by_checkM/raw_files/$i/$i.tsv \
+        | grep -v "markers" \
+        >> $wd/summary.tsv
 
-        awk 'NR>1 {print $1}' $raw_files/$i/$i.95Compl_5Conta_5hetero.tsv \
-        > $wd/tmp/$i.95Compl_5Conta_5hetero.txt
+        # ## 95Compl_5Conta_5hetero
+        # awk -F'\t' 'NR==1 || ($6>95 && $7<95 && $8<95) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
+        # > $raw_files/$i/$i.95Compl_5Conta_5hetero.tsv
 
-        ## 70Compl_30Conta_25hetero
-        awk -F'\t' 'NR==1 || ($6>70 && $7<70 && $8<25) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
-        > $raw_files/$i/$i.70Compl_30Conta_25hetero.tsv
+        # awk 'NR>1 {print $1}' $raw_files/$i/$i.95Compl_5Conta_5hetero.tsv \
+        # > $wd/tmp/$i.95Compl_5Conta_5hetero.txt
 
-        awk 'NR>1 {print $1}' $raw_files/$i/$i.70Compl_30Conta_25hetero.tsv \
-        > $wd/tmp/$i.70Compl_30Conta_25hetero.txt
+        # ## 70Compl_30Conta_25hetero
+        # awk -F'\t' 'NR==1 || ($6>70 && $7<70 && $8<25) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
+        # > $raw_files/$i/$i.70Compl_30Conta_25hetero.tsv
+
+        # awk 'NR>1 {print $1}' $raw_files/$i/$i.70Compl_30Conta_25hetero.tsv \
+        # > $wd/tmp/$i.70Compl_30Conta_25hetero.txt
 
 
-        ## 50Compl_50Conta_50hetero
-        awk -F'\t' 'NR==1 || ($6>50 && $7<50 && $8<50) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
-        > $raw_files/$i/$i.50Compl_50Conta_50hetero.tsv
+        # ## 50Compl_50Conta_50hetero
+        # awk -F'\t' 'NR==1 || ($6>50 && $7<50 && $8<50) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
+        # > $raw_files/$i/$i.50Compl_50Conta_50hetero.tsv
 
-        awk 'NR>1 {print $1}' $raw_files/$i/$i.50Compl_50Conta_50hetero.tsv \
-        > $wd/tmp/$i.50Compl_50Conta_50hetero.txt
+        # awk 'NR>1 {print $1}' $raw_files/$i/$i.50Compl_50Conta_50hetero.tsv \
+        # > $wd/tmp/$i.50Compl_50Conta_50hetero.txt
     done 
 
-    cat $wd/tmp/*.70Compl_30Conta_25hetero.txt \
-    > $wd/tmp/all.70Compl_30Conta_25hetero.txt
+    # cat $wd/tmp/*.70Compl_30Conta_25hetero.txt \
+    # > $wd/all.70Compl_30Conta_25hetero.tsv
 
-    cat $wd/tmp/*.95Compl_5Conta_5hetero.txt \
-    > $wd/tmp/all.95Compl_5Conta_5hetero.txt
+    # cat $wd/tmp/*.95Compl_5Conta_5hetero.txt \
+    # > $wd/all.95Compl_5Conta_5hetero.tsv
 
-    cat $wd/tmp/*.50Compl_50Conta_50hetero.txt \
-    > $wd/tmp/all.50Compl_50Conta_50hetero.txt
+    # cat $wd/tmp/*.50Compl_50Conta_50hetero.txt \
+    # > $wd/all.50Compl_50Conta_50hetero.tsv
 
 ###############################################################################
     log "Ended: sbatch for 0071_QC_by_checkM for $sublist"

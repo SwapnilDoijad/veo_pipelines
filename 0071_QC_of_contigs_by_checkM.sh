@@ -15,6 +15,9 @@
     split_list $wd $list
     submit_jobs $wd $pipeline
 
+    echo -e "Bin_Id\tMarker_lineage\tgenomes\tmarkers\tmarker_sets\t0\t1\t2\t3\t4\t5+\tCompleteness\tContamination\tStrain_heterogeneity" \
+    > $wd/summary.tsv
+
 ###############################################################################
     echo "ENDED : 0071_QC_of_contigs_by_checkM -------------------------------------------------------"
 ###############################################################################
