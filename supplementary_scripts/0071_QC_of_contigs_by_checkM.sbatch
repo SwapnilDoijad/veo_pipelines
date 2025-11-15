@@ -38,6 +38,10 @@
             $wd/fasta/$i/ \
             $raw_files/$i
 
+            cat results/0071_QC_of_contigs_by_checkM/raw_files/$i/$i.tsv \
+            | grep -v "markers" \
+            >> $wd/summary.tsv
+
             else
             log "FINISHED : $pipeline : $i"
         fi
@@ -46,10 +50,6 @@
 ## step-02: post-processing : 
 
     for i in $(cat $sublist); do 
-
-        cat results/0071_QC_of_contigs_by_checkM/raw_files/$i/$i.tsv \
-        | grep -v "markers" \
-        >> $wd/summary.tsv
 
         # ## 95Compl_5Conta_5hetero
         # awk -F'\t' 'NR==1 || ($6>95 && $7<95 && $8<95) {print $0}' $raw_files/$i/$i.tsv | grep -v "unbinned" \
