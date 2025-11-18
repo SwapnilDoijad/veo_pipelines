@@ -3,8 +3,8 @@
 #SBATCH --partition=short,standard,long,interactive,gpu,gpu-veo,gpu-test
 #SBATCH --output=results/0229_IS_detection_by_isescan/tmp/slurm/%j.out
 #SBATCH --error=results/0229_IS_detection_by_isescan/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=20
-#SBATCH --mem=10G
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=50G
 ###############################################################################
 ## step-01: preparation
     pipeline=0229_IS_detection_by_isescan
