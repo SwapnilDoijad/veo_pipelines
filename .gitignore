@@ -1,0 +1,9 @@
+# Keep local config files
+supplementary_scripts/user_email.csv
+supplementary_scripts/emails
+.vscode
+
+# Ignore TSV data files to avoid accidental large commits
+*.tsv
+# Explicitly ignore known large files
+listeria_all_fields.tsv
