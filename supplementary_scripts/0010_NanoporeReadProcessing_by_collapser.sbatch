@@ -4,12 +4,15 @@
 #SBATCH --output=results/0010_NanoporeReadProcessing_by_collapser/tmp/slurm/%j.out
 #SBATCH --error=results/0010_NanoporeReadProcessing_by_collapser/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
+#SBATCH --mem=100G
 ###############################################################################
 ## step-01: preparation
     pipeline=0010_NanoporeReadProcessing_by_collapser
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     fastq_file_path=$(grep my_fastq_path $parameters | awk '{print $2}')
     sublist=$wd/tmp/lists/ABC
+
+	echo "fastq_file_path: $fastq_file_path"
 ###############################################################################
 	log "STARTED: $pipeline -----------------------------" 
 ###############################################################################
@@ -21,6 +24,7 @@
 
 		mkdir -p $raw_files/$i
 
+		log "Running Collapser for $i"
 		python3.9 /vast/xa73pav/projects/p_swapnil_Collapser/scripts/Collapser.py \
 		$fastq_file_path/$i.fastq.gz \
 		$i \
@@ -32,18 +36,30 @@
 		--max-gap 1000 \
 		--min-pct-id 90 \
 		--min-length 2000 \
-		--jobs $SLURM_CPUS_PER_TASK
+		--jobs 1 \
+		--workers $SLURM_CPUS_PER_TASK \
+		& my_pid=$!
+		get_resource_stat $my_pid $wd/tmp/resource_log/$i.Collapser.tsv 
 
+	done
 
+	for i in $(cat $sublist); do
+		log "Cutting sequences for $i"
 		python3.9 scripts/cut_sequences.py \
 		--input-type fastq \
-		--input-file $input_dir/$i.fastq.gz \
+		--input-file $fastq_file_path/$i.fastq.gz \
 		--coords-dir $raw_files/$i \
 		--out-dir $output_dir/fastq \
-		--threads $SLURM_CPUS_PER_TASK
+		--threads $SLURM_CPUS_PER_TASK  \
+		& my_pid=$!
+		get_resource_stat $my_pid $wd/tmp/resource_log/$i.cut_sequences.tsv 
 
-		raw_reads=$(count_reads_from_fastq "$input_dir/$i.fastq.gz")
-		collapsed_reads=$(find $output_dir/raw_files/$i -maxdepth 1 -type f -name '*.png' | wc -l)
+	done
+
+	for  i in $(cat $sublist); do
+		log "calaculating read counts for $i"
+		raw_reads=$(count_reads_from_fastq "$fastq_file_path/$i.fastq.gz")
+		collapsed_reads=$(find $raw_files/$i -maxdepth 1 -type f -name '*.png' | wc -l)
 
 		echo  "$i $raw_reads $collapsed_reads" | tee -a $raw_files/collapser_summary.txt
 	done
