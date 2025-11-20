@@ -18,7 +18,7 @@ echo "script 0024_QC_combine_fastq_QC_by_mulitQC started -----------------------
     QC_dir=$( find results/ -type d -name "*QC*" | grep -v 0024 | grep -v nanoplot | sed 's/ /\n/g' | sed 's/results\///g')
     echo $QC_dir
 ###############################################################################
-## step-02: run mulitQC  ## test
+## step-02: run mulitQC
 
 
     ## activate multiQC virtual env 
