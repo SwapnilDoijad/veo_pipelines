@@ -441,38 +441,119 @@ clean() {
         rm -rf tmp/$user.$SLURM_JOB_ID.general_log.py
 }
 
-## log_usage
-log_usage() {
+## old (20251125) log_usage
+    # log_usage() {
+    #     local pid="$1"
+    #     local log_file="$2"
+    #     local num_cores=$(nproc)
+
+    #     echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
+
+    #     while kill -0 "$pid" 2>/dev/null; do
+    #         # Get CPU and memory usage
+    #         ps_output=$(ps -p "$pid" -o %cpu,rss --no-headers)
+    #         cpu_usage=$(echo "$ps_output" | awk '{print $1}')
+    #         mem_usage=$(echo "$ps_output" | awk '{print $2}')
+    #         mem_usage_mb=$(echo "scale=2; $mem_usage / 1024" | bc)
+    #         cpus_used=$(echo "scale=2; $cpu_usage * $num_cores / 100" | bc)
+
+    #         # Get GPU usage (handle cases where NVIDIA GPU is not present)
+    #         gpu_output=$(nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader,nounits 2>/dev/null)
+    #         if [ -n "$gpu_output" ]; then
+    #             gpu_usage=$(echo "$gpu_output" | awk -F ',' '{print $1}')
+    #             gpu_mem=$(echo "$gpu_output" | awk -F ',' '{print $2}')
+    #         else
+    #             gpu_usage="0"
+    #             gpu_mem="0"
+    #         fi
+
+    #         # Append data to log file with updated timestamp format (underscores instead of spaces)
+    #         echo -e "$(date '+%Y-%m-%d_%H:%M:%S')\t$cpu_usage\t$mem_usage_mb\t$cpus_used\t$gpu_usage\t$gpu_mem" | sed 's/No\ devices\ were\ found/0/g' >> "$log_file"
+    #         sleep 1
+    #     done
+    # }
+
+## 2025-11-25 09:16:00  Accurate sampler: sample /proc deltas for CPU and use nvidia-smi for GPU
+    log_usage() {
     local pid="$1"
     local log_file="$2"
-    local num_cores=$(nproc)
+    local interval=1   # seconds
+    local clk_tck=$(getconf CLK_TCK)
+    local nproc=$(nproc)
 
     echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
 
-    while kill -0 "$pid" 2>/dev/null; do
-        # Get CPU and memory usage
-        ps_output=$(ps -p "$pid" -o %cpu,rss --no-headers)
-        cpu_usage=$(echo "$ps_output" | awk '{print $1}')
-        mem_usage=$(echo "$ps_output" | awk '{print $2}')
-        mem_usage_mb=$(echo "scale=2; $mem_usage / 1024" | bc)
-        cpus_used=$(echo "scale=2; $cpu_usage * $num_cores / 100" | bc)
+    # helper: read total cpu jiffies from /proc/stat
+    read_total_cpu() {
+        awk '/^cpu /{for(i=2;i<=NF;i++) sum+=$i; print sum}' /proc/stat
+    }
 
-        # Get GPU usage (handle cases where NVIDIA GPU is not present)
-        gpu_output=$(nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader,nounits 2>/dev/null)
-        if [ -n "$gpu_output" ]; then
-            gpu_usage=$(echo "$gpu_output" | awk -F ',' '{print $1}')
-            gpu_mem=$(echo "$gpu_output" | awk -F ',' '{print $2}')
+    # helper: read proc jiffies and rss (including children if requested)
+    read_proc_stats() {
+        local p="$1"
+        # get utime stime cutime cstime rss (fields in /proc/<pid>/stat and /proc/<pid>/statm or status)
+        # stat: utime(14) stime(15) cutime(16) cstime(17) ... rss is field 24 (in pages)
+        # but some shells/tools index differently; safer to read /proc/<pid>/stat and /proc/<pid>/status
+        if [ ! -r "/proc/$p/stat" ]; then
+        echo "0 0"
+        return
+        fi
+        # read the numeric fields robustly
+        statline=$(cat /proc/$p/stat)
+        # extract utime stime cutime cstime (14-17) and rss (24)
+        # use awk to parse
+        awk '{
+        ut=$14; st=$15; cut=$16; cst=$17; rss=$24;
+        print (ut+st+cut+cst), rss
+        }' <<<"$statline"
+    }
+
+    while kill -0 "$pid" 2>/dev/null; do
+        # choose whether to include children: here we include them by reading /proc/<pid>/task/*/children is complex,
+        # but /proc/<pid>/stat includes cutime/cstime which are children times aggregated by the kernel.
+        proc1=($(read_proc_stats "$pid"))   # e.g. [total_jiffies rss_pages]
+        total1=$(read_total_cpu)
+
+        sleep "$interval"
+
+        proc2=($(read_proc_stats "$pid"))
+        total2=$(read_total_cpu)
+
+        delta_proc=$((proc2[0] - proc1[0]))
+        delta_total=$((total2 - total1))
+
+        if [ "$delta_total" -le 0 ] || [ "$delta_proc" -le 0 ]; then
+        cpu_pct="0.00"
         else
-            gpu_usage="0"
-            gpu_mem="0"
+        # convert jiffies to CPU percent: 100 * (delta_proc / delta_total)
+        cpu_pct=$(awk -v dp="$delta_proc" -v dt="$delta_total" 'BEGIN{printf "%.2f", 100 * dp / dt}')
         fi
 
-        # Append data to log file with updated timestamp format (underscores instead of spaces)
-        echo -e "$(date '+%Y-%m-%d_%H:%M:%S')\t$cpu_usage\t$mem_usage_mb\t$cpus_used\t$gpu_usage\t$gpu_mem" | sed 's/No\ devices\ were\ found/0/g' >> "$log_file"
+        # RSS pages -> KB (pagesize)
+        pagesize=$(getconf PAGE_SIZE)
+        rss_pages=${proc2[1]:-0}
+        mem_kb=$(( rss_pages * pagesize / 1024 ))
+        mem_mb=$(awk -v m="$mem_kb" 'BEGIN{printf "%.2f", m/1024}')
 
-        sleep 1
+        cpus_used=$(awk -v cpu="$cpu_pct" -v n="$nproc" 'BEGIN{printf "%.2f", cpu * n / 100}')
+
+        # GPU sampling (use nvidia-smi if present)
+        if command -v nvidia-smi >/dev/null 2>&1; then
+        # one-line query (if multiple GPUs present, takes first GPU; adapt if you want all)
+        gpu_line=$(nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader,nounits 2>/dev/null | head -n1)
+        if [ -n "$gpu_line" ]; then
+            gpu_pct=$(awk -F',' '{gsub(/^ +| +$/,"",$1); print $1}' <<<"$gpu_line")
+            gpu_mem=$(awk -F',' '{gsub(/^ +| +$/,"",$2); print $2}' <<<"$gpu_line")
+        else
+            gpu_pct=0; gpu_mem=0
+        fi
+        else
+        gpu_pct=0; gpu_mem=0
+        fi
+
+        echo -e "$(date '+%Y-%m-%d_%H:%M:%S')\t$cpu_pct\t$mem_mb\t$cpus_used\t$gpu_pct\t$gpu_mem" >> "$log_file"
     done
-}
+    }
 
 summarize_log() {
     local log_file="$1"

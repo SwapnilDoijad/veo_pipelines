@@ -468,22 +468,22 @@
         if [ ! -d $raw_files/kraken2 ] ; then
             mkdir -p $raw_files/kraken2/hits
             for subsample in "${subsamples[@]}"; do
-                while IFS= read -r barcode_FR && IFS= read -r barcode_RC <&3; do  
-                    echo "$barcode_FR $barcode_FR barcode_RC $barcode_RC"
-                    sample_id_tmp=$(grep $barcode_FR.$barcode_RC $wd/tmp/list_BarcodePrimers/list.barcodes.names.txt | awk '{print $2}')
-                    sample_id=$(grep -w $sample_id_tmp tmp/parameters/0991_calculate_abundance_from_fastq.my_barcode.txt | awk '{print $1}' )
-                    echo "sample_id $sample_id"
-                    if [ ! -f $raw_files/kraken2/hits/$sample_id.$QC.fastq.$subsample.fasta.out ] ; then 
-                        # log "submitting kraken2 sbatch for $subsample $barcode_FR $barcode_RC" 
+                for sample in $(cat $wd/tmp/lists/samples.txt ); do
+                    for mismatch in "${mismatches[@]}"; do
+                        if [ ! -f $raw_files/kraken2/hits/$sample_id.$QC.fastq.$subsample.fasta.out ] ; then 
+                            log "submitting kraken2 sbatch for $subsample $sample $mismatch" 
 
-                        sed "s/my_barcode_FR/$barcode_FR/g" $suppl_scripts/$pipeline.kraken2.sbatch \
-                        | sed "s/my_barcode_RC/$barcode_RC/g" | sed "s/my_subsample/$subsample/g" | sed "s/my_QC_value/$QC/g" \
-                        > $wd/tmp/sbatch/$barcode_FR.$barcode_RC.$subsample.kraken2.sbatch
-                        sbatch $wd/tmp/sbatch/$barcode_FR.$barcode_RC.$subsample.kraken2.sbatch
-                        wait_for_jobs_to_complete 50
+                            sed "s/my_subsample/$subsample/g" $suppl_scripts/$pipeline.kraken2.sbatch \
+                            | sed "s/my_sample/$sample/g" \
+                            | sed "s/my_mismatch/$mismatch/g" \
+                            | sed "s/my_QC_value/$QC/g" \
+                            > $wd/tmp/sbatch/$sample.$subsample.$mismatch.kraken2.sbatch
+                            sbatch $wd/tmp/sbatch/$sample.$subsample.$mismatch.kraken2.sbatch
+                            wait_for_jobs_to_complete 50
 
-                    fi 
-                done < "$bp/list.barcodes_all.FR.txt" 3< "$bp/list.barcodes_all.RC.txt"
+                        fi 
+                    done
+                done
             done 
         fi
         wait_till_all_job_finished_with_name 03_0991
@@ -502,7 +502,9 @@
                 for mismatch in "${mismatches[@]}"; do
                     if [ ! -f $raw_files/$tool/$database/$subsample.$sample.$mismatch.fastq.fasta.tsv ] ; then
                         sed "s/my_subsample/$subsample/g" $suppl_scripts/$pipeline.$tool.sbatch \
-                        | sed "s/my_sample/$sample/g" | sed "s/my_mismatch/$mismatch/g" | sed "s/my_qc_value/$QC/g" \
+                        | sed "s/my_sample/$sample/g" \
+                        | sed "s/my_mismatch/$mismatch/g" \
+                        | sed "s/my_qc_value/$QC/g" \
                         > $wd/tmp/sbatch/$tool.$subsample.$sample.$mismatch.sbatch
 
                         sbatch $wd/tmp/sbatch/$tool.$subsample.$sample.$mismatch.sbatch
