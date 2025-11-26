@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0668_phage_taxonomy_by_ictvNR
-#SBATCH --partition=long,interactive
+#SBATCH --partition=long,standard
 #SBATCH --output=results/0668_phage_taxonomy_by_ictvNR/tmp/slurm/%j.out
 #SBATCH --error=results/0668_phage_taxonomy_by_ictvNR/tmp/slurm/%j.err
 #SBATCH --mem=200G
@@ -21,7 +21,8 @@
 
 	pixi run pipeline \
 	& my_pid=$!
-	get_resource_stat $my_pid ../../tmp/resource_log/pixi.ictvNR.tsv
+	accurate_log_usage $my_pid ../../tmp/resource_log/pixi.ictvNR.accurate.tsv 1
+	# get_resource_stat $my_pid ../../tmp/resource_log/pixi.ictvNR.tsv
 ###############################################################################
 	log "ENDED :SBATCH : $pipeline -----------------------------"
 ###############################################################################

@@ -483,11 +483,6 @@ clean() {
 
     echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
 
-    # helper: read total cpu jiffies from /proc/stat
-    read_total_cpu() {
-        awk '/^cpu /{for(i=2;i<=NF;i++) sum+=$i; print sum}' /proc/stat
-    }
-
     # helper: read proc jiffies and rss (including children if requested)
     read_proc_stats() {
         local p="$1"
@@ -508,34 +503,47 @@ clean() {
         }' <<<"$statline"
     }
 
+    # Collect all descendant PIDs (recursive)
+    collect_tree_pids() {
+        local root=$1
+        local out="$root"
+        local child
+        for child in $(pgrep -P "$root" 2>/dev/null); do
+            out="$out $(collect_tree_pids "$child")"
+        done
+        echo "$out"
+    }
+
     while kill -0 "$pid" 2>/dev/null; do
-        # choose whether to include children: here we include them by reading /proc/<pid>/task/*/children is complex,
-        # but /proc/<pid>/stat includes cutime/cstime which are children times aggregated by the kernel.
+        # read CPU jiffies and rss pages (utime+stime+cutime+cstime, rss)
         proc1=($(read_proc_stats "$pid"))   # e.g. [total_jiffies rss_pages]
-        total1=$(read_total_cpu)
 
         sleep "$interval"
 
         proc2=($(read_proc_stats "$pid"))
-        total2=$(read_total_cpu)
 
         delta_proc=$((proc2[0] - proc1[0]))
-        delta_total=$((total2 - total1))
 
-        if [ "$delta_total" -le 0 ] || [ "$delta_proc" -le 0 ]; then
-        cpu_pct="0.00"
+        # Compute CPU percentage relative to one CPU core (like top):
+        # cpu_pct = 100 * (delta_proc / clk_tck) / interval
+        if [ "$delta_proc" -le 0 ]; then
+            cpu_pct="0.00"
         else
-        # convert jiffies to CPU percent: 100 * (delta_proc / delta_total)
-        cpu_pct=$(awk -v dp="$delta_proc" -v dt="$delta_total" 'BEGIN{printf "%.2f", 100 * dp / dt}')
+            cpu_pct=$(awk -v dp="$delta_proc" -v clk="$clk_tck" -v iv="$interval" 'BEGIN{printf "%.2f", 100 * (dp/clk) / iv}')
         fi
 
-        # RSS pages -> KB (pagesize)
+        # Sum RSS across the full process tree (KB)
         pagesize=$(getconf PAGE_SIZE)
-        rss_pages=${proc2[1]:-0}
-        mem_kb=$(( rss_pages * pagesize / 1024 ))
+        pids=$(collect_tree_pids "$pid")
+        # ensure we have at least the main pid
+        pids=${pids:-$pid}
+        # sum RSS (KB) for all pids
+        mem_kb=$(ps -o rss= -p $pids 2>/dev/null | awk '{sum+=$1} END{print (sum+0)}')
+        mem_kb=${mem_kb:-0}
         mem_mb=$(awk -v m="$mem_kb" 'BEGIN{printf "%.2f", m/1024}')
 
-        cpus_used=$(awk -v cpu="$cpu_pct" -v n="$nproc" 'BEGIN{printf "%.2f", cpu * n / 100}')
+        # Estimate how many CPU cores were used: cpu_pct / 100
+        cpus_used=$(awk -v cpu="$cpu_pct" 'BEGIN{printf "%.2f", cpu/100}')
 
         # GPU sampling (use nvidia-smi if present)
         if command -v nvidia-smi >/dev/null 2>&1; then
@@ -553,6 +561,122 @@ clean() {
 
         echo -e "$(date '+%Y-%m-%d_%H:%M:%S')\t$cpu_pct\t$mem_mb\t$cpus_used\t$gpu_pct\t$gpu_mem" >> "$log_file"
     done
+    }
+
+    ## New: accurate_log_usage - sums CPU jiffies and RSS across the full process tree
+    ## Usage: accurate_log_usage <pid> <log_file> [interval_seconds]
+    accurate_log_usage() {
+        local pid="$1"
+        local log_file="$2"
+        local interval="${3:-1}"
+        local clk_tck=$(getconf CLK_TCK)
+
+        if [ -z "$pid" ] || [ -z "$log_file" ]; then
+            echo "Usage: accurate_log_usage <pid> <log_file> [interval_seconds]" >&2
+            return 2
+        fi
+
+        echo -e "Timestamp\tCPU(%)\tMemory(MB)\tCPUs_used\tGPU(%)\tGPU_Mem(MB)" > "$log_file"
+
+        # recursive pid collector
+        collect_tree_pids_recursive() {
+            local root=$1
+            local out="$root"
+            local child
+            for child in $(pgrep -P "$root" 2>/dev/null); do
+                out="$out $(collect_tree_pids_recursive "$child")"
+            done
+            echo "$out"
+        }
+
+        # read total cpu jiffies
+        read_total_cpu() {
+            awk '/^cpu /{for(i=2;i<=NF;i++) sum+=$i; print sum}' /proc/stat
+        }
+
+        # read sum of utime+stime for a list of pids
+        read_proc_jiffies_sum() {
+            local pids="$1"
+            local sum=0
+            local s
+            for s in $pids; do
+                if [ -r "/proc/$s/stat" ]; then
+                    # utime (14) + stime (15)
+                    awk '{printf "%d", $14+$15}' /proc/$s/stat 2>/dev/null | {
+                        read val || val=0
+                        sum=$((sum + val))
+                    }
+                fi
+            done
+            echo "$sum"
+        }
+
+        # initial sample
+        pids=$(collect_tree_pids_recursive "$pid")
+        pids=${pids:-$pid}
+        proc_j1=$(read_proc_jiffies_sum "$pids")
+        tot_j1=$(read_total_cpu)
+
+        while kill -0 "$pid" 2>/dev/null; do
+            sleep "$interval"
+
+            # recompute tree (children may have changed)
+            pids=$(collect_tree_pids_recursive "$pid")
+            pids=${pids:-$pid}
+
+            proc_j2=$(read_proc_jiffies_sum "$pids")
+            tot_j2=$(read_total_cpu)
+
+            delta_proc=$((proc_j2 - proc_j1))
+            delta_tot=$((tot_j2 - tot_j1))
+
+            if [ "$delta_proc" -le 0 ] || [ "$delta_tot" -le 0 ]; then
+                cpu_pct="0.00"
+            else
+                # convert jiffies to seconds by /clk_tck, then percent over interval
+                cpu_pct=$(awk -v dp="$delta_proc" -v clk="$clk_tck" -v iv="$interval" 'BEGIN{printf "%.2f", 100 * (dp/clk) / iv}')
+            fi
+
+            # sum RSS (KB) for pid tree
+            mem_kb=$(ps -o rss= -p $pids 2>/dev/null | awk '{sum+=$1} END{print (sum+0)}')
+            mem_kb=${mem_kb:-0}
+            mem_mb=$(awk -v m="$mem_kb" 'BEGIN{printf "%.2f", m/1024}')
+
+            cpus_used=$(awk -v cpu="$cpu_pct" 'BEGIN{printf "%.2f", cpu/100}')
+
+            # GPU: try to map per-pid GPU memory if available, else record per-GPU util of first GPU
+            gpu_pct=0; gpu_mem=0
+            if command -v nvidia-smi >/dev/null 2>&1; then
+                # sum used_memory for our pids (if driver reports compute apps)
+                gpu_mem_sum=0
+                while IFS=',' read -r gpid gmem; do
+                    # strip spaces
+                    gpid=$(echo "$gpid" | tr -d '[:space:]')
+                    gmem=$(echo "$gmem" | tr -d '[:space:]')
+                    case " $pids " in
+                        *" $gpid "*) gpu_mem_sum=$((gpu_mem_sum + (gmem+0))) ;;
+                    esac
+                done < <(nvidia-smi --query-compute-apps=pid,used_memory --format=csv,noheader,nounits 2>/dev/null || true)
+
+                if [ "$gpu_mem_sum" -gt 0 ]; then
+                    gpu_mem=$gpu_mem_sum
+                    gpu_pct=0
+                else
+                    # fallback: per-GPU utilization (take first GPU)
+                    gpu_line=$(nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader,nounits 2>/dev/null | head -n1)
+                    if [ -n "$gpu_line" ]; then
+                        gpu_pct=$(awk -F',' '{gsub(/^ +| +$/,"",$1); print $1}' <<<"$gpu_line")
+                        gpu_mem=$(awk -F',' '{gsub(/^ +| +$/,"",$2); print $2}' <<<"$gpu_line")
+                    fi
+                fi
+            fi
+
+            echo -e "$(date '+%Y-%m-%d_%H:%M:%S')\t$cpu_pct\t$mem_mb\t$cpus_used\t$gpu_pct\t$gpu_mem" >> "$log_file"
+
+            # rotate samples
+            proc_j1=$proc_j2
+            tot_j1=$tot_j2
+        done
     }
 
 summarize_log() {
