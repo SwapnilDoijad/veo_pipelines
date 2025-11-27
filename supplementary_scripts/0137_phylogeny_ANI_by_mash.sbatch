@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0137_phylogeny_ANI_by_mash
-#SBATCH --partition=long,standard,gpu,gpu-veo,gpu-test
+#SBATCH --partition=gpu,gpu-veo,gpu-test,long,standard
 #SBATCH --output=results/0137_phylogeny_ANI_by_mash/tmp/slurm/%j.out
 #SBATCH --error=results/0137_phylogeny_ANI_by_mash/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=20

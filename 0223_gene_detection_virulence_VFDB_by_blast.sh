@@ -6,7 +6,7 @@
     log "STARTED SUBMISSION: $pipeline "
 ###############################################################################
 ## step-01: file and directory preparation
-    fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
+    fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
 	ls $fasta_directory | sed 's/\.fasta//g' > list.$pipeline.txt
     list=list.$pipeline.txt
 

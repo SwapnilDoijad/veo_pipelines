@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0223_gene_detection_virulence_VFDB_by_blast
-#SBATCH --partition=standard,long
+#SBATCH --partition=gpu-veo,gpu,gpu-test,standard,long
 #SBATCH --output=results/0223_gene_detection_virulence_VFDB_by_blast/tmp/slurm/%j.out
 #SBATCH --error=results/0223_gene_detection_virulence_VFDB_by_blast/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
