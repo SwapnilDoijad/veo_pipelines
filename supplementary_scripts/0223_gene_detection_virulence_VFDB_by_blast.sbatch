@@ -11,7 +11,7 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     annotation_file=/veodata/03/databases/VFDB/v2021/VFDB-annotations.txt
 	blastn=/home/groups/VEO/tools/ncbi-blast/v2.14.0+/bin/blastn
-    fasta_path=$(grep my_fasta_directory $parameters | awk '{print $2}')
+    fasta_path=$(grep my_fasta_path $parameters | awk '{print $2}')
     cpus=$SLURM_CPUS_PER_TASK
     sublist=$wd/tmp/lists/ABC
 	source /home/groups/VEO/tools/biopython/myenv/bin/activate
