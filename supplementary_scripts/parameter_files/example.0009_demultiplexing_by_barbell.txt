@@ -9,3 +9,10 @@ my_fastq_path	data/fastq
 ## alternatives: SQK-LSK114=SQK-NBD114-96
 my_kit	SQK-NBD114-96
 
+## custom primers? (Yes or No)
+my_custom_primers	No
+
+## if my custom primers is Yes then adjust below else ignore 
+## for custom primers provide path
+my_F_primer	/vast/groups/VEO/shared_data/angela/F_primers.txt
+my_R_primer /vast/groups/VEO/shared_data/angela/R_primers.txt
