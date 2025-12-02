@@ -6,15 +6,17 @@
     log "STARTED : $pipeline -----------------------------------------------"
 ###############################################################################
 
-    fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
-    ls $fastq_path/*.fastq | awk -F/ '{print $NF}' | sed 's/\.fastq//g' | sort | uniq > list.$pipeline.txt
+    primer_file=$(grep my_F_primer $parameters | awk '{print $2}')
+    grep ">" $primer_file | sed 's/>//g' | awk -F'_' '{print $1}' | sort | uniq  > list.$pipeline.txt
     list=list.$pipeline.txt
 	
     create_directories_structure_1 $wd
     split_list $wd $list
     submit_jobs $wd $pipeline
 
-    mkdir -p $out_dir/trimmed
+    mkdir -p $wd/tmp/filters
+    mkdir -p $wd/tmp/primers
+    mkdir -p $wd/fastq
 ###############################################################################
     log "FINISHED : $pipeline -----------------------------------------------"
-###############################################################################
+############################################################################---
