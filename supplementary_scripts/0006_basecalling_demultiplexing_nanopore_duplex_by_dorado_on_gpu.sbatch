@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name 0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu
-#SBATCH --partition=gpu-test,gpu,gpu-veo
+#SBATCH --partition=gpu,gpu-veo
 #SBATCH --output results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.out
 #SBATCH --error results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.err
 #SBATCH --gres=gpu:1
@@ -311,10 +311,17 @@
                         # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
                         # --kit-name $kit_name \
                         # $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
-            $dorado \
-            basecaller sup \
-            $data_directory_pod5_path/ \
-            > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+            
+            if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ]; then
+                log "BASECALLING: generating $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam"
+
+                $dorado \
+                basecaller sup \
+                $data_directory_pod5_path/ \
+                > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+
+                log "FINISHED BASECALLING: generating $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam"
+            fi
 
             $dorado demux \
             --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \

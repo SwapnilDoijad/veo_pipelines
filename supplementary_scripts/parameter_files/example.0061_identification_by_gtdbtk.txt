@@ -3,3 +3,6 @@
 ## note that all files should end with .fasta
 ## example path is given below (change the path according to your data):
 my_fasta_dir	data/top5_close_relatives
+
+## Do you want tree only for your (study) genomes or combined with GTDBtk genome? study_genomes or combined_genomes
+my_tree_choise	study_genomes
