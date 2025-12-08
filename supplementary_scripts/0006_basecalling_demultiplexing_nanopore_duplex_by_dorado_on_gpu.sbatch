@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name 0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu
-#SBATCH --partition=gpu,gpu-veo
+#SBATCH --partition=gpu,gpu-veo,gpu-test
 #SBATCH --output results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.out
 #SBATCH --error results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.err
 #SBATCH --gres=gpu:1
@@ -294,23 +294,23 @@
     
     if [[ $type_of_sequencing == "genome" ]] ; then 
         ## basecalling + in line demultiplexing
-        if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ] ; then
+        # if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ] ; then
             log "STARTED: 02_pod5_to_demux : basecalling + in line demultiplexing"
 
             ( mkdir -p $raw_files/02_pod5_to_demultiplex ) > /dev/null 2>&1
             ( mkdir -p $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq ) > /dev/null 2>&1
             ( mkdir -p $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10 ) > /dev/null 2>&1
 
-            ## 240706 Swapnil: I think direct demultiplexing is not possible with dorado
-            ## 1 create basecalled .bam file 
-            ## 2 demultiplex bam 
-            ## 3 convert individual bam to fastq
-                    ## depreciated codes
-                        # ( mkdir -p $raw_files/02_pod5_to_demultiplex/demultiplexed_bam ) > /dev/null 2>&1
-                        # $dorado demux \
-                        # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
-                        # --kit-name $kit_name \
-                        # $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+                            ## 240706 Swapnil: I think direct demultiplexing is not possible with dorado
+                            ## 1 create basecalled .bam file 
+                            ## 2 demultiplex bam 
+                            ## 3 convert individual bam to fastq
+                                    ## depreciated codes
+                                        # ( mkdir -p $raw_files/02_pod5_to_demultiplex/demultiplexed_bam ) > /dev/null 2>&1
+                                        # $dorado demux \
+                                        # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_bam \
+                                        # --kit-name $kit_name \
+                                        # $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
             
             if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ]; then
                 log "BASECALLING: generating $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam"
@@ -347,7 +347,7 @@
             log "FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
             else
             log "ALREADY FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
-        fi 
+        # fi 
     fi 
 
 ###############################################################################  

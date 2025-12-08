@@ -59,21 +59,22 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 ############################################################################### 
 ## for NON-kit based demultiplexing
     if [ $custom_primers == "Yes" ] ; then
-    for primer_id in $(cat $sublist ); do 
-    	echo $primer_id
+
 
         mkdir $raw_files/${primer_id}
         mkdir $raw_files/${primer_id}/fastq
-        ## create primer files
-            ## Note that the primers with specific premix must be present 
-            ## for e.g. mut1_* 
-            ## see /vast/groups/VEO/shared_data/angela/F_primers.txt and /vast/groups/VEO/shared_data/angela/R_primers.txt
-            ## this is needed for barbell to work properly
-                grep -A 1 -E "${primer_id}_" "$F_primer" \
-                > "$wd/tmp/primers/${primer_id}_F_primers.txt"
 
-                grep -A 1 -E "${primer_id}_" "$R_primer" \
-                > "$wd/tmp/primers/${primer_id}_R_primers.txt"
+        F_FILES=($wd/tmp/primers/mut*_F.txt)
+        R_FILES=($wd/tmp/primers/mut*_R.txt)
+
+        F_LIST=$(IFS=,; echo "${F_FILES[*]}")
+        R_LIST=$(IFS=,; echo "${R_FILES[*]}")
+
+        F_TAGS=$(printf 'Ftag,'%.0s "${F_FILES[@]}")
+        R_TAGS=$(printf 'Rtag,'%.0s "${R_FILES[@]}")
+        TAGS="${F_TAGS}${R_TAGS%,}"
+
+        barbell annotate -q "${F_LIST},${R_LIST}" -b "${TAGS}"
 
         ## annotate reads
             $barbell annotate \
@@ -179,8 +180,6 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
             done
 
 
-
-    done 
     fi
 
 ###############################################################################
