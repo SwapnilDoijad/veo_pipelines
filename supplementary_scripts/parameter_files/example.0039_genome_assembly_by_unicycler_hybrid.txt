@@ -1,16 +1,16 @@
 ## This is a parameter file for 0039_genome_assembly_by_unicycler_hybrid pipeline
 ## tab seperated
 ## files should end with .fastq.gz 
-## If you mention the 'single' below, the data in the paired will be ignored and vice-versa
-
 ## please give a path of every files as below
 ## example path is given below (change the path according to your data):
 ## long_read	illumina_R1	illumina_R2
-data/pacbio/pacbio_decompressed/ABM_DNA_S10-1_4_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S10-1_4_1.fastq.gz	data/illumina/fastq/ABM_DNA_S10-1_4_2.fastq.gz
-data/pacbio/pacbio_decompressed/ABM_DNA_S11-2_5_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S11-2_5_1.fastq.gz	data/illumina/fastq/ABM_DNA_S11-2_5_2.fastq.gz
-data/pacbio/pacbio_decompressed/ABM_DNA_S12-2_6_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S12-2_6_1.fastq.gz	data/illumina/fastq/ABM_DNA_S12-2_6_2.fastq.gz
-data/pacbio/pacbio_decompressed/ABM_DNA_S9-1_3_HiFi.fastq.gz	data/illumina/fastq/ABM_DNA_S9-1_3_1.fastq.gz	data/illumina/fastq/ABM_DNA_S9-1_3_2.fastq.gz
-data/pacbio/pacbio_decompressed/ABM_July_1_HiFi.fastq.gz	data/illumina/fastq/ABM_July_1_1.fastq.gz	data/illumina/fastq/ABM_July_1_2.fastq.gz
-data/pacbio/pacbio_decompressed/ABM_July_2_HiFi.fastq.gz	data/illumina/fastq/ABM_July_2_1.fastq.gz	data/illumina/fastq/ABM_July_2_2.fastq.gz
-data/pacbio/pacbio_decompressed/ABM_NL1369-1_7_HiFi.fastq.gz	data/illumina/fastq/ABM_NL1369-1_7_1.fastq.gz	data/illumina/fastq/ABM_NL1369-1_7_2.fastq.gz
-
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/i2_7.fastq.gz	/vast/xa73pav/projects/p_angela_rabia_bacterialGenome/data/fastq_set_1/i2_7_R1.fastq.gz	/vast/xa73pav/projects/p_angela_rabia_bacterialGenome/data/fastq_set_1/i2_7_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/IE6845.fastq.gz	/vast/xa73pav/projects/p_angela_rabia_bacterialGenome/data/fastq_set_1/IE6845_R1.fastq.gz	/vast/xa73pav/projects/p_angela_rabia_bacterialGenome/data/fastq_set_1/IE6845_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y1_12.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_12_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_12_original_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y1_16.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_16_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_16_original_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y1_19.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_19_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_19_original_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y1_20.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_20_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_20_original_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y1_4.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_4_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y1_4_original_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y2_10.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y2_10_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y2_10_original_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y2_6.fastq.gz	/vast/xa73pav/projects/p_angela_rabia_bacterialGenome/data/fastq_set_1/Y2_6_R1.fastq.gz	/vast/xa73pav/projects/p_angela_rabia_bacterialGenome/data/fastq_set_1/Y2_6_R2.fastq.gz
+results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/Y3_38.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y3_38_original_R1.fastq.gz	/vast/xa73pav/projects/p_jannick_230118_bacterialGenome/data/illumina/final_reads/Y3_38_original_R2.fastq.gz

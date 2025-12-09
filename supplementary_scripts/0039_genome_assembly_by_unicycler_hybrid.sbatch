@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=0039_genome_assembly_by_unicycler_hybrid
-#SBATCH --partition=interactive
+#SBATCH --partition=gpu-veo,gpu-test,standard,long,gpu,fat
 #SBATCH --output=results/0039_genome_assembly_by_unicycler_hybrid/tmp/slurm/%j.out
 #SBATCH --error=results/0039_genome_assembly_by_unicycler_hybrid/tmp/slurm/%j.err
-#SBATCH --mem=300G
-#SBATCH --cpus-per-task=24
+#SBATCH --mem=200G
+#SBATCH --cpus-per-task=40
 ###############################################################################
 ## header 
 	pipeline=0039_genome_assembly_by_unicycler_hybrid
