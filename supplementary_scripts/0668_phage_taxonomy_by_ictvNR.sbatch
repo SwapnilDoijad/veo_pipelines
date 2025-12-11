@@ -19,10 +19,18 @@
 	mv ictv-taxonomy-challenge-nr $raw_files
 	cd $raw_files/ictv-taxonomy-challenge-nr
 
-	pixi run pipeline \
-	& my_pid=$!
-	accurate_log_usage $my_pid ../../tmp/resource_log/pixi.ictvNR.accurate.tsv 1
+	# pixi run pipeline \
+	# & my_pid=$!
 	# get_resource_stat $my_pid ../../tmp/resource_log/pixi.ictvNR.tsv
+
+	# pixi run pipeline \
+	# & my_pid=$!
+	# accurate_log_usage $my_pid ../../tmp/resource_log/pixi.ictvNR.accurate.tsv 1
+
+	setsid pixi run pipeline & my_pid=$!
+	pgid=$(ps -o pgid= -p $my_pid | tr -d ' ')
+	accurate_log_usage_by_pgid "$pgid" ../../tmp/resource_log/pixi.ictvNR.accurate.tsv 1
+
 ###############################################################################
 	log "ENDED :SBATCH : $pipeline -----------------------------"
 ###############################################################################

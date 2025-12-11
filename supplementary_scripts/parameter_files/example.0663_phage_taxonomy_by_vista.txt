@@ -2,4 +2,4 @@
 ## please give a path of a fasta folder containing fasta files (ending with .fasta)
 ## tab seperated
 ## example path
-my_fasta_dir	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/dataset_challenge
+my_fasta_file	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/combined_fasta/all59907.fasta
