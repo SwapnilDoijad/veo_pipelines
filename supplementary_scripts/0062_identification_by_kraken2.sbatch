@@ -28,7 +28,7 @@ log "database: $database"
             log "running kraken2 (fasta) for $F1"
             ( mkdir $raw_files/$F1 ) > /dev/null 2>&1  
 
-            ( $tools/kraken2/v2.1.2/kraken2 \
+            ( /usr/bin/perl $tools/kraken2/v2.1.2/kraken2 \
             --db $database \
             --threads $SLURM_CPUS_PER_TASK \
             --report $raw_files/$F1/report.txt \
