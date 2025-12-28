@@ -56,6 +56,16 @@
         & my_pid=$!
         get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.gtdbtk_denovo.tsv
 
+        gunzip $raw_files/list.0061_identification_by_gtdbtk.tmp/align/gtdbtk.bac120.user_msa.fasta.gz
+
+        /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
+        -s $raw_files/list.0061_identification_by_gtdbtk.tmp/align/gtdbtk.bac120.user_msa.fasta \
+        -m MFP \
+        -nt $SLURM_CPUS_PER_TASK \
+        -bb 1000 \
+        & my_pid=$!
+        get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.iqtree.tsv
+
         log "FINISHED: de_novo_wf $pipeline"
         
         else

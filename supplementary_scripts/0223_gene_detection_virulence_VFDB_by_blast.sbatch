@@ -78,14 +78,15 @@
 ###############################################################################
 	log "STARTED: $pipeline -----------------------------" && clean
 ###############################################################################
-# awk 'NR>1' $wd/all_results/$i.VFDB-blast.tsv >> $wd/VFDB-blast.tsv
+#awk 'NR>1' $wd/all_results/$i.VFDB-blast.tsv >> $wd/VFDB-blast.tsv
 
 # source /home/groups/VEO/tools/biopython/myenv/bin/activate
 
-# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.gene_collapse.py \
-# -i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.tsv \
-# -o /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.tsv \
-# --report /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.report.tsv
+## this will classify genes for e.g. capsule, fimbriae, LPS, toxins, etc.
+	# python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.gene_collapse.py \
+	# -i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.tsv \
+	# -o /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.tsv \
+	# --report /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.report.tsv
 
 # python /home/groups/VEO/scripts_for_users/supplementary_scripts/0223_gene_detection_virulence_VFDB_by_blast.add_species.py \
 # -i /vast/xa73pav/projects/p_swapnil_Enterobacter/results/0223_gene_detection_virulence_VFDB_by_blast/VFDB-blast.matrix.protein.collapsed.tsv \

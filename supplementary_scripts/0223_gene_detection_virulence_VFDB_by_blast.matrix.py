@@ -2,8 +2,8 @@
 """
 Create a presence/absence (1/0) matrix of genome vs gene.
 
-- Genomes are derived from qseqid by taking the first part (default: up to the first '_' or whitespace).
-  Example: H447_contig_1 -> H447
+- Genomes are derived from qseqid as-is (no extraction or splitting).
+    Example: H447_contig_1 -> H447_contig_1
 - Required columns (case-insensitive): qseqid, gene
 - Output delimiter is inferred from -o extension unless --output-sep is provided.
 
@@ -17,7 +17,6 @@ Install deps: pip install pandas
 
 import argparse
 import sys
-import re
 from pathlib import Path
 import pandas as pd
 
@@ -39,8 +38,7 @@ def main():
     ap.add_argument("--output-sep", default=None, help="Output delimiter (e.g. '\\t' for TSV). If not set, inferred by -o.")
     ap.add_argument("--qcol", default="qseqid", help="Genome id column name (default: qseqid). Case-insensitive.")
     ap.add_argument("--gcol", default="gene", help="Gene column name (default: gene). Case-insensitive.")
-    ap.add_argument("--qextract", default=r"^([^\s_]+)",
-                    help=r"Regex with one capture group to extract genome from qseqid (default: r'^([^\s_]+)')).")
+    # Use the qseqid value as the genome name (no extraction option)
     ap.add_argument("--no-sort", action="store_true", help="Do not sort rows/columns in the output.")
     args = ap.parse_args()
 
@@ -77,19 +75,9 @@ def main():
     df = df.dropna(subset=[qcol, gcol])
     df = df[(df[qcol] != "") & (df[gcol] != "")]
 
-    # Extract genome prefix from qseqid
-    try:
-        pattern = re.compile(args.qextract)
-    except re.error as e:
-        print(f"[ERROR] Invalid --qextract regex: {e}", file=sys.stderr)
-        sys.exit(3)
-
+    # Use qseqid as-is for genome name
     qraw = df[qcol].astype(str)
-
-    # First try regex group(1); fallback to first token split by underscore/whitespace
-    prefix = qraw.str.extract(pattern, expand=False)
-    fallback = qraw.str.split(r"[_\s]", n=1).str[0]
-    genome = prefix.fillna(fallback)
+    genome = qraw
 
     df["_genome"] = genome
 
