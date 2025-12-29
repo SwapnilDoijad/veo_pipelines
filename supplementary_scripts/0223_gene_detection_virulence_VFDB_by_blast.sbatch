@@ -59,11 +59,13 @@
 				# Default: best per (qseqid, gene, locus), gap 500 bp
 					# python best_hits.py -i blast.tsv -o best.tsv
 				# Stricter filters
+					## Swapnil - Keep --entity protein to prefer actual gene and avoid "Unknown"
 					python $suppl_scripts/$pipeline.filter.py \
 					-i $wd/all_results/$i.VFDB-blast.csv \
 					-o $wd/all_results/$i.VFDB-blast.tsv \
 					--mode query-locus \
-					--min-pident 70 --min-scovs 85
+					--entity protein \
+					--min-pident 70 --min-scovs 85 
 				# Simpler collapsing (keep 1 per gene per contig)
 					# python best_hits.py -i blast.tsv -o best.tsv --mode query-gene
 

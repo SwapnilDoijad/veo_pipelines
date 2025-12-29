@@ -48,11 +48,32 @@ def add_loci(df, gap):
     df["locus_id"] = locus_ids
     return df
 
-def best_by(df, keys):
-    order = keys + ["evalue","bitscore","pident","scovs"]
-    asc   = [True]*len(keys) + [True, False, False, False]
-    ranked = df.sort_values(order, ascending=asc, kind="mergesort")
-    return ranked.drop_duplicates(subset=keys, keep="first")
+def best_by(df, keys, prefer_entity_cols=None):
+    """Return best rows per `keys`.
+
+    If `prefer_entity_cols` is provided and contains columns present in `df`,
+    prefer rows where those entity columns are not 'Unknown' (or empty/none/na)
+    when choosing the best hit for a group.
+    """
+    df2 = df.copy()
+    add_unknown_flag = False
+    if prefer_entity_cols:
+        cols = [c for c in prefer_entity_cols if c in df2.columns]
+        if cols:
+            add_unknown_flag = True
+            known = pd.Series(False, index=df2.index)
+            for c in cols:
+                s = df2[c].fillna("").astype(str).str.strip().str.lower()
+                known = known | (~s.isin(["", "unknown", "none", "na", "n/a"]))
+            df2["_unknown_flag"] = (~known).astype(int)  # 0 = known, 1 = unknown
+
+    order = keys + (["_unknown_flag"] if add_unknown_flag else []) + ["evalue","bitscore","pident","scovs"]
+    asc   = [True]*len(keys) + ([True] if add_unknown_flag else []) + [True, False, False, False]
+    ranked = df2.sort_values(order, ascending=asc, kind="mergesort")
+    best = ranked.drop_duplicates(subset=keys, keep="first")
+    if add_unknown_flag:
+        best = best.drop(columns=["_unknown_flag"], errors="ignore")
+    return best
 
 def main():
     ap = argparse.ArgumentParser(description="Collapse BLAST hits by locus with subject coverage.")
@@ -110,7 +131,7 @@ def main():
     else:  # query-entity-locus
         keys = ["qseqid"] + entity_cols + ["locus_id"]
 
-    best = best_by(df_loci, keys)
+    best = best_by(df_loci, keys, entity_cols)
     # remove helper cols
     best = best.drop(columns=["qlo","qhi","locus_id"], errors="ignore")
 
