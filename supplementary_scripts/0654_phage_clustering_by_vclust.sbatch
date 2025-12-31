@@ -57,7 +57,7 @@
 	## -t is not available
 
 	## Create a heatmap
-	if [ figure == "yes" ]; then
+	if [ figure == "Yes" ]; then
 		log "Creating heatmap..."
 		source /home/groups/VEO/tools/biopython/myenv/bin/activate
 

@@ -30,7 +30,7 @@
             log "STARTED : $pipeline : sbatch for $sublist : $i "
 
             ## fasta should contain only upper case letters
-            python $suppl_scripts/utilities/reformat_fasta.low2upCaps.py \
+            python $suppl_scripts/utilities/reformat_fasta.py \
             -i $fasta_path/$i.fasta \
             -o $fasta_path/$i.fasta.tmp
 
