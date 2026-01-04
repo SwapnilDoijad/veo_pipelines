@@ -40,18 +40,21 @@
     log "ENDED: 0171_comparative_genomics_core_pan_by_panaroo pipeline"
 
     if [ "$tree" = "Yes" ]; then
-        log "Building tree based on core gene alignment"
+        log "FastTree: Building tree based on core gene alignment"
 
         /home/groups/VEO/tools/fastTreeMP/v2.2.0/FastTree \
         -nt -gtr \
         $raw_files/core_gene_alignment.aln \
         > $raw_files/core_gene_alignment.aln.fasttree
 
+        log "iqtree: Building tree based on core gene alignment"
         ## for bootstrapping use iq-tree
         /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
         -s $raw_files/core_gene_alignment.aln \
         -m GTR+G -bb 1000 -alrt 1000 -nt 80 -pre \
         $raw_files/core_gene_alignment.aln.iqtree
+
+
     fi
 
 
@@ -71,9 +74,14 @@
     # --threads 20 \
     # -o scoary_results 
 
+## for closely realted genomes
+    #  FastTree -nt -gtr -gamma -spr 4 -mlacc 3 -slow alignment.fasta > tree.nwk
 
+## snippy step
+    snp-dists $raw_files/core_gene_alignment.aln \
+    > $raw_files/core_gene_alignment.aln.snp-dist
 
-
+    
 ###############################################################################
     log "SBATCH ENDED : $pipeline ----------------------" && clean
 ###############################################################################
