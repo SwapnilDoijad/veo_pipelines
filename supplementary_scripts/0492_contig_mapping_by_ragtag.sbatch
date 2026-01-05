@@ -16,10 +16,10 @@
 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate ragtag_v2.1.0 
 	
 	while IFS=$'\t' read -r query ref; do 
+		query_id=$(echo $query | awk -F'/' '{print $NF}' | sed 's/.fasta//g')
+
 		if [ ! -f $wd/all_fasta/$query_id.fasta ]; then
 			log "STARTED: $query $ref"
-
-			query_id=$(echo $query | awk -F'/' '{print $NF}' | sed 's/.fasta//g')
 
 			ragtag.py scaffold \
 			$ref $query \
