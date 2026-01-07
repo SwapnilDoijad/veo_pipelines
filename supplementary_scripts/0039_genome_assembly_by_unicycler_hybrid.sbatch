@@ -15,7 +15,7 @@
     log "STARTED: $pipeline : $sublist"
 ###############################################################################
 ## step-02: unicycler assembly
-
+	source /home/groups/VEO/tools/biopython/myenv/bin/activate
 	while IFS=$'\t' read -r long_read illumina_R1 illumina_R2 ; do 
 		id=$(echo $long_read | awk -F'/' '{print $NF}' | sed 's/.fastq.gz//g')
 
@@ -35,25 +35,29 @@
 			& my_pid=$!
 			get_resource_stat $my_pid $wd/tmp/resource_log/$id.unicycler.tsv 
 
+			## as per graph, split contigs by component and merge (by 10N) those belong to a single component
+			python $suppl_scripts/$pipeline.split_by_component.py \
+            -i $raw_files/${i}/assembly.fasta \
+            -g $raw_files/${i}/assembly.gfa \
+            -o $raw_files/${i}/${i}
+
+            cat $raw_files/${i}/${i}_*.fasta \
+            > $raw_files/${i}/assembly.final.fasta
+
 			log "FINISHED: hybrid assembly for $id"
 
 			else
 			log "ALREADY FINISHED: hybrid assembly for $id"
 		fi
 	done < $sublist
- 
+	deactivate
 ###############################################################################
 ## step-03: post-assembly statistics and converting fasta files
 	for F1 in $long_read_id_list; do
 		if [ ! -f $wd/all_fasta/$F1.fasta ] ; then 
 			if [ -f $raw_files/$F1/assembly.fasta ]; then
 				log "copying files to all_fasta and all_fasta_joined"
-				cp $raw_files/$F1/assembly.fasta $wd/all_fasta/$F1.fasta
-				# cp $raw_files/$F1/assembly.fasta $raw_files/$F1/$F1.joined.fasta
-				# sed -i 's/>.*/NNNNNNNNNN/g' $raw_files/$F1/$F1.joined.fasta
-				# sed -i "1i "'>'$F1"" $raw_files/$F1/$F1.joined.fasta
-				# sed -i "\$aNNNNNNNNNN" $raw_files/$F1/$F1.joined.fasta
-				# cp $raw_files/$F1/$F1.joined.fasta $wd/all_fasta_joined/$F1.joined.fasta
+				cp $raw_files/$F1/assembly.final.fasta $wd/all_fasta/$F1.fasta
 			fi
 		fi
 	done
@@ -80,10 +84,10 @@
 			if [ ! -d $raw_files/$F1/quast/fasta ] ; then 
 				log "STARTED : metaquast for $F1"
 				mkdir -p $raw_files/$F1/quast/fasta
-				cp $raw_files/$F1/assembly.fasta \
+				cp $raw_files/$F1/assembly.final.fasta \
 				$raw_files/$F1/quast/fasta/
 
-				cp $raw_files/$F1/assembly.fasta \
+				cp $raw_files/$F1/assembly.final.fasta \
 				$wd/all_fasta/$F1.fasta
 
 				get_resource_stat "$wd"/tmp/resource_log/$F1.metaquast.tsv \

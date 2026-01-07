@@ -11,6 +11,7 @@
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     conda activate flye_v2.9.2
     sublist=$wd/tmp/lists/ABC
+    fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
 ############################################################################### 
 log "STARTED SBATCH : $pipeline : $sublist"
 ############################################################################### 
@@ -21,9 +22,12 @@ log "STARTED SBATCH : $pipeline : $sublist"
         if [ ! -d $raw_files/$i ]; then 
             log "STARTED : $i : flye"
 
-            flye --meta -t $SLURM_CPUS_PER_TASK \
-            --nano-raw $data_directory_fastq_path/$i.fastq.gz \
-            --out-dir $raw_files/$i ;
+            flye \
+            -t $SLURM_CPUS_PER_TASK \
+            --nano-raw $fastq_path/$i.fastq.gz \
+            --out-dir $raw_files/$i \
+            --genome-size 6m \
+            --plasmids \
 
             log "FINISHED : $i : flye"
             else

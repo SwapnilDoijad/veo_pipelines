@@ -1,13 +1,14 @@
 #!/bin/bash
 ###############################################################################
 ## header 
-
     pipeline=0048_genome_assembly_by_flye
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-    log "STARTED: $pipeline --------------------"
-
+	log "STARTED: $pipeline --------------------"
 ###############################################################################
-## step-01: preparation
+	fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
+    ls $fastq_path/ | awk -F'/' '{print $NF}' | sed 's/\.fastq\.gz//g' | sort | uniq  > list.$pipeline.txt
+    list=list.$pipeline.txt
+
     create_directories_structure_1 $wd
     split_list $wd $list
     submit_jobs $wd $pipeline
