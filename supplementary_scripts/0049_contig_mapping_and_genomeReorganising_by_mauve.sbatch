@@ -50,7 +50,7 @@
 
             /home/groups/VEO/tools/mauve/mauve_snapshot_2015-02-13/linux-x64/progressiveMauve \
             --output="$raw_files/viewing.xmfa" \
-            $fasta_path/*.fasta \
+            "$fasta_path"/*.fasta \
             & my_pid=$!
             get_resource_stat $my_pid $wd/tmp/resource_log/viewing.tsv 
     else
