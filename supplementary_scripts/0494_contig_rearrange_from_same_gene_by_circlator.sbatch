@@ -20,19 +20,22 @@
 ###############################################################################
 
 	for i in $(cat $sublist); do
+		if [ ! -d $raw_files/$i ] ; then 
+			log "STARTED: $i"
 
-		log "STARTED: $i"
+			mkdir -p $raw_files/$i
 
-		mkdir -p $raw_files/$i
+			circlator fixstart \
+			--genes_fa $start_gene_path \
+			$fasta_dir/$i.fasta \
+			$raw_files/$i/${i}_${start_gene_name}
 
-		circlator fixstart \
-		--genes_fa $start_gene_path \
-		$fasta_dir/$i.fasta \
-		$raw_files/$i/${i}_${start_gene_name}
+			cp $raw_files/$i/${i}_${start_gene_name}.fasta \
+			$wd/all_fasta_${start_gene_name}_rearranged_by_circlator/${i}_${start_gene_name}.fasta
 
-		cp $raw_files/$i/${i}_${start_gene_name}.fasta \
-		$wd/all_fasta_${start_gene_name}_rearranged_by_circlator/${i}_${start_gene_name}.fasta
-
+			else
+			log "ALREADY FINISHED: $i"
+		fi
 	done
 
 ############################################################################### 
