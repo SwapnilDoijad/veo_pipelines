@@ -12,6 +12,7 @@
 
 	fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
 	ani=$( grep my_ani $parameters | awk '{print $2}' )
+	cov=$( grep my_cov $parameters | awk '{print $2}' )
 	figure=$( grep my_figure $parameters | awk '{print $2}' )
     list=list.$pipeline.txt
 ###############################################################################
@@ -52,12 +53,14 @@
 	--ids $raw_files/ani.ids.tsv \
 	--metric ani \
 	--ani $ani \
+	--cov $cov \
+	--algorithm single \
 	& my_pid=$!
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.cluster.tsv
 	## -t is not available
 
 	## Create a heatmap
-	if [ figure == "Yes" ]; then
+	if [ "$figure" == "Yes" ]; then
 		log "Creating heatmap..."
 		source /home/groups/VEO/tools/biopython/myenv/bin/activate
 

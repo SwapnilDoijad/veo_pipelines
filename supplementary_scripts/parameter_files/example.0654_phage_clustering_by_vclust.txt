@@ -6,7 +6,15 @@ my_fasta_path	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complet
 
 ## do you need a figure? Yes or No. if more than 200 phages it takes more than 1 hour
 ## Keep No for metagenomes, as image generation will take long time
-my_figure   No
+my_figure	No
 
 ## ani
 my_ani	0.95
+
+## cov
+my_cov	0.95
+
+
+# ANI = identical nucleotides ÷ total aligned length. Only the regions that actually align between two contigs are considered.
+# gANI = identical nucleotides ÷ length of the query (or reference) genome. Same matches as ANI, but normalized by entire genome length, not just aligned parts.
+# tANI = identical nucleotides (A→B + B→A) ÷ (len(A) + len(B)). This measures similarity across both genomes, including unmatched regions.

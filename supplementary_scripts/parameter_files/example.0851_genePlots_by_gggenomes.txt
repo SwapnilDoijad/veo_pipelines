@@ -6,3 +6,7 @@ my_data_dir	results/0085_annotation_bacteria_by_bakta_esp_plsmd3/gff
 
 ## panaroo file for synteny blocks (optional)
 my_panaroo_file	results/0171_comparative_genomics_core_pan_by_panaroo_AY657002/raw_files/gene_presence_absence.csv
+
+## lable order file (optional) (the way isolates or plasmids are arranged you want)
+my_lable_file	results/0171_comparative_genomics_core_pan_by_panaroo_plasmid_3/raw_files/core_gene_alignment.aln.iqtree.treefile.lables
+

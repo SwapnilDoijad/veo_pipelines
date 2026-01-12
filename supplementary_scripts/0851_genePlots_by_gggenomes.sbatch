@@ -18,8 +18,7 @@
 
 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
 	conda activate genePlot_v0.0.1
-
-	if [ -f $panaroo_file ]; then
+	if [ -s "$panaroo_file" ]; then
 		log "RUNNING: genePlot : with panaroo_file"
 		bash /vast/xa73pav/projects/p_swapnil_genePlot/genePlot.sh \
 		-d "$data_directory" \

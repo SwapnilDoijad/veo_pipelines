@@ -54,7 +54,10 @@
         -m GTR+G -bb 1000 -alrt 1000 -nt 80 -pre \
         $raw_files/core_gene_alignment.aln.iqtree
 
-
+        python $suppl_scripts/utilities/export_phylogenomic_tip_labels.py \
+        -i $raw_files/core_gene_alignment.aln.iqtree.treefile \
+        -o $raw_files/core_gene_alignment.aln.iqtree.treefile.label 
+        
     fi
 
 
