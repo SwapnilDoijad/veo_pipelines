@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0048_genome_assembly_by_flye
-#SBATCH --partition=interactive
+#SBATCH --partition=long,standard,gpu,gpu-veo,fat
 #SBATCH --output results/0048_genome_assembly_by_flye/tmp/slurm/%j.out.0048_genome_assembly_by_fly
 #SBATCH --error results/0048_genome_assembly_by_flye/tmp/slurm/%j.err.0048_genome_assembly_by_fly
 #SBATCH --mem=50G
