@@ -29,3 +29,5 @@ write.tree(mytree, file = opt$output)
 
 # Plot the tree
 plot(treeUPGMA, main = "UPGMA")
+
+	
