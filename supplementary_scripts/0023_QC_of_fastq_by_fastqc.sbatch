@@ -15,9 +15,11 @@ fastq_path=$( grep my_fastq_path $parameters | awk '{print $2}' )
         log "RUNNING: $i"
 
         ( mkdir $raw_files/$i ) > /dev/null 2>&1
-        /home/groups/VEO/tools/fastqc/v0.12.1/fastqc -o $raw_files/$i \
+        /home/groups/VEO/tools/fastqc/v0.12.1/fastqc \
+        -o $raw_files/$i \
         -t $SLURM_CPUS_PER_TASK \
-        --memory 10000 -q $fastq_path/"$i"*.fastq.gz \
+        --memory 10000 \
+        -q $fastq_path/"$i"*.fastq.gz \
         & my_pid=$!
         get_resource_stat $my_pid $wd/tmp/resource_log/$i.fastqc.tsv 
 
