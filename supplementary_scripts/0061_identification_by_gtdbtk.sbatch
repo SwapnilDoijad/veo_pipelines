@@ -29,44 +29,83 @@
     source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
     conda activate gtdbtk_v2.4.1
 
-    if [ "$tree_choise" == "combined_genomes" ]; then
-    log "RUNNING: classify_wf $pipeline"
+    if [ "$tree_choise" == "identification" ]; then
+            log "RUNNING: classify_wf $pipeline"
 
-        gtdbtk classify_wf \
-        --cpus $SLURM_CPUS_PER_TASK \
-        --batchfile $sublist \
-        --out_dir $raw_files/$sublist \
-        --extension fasta \
-        --mash_db /veodata/03/databases/gtdbtk/release226/mash_file.msh \
-        & my_pid=$! 
-        get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.gtdbtk.tsv 
+            gtdbtk classify_wf \
+            --cpus $SLURM_CPUS_PER_TASK \
+            --batchfile $sublist \
+            --out_dir $raw_files/$sublist \
+            --extension fasta \
+            --mash_db /veodata/03/databases/gtdbtk/release226/mash_file.msh \
+            & my_pid=$! 
+            get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.gtdbtk.tsv 
 
-        log "FINISHED: classify_wf $pipeline"
+            log "FINISHED: classify_wf $pipeline"
 
         elif [ "$tree_choise" == "study_genomes" ]; then
-        log "RUNNING: de_novo_wf $pipeline"
+            log "RUNNING: de_novo_wf $pipeline"
 
-        gtdbtk de_novo_wf \
-        --batchfile $sublist \
-        --cpus $SLURM_CPUS_PER_TASK \
-        --extension fasta \
-        --bacteria \
-        --outgroup_taxon p__Firmicutes \
-        --out_dir $raw_files/$sublist \
-        & my_pid=$!
-        get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.gtdbtk_denovo.tsv
+            gtdbtk de_novo_wf \
+            --batchfile $sublist \
+            --cpus $SLURM_CPUS_PER_TASK \
+            --extension fasta \
+            --bacteria \
+            --outgroup_taxon p__Firmicutes \
+            --out_dir $raw_files/$sublist \
+            & my_pid=$!
+            get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.gtdbtk_denovo.tsv
 
-        gunzip $raw_files/list.0061_identification_by_gtdbtk.tmp/align/gtdbtk.bac120.user_msa.fasta.gz
+            gunzip $raw_files/list.0061_identification_by_gtdbtk.tmp/align/gtdbtk.bac120.user_msa.fasta.gz
 
-        /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
-        -s $raw_files/list.0061_identification_by_gtdbtk.tmp/align/gtdbtk.bac120.user_msa.fasta \
-        -m MFP \
-        -nt $SLURM_CPUS_PER_TASK \
-        -bb 1000 \
-        & my_pid=$!
-        get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.iqtree.tsv
+            /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
+            -s $raw_files/list.0061_identification_by_gtdbtk.tmp/align/gtdbtk.bac120.user_msa.fasta \
+            -m MFP \
+            -nt $SLURM_CPUS_PER_TASK \
+            -bb 1000 \
+            & my_pid=$!
+            get_resource_stat $my_pid $wd/tmp/resource_log/$sublist.iqtree.tsv
 
-        log "FINISHED: de_novo_wf $pipeline"
+            log "FINISHED: de_novo_wf $pipeline"
+
+        elif [ "$tree_choise" == "tree_for_study_isolates" ]; then
+
+            ## Run GTDB identify (only marker detection)
+            log "RUNNING: tree_for_study_isolates $pipeline"
+                gtdbtk identify \
+                --genome_dir $fasta_file_dir \
+                --extension fasta \
+                --out_dir $raw_files \
+                --cpus $SLURM_CPUS_PER_TASK
+            log "FINISHED: tree_for_study_isolates $pipeline"
+            ## Align markers (no classification!)
+            log "RUNNING: gtdbtk align $pipeline"
+                gtdbtk align \
+                --identify_dir $raw_files \
+                --out_dir $raw_files \
+                --cpus $SLURM_CPUS_PER_TASK
+
+                gunzip $raw_files/align/gtdbtk.bac120.user_msa.fasta.gz
+                gunzip $raw_files/align/gtdbtk.bac120.msa.fasta.gz
+            log "FINISHED: gtdbtk align $pipeline"
+                ## Build Tree with IQ-TREE (Recommended)
+                log "RUNNING: iqtree $pipeline"
+                    ## this takes time (but robust)
+                        /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
+                        -s $raw_files/align/gtdbtk.bac120.user_msa.fasta \
+                        -st AA \
+                        -m MFP \
+                        -bb 1000 \
+                        -alrt 1000 \
+                        -nt AUTO            
+
+                    ## relatively faster with fixed model (GTR+G) and no alrt support values
+                        # /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
+                        #     -s gtdb_trim/bac120.trimmed.fasta \
+                        #     -m GTR+G \
+                        #     -bb 1000 \
+                        #     -nt AUTO
+                log "FINISHED: iqtree $pipeline"
         
         else
         log "ERROR: Invalid tree choice specified in parameters file. Please use 'study_genomes' or 'combined_genomes'."

@@ -4,5 +4,8 @@
 ## example path is given below (change the path according to your data):
 my_fasta_dir	data/top5_close_relatives
 
-## Do you want tree only for your (study) genomes or combined with GTDBtk genome? study_genomes or combined_genomes
-my_tree_choise	study_genomes
+## Do you want 
+	# tree only for your (study) genomes: tree_for_study_isolates
+	# combined with GTDBtk genome?  	: combined_genomes 
+	# identification of (study) genomes	: identification
+my_tree_choise	tree_for_study_isolates
