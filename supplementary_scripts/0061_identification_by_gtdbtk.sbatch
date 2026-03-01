@@ -97,7 +97,7 @@
                         -m MFP \
                         -bb 1000 \
                         -alrt 1000 \
-                        -nt AUTO            
+                        -nt AUTO         
 
                     ## relatively faster with fixed model (GTR+G) and no alrt support values
                         # /home/groups/VEO/tools/iqtree/1.6.12/bin/iqtree \
@@ -105,6 +105,7 @@
                         #     -m GTR+G \
                         #     -bb 1000 \
                         #     -nt AUTO
+
                 log "FINISHED: iqtree $pipeline"
         
         else
