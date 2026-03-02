@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0135_phylogeny_by_fastANI
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu,gpu-test
 #SBATCH --output results/0135_phylogeny_by_fastANI/tmp/slurm/%j.out
 #SBATCH --error  results/0135_phylogeny_by_fastANI/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
@@ -26,6 +26,7 @@
         --ql $wd/tmp/list.fastANI.txt \
         --rl $wd/tmp/list.fastANI.txt \
         -o $wd/raw_files/output.csv \
+        --fragLen 1000 \
         --matrix \
         -t $SLURM_CPUS_PER_TASK 
 
@@ -39,16 +40,20 @@
 
     log "fastANI finished, will create matrix and tree"
 
-    sed -i -e 's/results\/0040_assembly\/all_fasta\///g' $wd/tmp/output.csv.matrix
+    cp $wd/tmp/output.csv.matrix $wd/tmp/output.csv.matrix.backup
+    sed -i "s/NA/0/g" $wd/tmp/output.csv.matrix
+    sed -i -e "s|$fasta_path/||g" $wd/tmp/output.csv.matrix
     sed -i "s/\.fasta//g" $wd/tmp/output.csv.matrix
 
-    sed -i "s/results\/0040_assembly\/all_fasta\///g" $wd/tmp/output.csv
+    cp $wd/tmp/output.csv $wd/tmp/output.csv.backup
+    sed -i "s/NA/0/g" $wd/tmp/output.csv
+    sed -i "s|$fasta_path/||g" $wd/tmp/output.csv
     sed -i "s/\.fasta//g" $wd/tmp/output.csv
 
 #------------------------------------------------------------------------------
 ## matrix-creation step
     cat $wd/tmp/output.csv.matrix | sed '1d' > $wd/tmp/all.distance.for_R.out.2.tab
-    cp $wd/tmp/all.distance.for_R.out.2.tab results/out.tab
+    cp $wd/tmp/all.distance.for_R.out.2.tab results/$pipeline/out.tab
     bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/transpose.mash.sh
     mv results/out.t.tab $wd/tmp/all.distance.for_R.out.t.tab
     awk 'NR==FNR{ a[NR+1]=$0 FS 0; next }{ sub(/^ +/,""); print (FNR==1)? 0:a[FNR],$0 } END{ print a[FNR+1] }' $wd/tmp/all.distance.for_R.out.2.tab $wd/tmp/all.distance.for_R.out.t.tab > $wd/tmp/all.distance.for_R.matrix.tab
@@ -57,7 +62,9 @@
 
     source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
     conda activate R
-    Rscript /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/plot_and_tree.fastANI-distance.r
+    Rscript /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/plot_and_tree.fastANI-distance.r \
+    -i $wd/all.ANI.tab \
+    -o $wd/fastANI_tree \
     mv "Rplots.pdf" $wd/
     mv tree.nwk $wd/
 ###############################################################################
