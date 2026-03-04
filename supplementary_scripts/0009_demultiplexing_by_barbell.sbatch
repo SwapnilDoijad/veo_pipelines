@@ -60,6 +60,8 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 ## for NON-kit based demultiplexing
     if [ $custom_primers == "Yes" ] ; then
 
+    for primer_id in $(cat $sublist ); do 
+    	echo $primer_id
 
         mkdir $raw_files/${primer_id}
         mkdir $raw_files/${primer_id}/fastq
@@ -179,7 +181,7 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
         	    echo -e "${primer_id}\t${i}\t${reads}" >> $wd/summary.reads_per_primer.${suffix}.txt
             done
 
-
+    done
     fi
 
 ###############################################################################
