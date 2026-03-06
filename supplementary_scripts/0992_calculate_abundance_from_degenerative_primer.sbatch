@@ -503,7 +503,7 @@
                                 cat $raw_files/read_ids_extracted/list.$barcode_FR.$barcode_RC.read_ids_present_in_both_FR_RC.$mismatch.$subsample.txt \
                                 >> $raw_files/read_ids_extracted/list.$sample.read_ids_present_in_both_FR_RC.$mismatch.$subsample.txt.tmp
                             done
-                        done < "$bp/samples/$sample/list.barcodes_all.FR.txt" 3< "$bp/samples/$sample/list.barcodes_all.RC.txt"
+                        done code< "$bp/samples/$sample/list.barcodes_all.FR.txt" 3< "$bp/samples/$sample/list.barcodes_all.RC.txt"
                     fi
 
                     ## VERY VERY IMP: Remove duplicate reas ids. Beacuase of cat command in above loop, there are duplicates read ids (generated from same primer sequence), and need to remove 
