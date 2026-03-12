@@ -68,7 +68,8 @@
                 if [ ! -f $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz.read_count ] ; then
                     log "STARTED: counting reads in raw_reads.no_trim.fastq.gz"
 
-                    count_reads_from_fastq $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz \
+                    count_reads_from_fastq \
+                    $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz \
                     > $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz.read_count
                 fi
 

@@ -3,21 +3,44 @@ import numpy as np
 from datetime import datetime, timedelta
 
 # Read data from the input file
-with open('/home/xa73pav/scripts/general_maintainance/tmp/logs/002/users_activity.tsv', 'r') as file:
-    lines = file.readlines()
+input_path = '/home/xa73pav/scripts/general_maintainance/tmp/logs/002/users_activity.tsv'
+try:
+    with open(input_path, 'r') as file:
+        lines = file.readlines()
+except FileNotFoundError:
+    raise SystemExit(f"Input file not found: {input_path}")
 
 # Process the data
 names = []
 data_3rd_column = []
 data_4th_column = []
 for line in lines:
-    parts = line.strip().split('\t')  # Split by tab
-    # Skip rows where either the 3rd or 4th column is 0
-    if float(parts[2]) == 0 or float(parts[3]) == 0:
+    line = line.strip()
+    if not line:
         continue
-    names.append(parts[0])
-    data_3rd_column.append(float(parts[2]))
-    data_4th_column.append(float(parts[3]))
+    parts = line.split('\t')  # Split by tab
+    # Need at least 3 columns (name + two numeric columns)
+    if len(parts) < 3:
+        continue
+    # Interpret the last two columns as the numeric values (handles leading tabs)
+    try:
+        v3 = float(parts[-2])
+        v4 = float(parts[-1])
+    except (ValueError, IndexError):
+        continue
+    # Skip rows where either numeric column is 0
+    if v3 == 0 or v4 == 0:
+        continue
+    # Use the remaining fields (everything except the last two) as the name.
+    # Join with spaces and remove non-printable/control characters to avoid glyph warnings
+    raw_name = ' '.join(p for p in parts[:-2] if p).strip()
+    # Remove non-printable characters (e.g., tabs, control codes)
+    name = ''.join(ch for ch in raw_name if ch.isprintable())
+    if not name:
+        name = 'unknown'
+    names.append(name)
+    data_3rd_column.append(v3)
+    data_4th_column.append(v4)
 
 # Set the width of the bars
 bar_width = 0.35
