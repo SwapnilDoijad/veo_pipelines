@@ -3,7 +3,7 @@
 #SBATCH --partition=standard,long,interactive
 #SBATCH --output=results/0227_gene_detection_by_lsBSR/tmp/slurm/%j.out
 #SBATCH --error=results/0227_gene_detection_by_lsBSR/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=80
+#SBATCH --cpus-per-task=20
 #SBATCH --mem=100G
 ###############################################################################
 ## step-01: preparation
@@ -51,3 +51,23 @@
 
     log "FINISHED : $pipeline : $sublist"
 ###############################################################################
+exit 
+/home/groups/VEO/tools/blast/v2.14.0/bin/makeblastdb -in /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/discarded/fasta_esp_unarranged/i2_7.fasta -dbtype nucl
+
+/home/groups/VEO/tools/blast/v2.14.0/bin/blastn \
+  -query /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/gene/nod_all_core_N741.fasta \
+  -db /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/discarded/fasta_esp_unarranged/i2_7.fasta \
+  -outfmt "6 qseqid sseqid pident length evalue bitscore" \
+  -evalue 1e-5 \
+  -num_threads $SLURM_CPUS_PER_TASK \
+  > nod_hits.tsv
+
+/home/groups/VEO/tools/blast/v2.14.0/bin/makeblastdb -in /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/discarded/fasta_esp_unarranged/Y2_6.fasta -dbtype nucl
+
+/home/groups/VEO/tools/blast/v2.14.0/bin/blastn \
+  -query /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/gene/nod_all_core_N741.fasta \
+  -db /vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/data/discarded/fasta_esp_unarranged/Y2_6.fasta \
+  -outfmt "6 qseqid sseqid pident length qlen qcovs evalue bitscore sstart send sstrand" \
+  -evalue 1e-5 \
+  -num_threads $SLURM_CPUS_PER_TASK \
+  > nod_hits.tsv
