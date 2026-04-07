@@ -26,9 +26,9 @@
 	log "Prefiltering similar genome sequence pairs..."
 	python3.9 /home/groups/VEO/tools/vclust/v1.2.7/vclust/vclust.py \
 	prefilter \
-	-i $raw_files/all.fna \
-	-o $raw_files/fltr.txt \
-	-t $SLURM_CPUS_PER_TASK  \
+	-i ${raw_files}/all.fna \
+	-o ${raw_files}/fltr.txt \
+	-t ${SLURM_CPUS_PER_TASK} \
 	& my_pid=$!
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.prefilter.tsv
 
@@ -36,21 +36,21 @@
 	log "Aligning similar genome sequence pairs..."
 	python3.9 /home/groups/VEO/tools/vclust/v1.0.0/vclust.py \
 	align \
-	-i $raw_files/all.fna  \
-	-o $raw_files/ani.tsv \
-	--filter $raw_files/fltr.txt \
-	-t $SLURM_CPUS_PER_TASK \
+	-i ${raw_files}/all.fna  \
+	-o ${raw_files}/ani.tsv \
+	--filter ${raw_files}/fltr.txt \
+	-t ${SLURM_CPUS_PER_TASK} \
 	& my_pid=$!
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.align.tsv
 
 	## Cluster genome sequences based on given ANI measure and minimum threshold.
-		## Dont care for the length-coverage (thus,fragment or complete phage belong to single phage in cluster)
+		## Dont care for the length-coverage (thus, fragment or complete phage belong to single phage in cluster)
 	log "Clustering genome sequences..."
 	python3.9 /home/groups/VEO/tools/vclust/v1.0.3/vclust.py \
 	cluster \
-	-i $raw_files/ani.tsv \
-	-o $raw_files/clusters.tsv \
-	--ids $raw_files/ani.ids.tsv \
+	-i ${raw_files}/ani.tsv \
+	-o ${raw_files}/clusters.tsv \
+	--ids ${raw_files}/ani.ids.tsv \
 	--metric ani \
 	--ani $ani \
 	--cov $cov \
