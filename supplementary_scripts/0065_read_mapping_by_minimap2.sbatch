@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=0065_read_mapping_by_minimap2
-#SBATCH --partition=short
+#SBATCH --partition=standard,long,gpu,gpu-veo,gpu-test,fat
 #SBATCH --output=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.out.txt
 #SBATCH --error=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.err.txt
 #SBATCH --mem=200G
-#SBATCH --cpus-per-task=20
+#SBATCH --cpus-per-task=40
 #SBATCH --exclusive
 ###############################################################################
 pipeline=0065_read_mapping_by_minimap2

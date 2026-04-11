@@ -29,6 +29,8 @@ data/my_fasta/canu.barcode04.fasta	data/my_fasta/barcode04.fastq.gz
 data/my_fasta/canu.barcode07.fasta	data/my_fasta/barcode07.fastq.gz
 
 ## for SNP annotation by snpEff, need to specify the REFERENCE genbank file for every fasta
+	## note that, if you are mapping only fastqs to a single reference then there can be one reference fasta and one genbank for all files
+	## data/my_fasta/ref.genbank.fasta	data/my_genBank/ref.genbank.gbff
 #assembly_or_fasta_ids	genBank_filepath
 data/my_fasta/canu.barcode01.fasta	data/my_genBank/ref.gb
 data/my_fasta/canu.barcode04.fasta	data/my_genBank/ref.gb
