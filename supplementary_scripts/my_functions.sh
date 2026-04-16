@@ -106,6 +106,17 @@ count_number_of_sequences_in_fasta() {
 
 }
 
+count_bases() {
+    file="$1"
+
+    if [[ "$file" == *.gz ]]; then
+        cmd="zcat"
+    else
+        cmd="cat"
+    fi
+
+    $cmd "$file" | awk 'NR % 4 == 2 {total += length($0)} END {print total}'
+}
 # Function to get individual sequence length of all sequences in FASTA 
 get_fasta_lengths() {
     local fasta_file="$1"
