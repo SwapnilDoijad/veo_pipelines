@@ -11,12 +11,15 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
     pipeline=0009_demultiplexing_by_barbell
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     fastq_file_path=$(grep "my_fastq_path" $parameters | awk '{print $2}')
-    sublist=$wd/tmp/lists/ABC
     cpus=$SLURM_CPUS_PER_TASK
+    list=list.${pipeline}.txt
+
 
     export CARGO_HOME=/home/groups/VEO/tools/cargo 
     export RUSTUP_HOME=/home/groups/VEO/tools/rust 
     barbell="/home/groups/VEO/tools/barbell/v0.3.0/barbell/target/release/barbell"
+    barbell="/home/groups/VEO/tools/cargo/bin/barbell" # v0.3.2
+
     kit=$( grep my_kit $parameters | awk '{print $2}' )
     custom_primers=$( grep my_custom_primers $parameters | awk '{print $2}' )
     F_primer=$(grep my_F_primer $parameters | awk '{print $2}')
@@ -43,31 +46,23 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 ## kit-based demultiplexing
     if [ $custom_primers == "No" ] ; then
 
-        for i in $( cat $sublist ) ; do
-            mkdir -p $raw_files/$i
+            mkdir -p $raw_files
             # Annotate
-            $barbell kit -k $kit -i $fastq_file_path/$i.fastq -o $raw_files/$i --maximize
+            $barbell kit -k $kit -i $fastq -o $raw_files/$i --maximize
             
             # Trim
             $barbell trim \
                 -i $raw_files/$i/filtered.tsv \
                 -r "$raw_fastq" \
                 -o $raw_files/trimmed
-        done 
 
     fi
 ############################################################################### 
 ## for NON-kit based demultiplexing
     if [ $custom_primers == "Yes" ] ; then
 
-    for primer_id in $(cat $sublist ); do 
-    	echo $primer_id
-
-        mkdir $raw_files/${primer_id}
-        mkdir $raw_files/${primer_id}/fastq
-
-        F_FILES=($wd/tmp/primers/mut*_F.txt)
-        R_FILES=($wd/tmp/primers/mut*_R.txt)
+        mapfile -t F_FILES < <(printf '%s\n' "$wd"/tmp/primers/mut*_F.txt | sort -V)
+        mapfile -t R_FILES < <(printf '%s\n' "$wd"/tmp/primers/mut*_R.txt | sort -V)
 
         F_LIST=$(IFS=,; echo "${F_FILES[*]}")
         R_LIST=$(IFS=,; echo "${R_FILES[*]}")
@@ -76,16 +71,22 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
         R_TAGS=$(printf 'Rtag,'%.0s "${R_FILES[@]}")
         TAGS="${F_TAGS}${R_TAGS%,}"
 
-        barbell annotate -q "${F_LIST},${R_LIST}" -b "${TAGS}"
-
         ## annotate reads
-            $barbell annotate \
-            -i $fastq \
-            -q $wd/tmp/primers/${primer_id}_F_primers.txt,$wd/tmp/primers/${primer_id}_R_primers.txt \
-            -b Ftag,Rtag \
-            -o $raw_files/${primer_id}/annotations.tsv \
-            -t 16 > $raw_files/${primer_id}/log.annotate.txt 2>&1
+        if [ ! -f $raw_files/annotations.tsv ] ; then
+            log "Annotating reads"
 
+            $barbell annotate \
+            -q "${F_LIST},${R_LIST}" -b "${TAGS}" \
+            -i $fastq \
+            -o $raw_files/annotations.tsv \
+            -t $SLURM_CPUS_PER_TASK 
+
+            awk -F'\t' '{print $13}' $raw_files/annotations.tsv | sort | uniq -c | awk '{print $2, $1}' > $raw_files/annotations.summary.tsv
+
+            else
+            log "Annotation file already exists. Skipping annotation step."
+        fi
+    ############################################################################### 
                 ## Optional : inspect patterns per read and manually create filters
                     ## genereally
                             ## Single-end left Ftag
@@ -115,37 +116,53 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
             # 3 mut1_4_R        # wrong reads due to * in filter
             # 9 mut1_5_F        # wrong reads due to * in filter
             # 10 mut1_5_R       # wrong reads due to * in filter
-
-                sed "s/\*/~$primer_id/g" $suppl_scripts/$pipeline.${suffix}.txt \
-                > $wd/tmp/filters/filters.${primer_id}.txt
+    ############################################################################### 
+        for primer_id in $( cat $list ); do
+            sed "s/\*/~$primer_id/g" ${suppl_scripts}/$pipeline.${suffix}.txt \
+            > $wd/tmp/filters/filters.${primer_id}.txt
+        done
+    ############################################################################### 
+    ## Filter
+        for primer_id in $( cat $list ); do
+                mkdir -p $raw_files/${primer_id}/fastq
 
                 $barbell filter \
-                -i $raw_files/${primer_id}/annotations.tsv \
+                -i $raw_files/annotations.tsv \
                 -f $wd/tmp/filters/filters.${primer_id}.txt \
                 -o $raw_files/${primer_id}/filtered.txt \
                 > $raw_files/${primer_id}/log.filter.txt 2>&1
 
-            ## retain only reads with up to 2 mismatches in barcode and flanking regions 
-                awk -F'\t' 'NR==1 || $12 <= 2 || $11 <= 2' $raw_files/${primer_id}/filtered.txt \
-                > $raw_files/${primer_id}/filtered.lowcost.txt 
+            ## aditional step for extra barcode cost
+            ## retain only reads with up to X mismatches in flanking ($11) and barcode ($12) cost 
+            ## Nanopore fank should be loose 10 (as its a flank and will have low QC)
+                awk -F'\t' 'NR==1 || ($11 <= 10 && $12 <= 2)' \
+                "$raw_files/${primer_id}/filtered.txt" \
+                > "$raw_files/${primer_id}/filtered.lowcost.txt"
 
-    
-        if [ $primer_sequences == "Single" ] ; then
-            ## single-end trimming
-            	$barbell trim \
-            	-i $raw_files/${primer_id}/filtered.lowcost.txt \
-            	-r $fastq \
-            	-o $wd/fastq \
-            	>> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
+                python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0009_demultiplexing_by_barbell.count.py \
+                -p results/0009_demultiplexing_by_barbell/tmp/list.primers.txt \
+                -i results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv \
+                -o results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv.F10B2.tsv \
+                -f 10 \
+                -b 2
 
-        elif [ $primer_sequences == "Dual" ] || [ $primer_sequences == "Both" ] ; then
-            ## dual-end or both trimming
-            	$barbell trim \
-            	-i $raw_files/${primer_id}/filtered.lowcost.txt \
-            	-r $fastq \
-            	-o $raw_files/${primer_id}/fastq \
-            	>> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
-        fi
+            if [ $primer_sequences == "Single" ] ; then
+                ## single-end trimming
+                    $barbell trim \
+                    -i $raw_files/${primer_id}/filtered.lowcost.txt \
+                    -r $fastq \
+                    -o $wd/fastq \
+                    >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
+
+            elif [ $primer_sequences == "Dual" ] || [ $primer_sequences == "Both" ] ; then
+                ## dual-end or both trimming
+                    $barbell trim \
+                    -i $raw_files/${primer_id}/filtered.lowcost.txt \
+                    -r $fastq \
+                    -o $raw_files/${primer_id}/fastq \
+                    >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
+            fi
+
 
 
         ## combine files and reverse complement as needed
@@ -180,8 +197,6 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                 reads=$( count_reads_from_fastq	$wd/fastq/${i}.fastq )
         	    echo -e "${primer_id}\t${i}\t${reads}" >> $wd/summary.reads_per_primer.${suffix}.txt
             done
-
-    done
     fi
 
 ###############################################################################
