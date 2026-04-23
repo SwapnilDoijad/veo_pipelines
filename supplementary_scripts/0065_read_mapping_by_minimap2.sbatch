@@ -82,6 +82,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 if [ ! -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam.gz ] ; then
                     log "STARTED : mapping $fastq_id on $assembly_id using minimap2"
                     /home/groups/VEO/tools/minimap2/v2.26/minimap2 -x $read_type_input -a \
+                    --secondary=no \
                     -t $SLURM_CPUS_PER_TASK \
                     $raw_files/index_files/$assembly_id.fasta.mmi \
                     $fastq_id_path/$fastq_id.fastq.gz \
@@ -221,21 +222,21 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 
                 /home/groups/VEO/tools/freebayes/v1.3.6/freebayes \
                     --ploidy 1 \
-                    --min-alternate-fraction 0.001 \
-                    --min-alternate-count 1 \
+                    --min-alternate-fraction 0.01 \
+                    --min-alternate-count 3 \
                     --min-mapping-quality 30 \
                     --min-base-quality 20 \
-                    --use-best-n-alleles 3 \
+                    --use-best-n-alleles 2 \
                     -f $assembly_id_path/"$assembly_id".fasta \
                     $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
                     > $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf
 
                     ## --ploidy 1 : haploid genome for e.g. phage 
-                    ## --min-alternate-fraction 0.001 : minimum fraction of alternate bases to call a variant (at least 0.1% or 1/1000 of the reads need to support the alternate allele)
-                    ## --min-alternate-count 1 : minimum number of alternate bases to call a variant (minimum number of reads supporting the alternate allele for it to be considered a variant.)
-                    ## --min-mapping-quality 10 : minimum mapping quality to consider a read for variant calling (minimum mapping quality a read must have to be considered in the variant calling process.)
+                    ## --min-alternate-fraction 0.01 : minimum fraction of alternate bases to call a variant (at least 1% or 1/100 of the reads need to support the alternate allele)
+                    ## --min-alternate-count 3 : minimum number of alternate bases to call a variant (minimum number of reads supporting the alternate allele for it to be considered a variant.)
+                    ## --min-mapping-quality 30 : minimum mapping quality to consider a read for variant calling (minimum mapping quality a read must have to be considered in the variant calling process.)
                     ## --min-base-quality 20 : minimum base quality to consider a base for variant calling (the minimum base quality for a base to be considered in variant calling.)
-                    ## --use-best-n-alleles 1: Limits the analysis to the best 1 allele per position, which can reduce noise and help in situations where one allele is dominan
+                    ## --use-best-n-alleles 2: Limits the analysis to the best 2 alleles per position, which can reduce noise and help in situations where one allele is dominant.
                 
                     # 2024-11-08 16:17:53
                     # compress vcf file and get normalised vcf file (complex SNPs are split into multiple lines)    
@@ -274,15 +275,15 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 -i $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
                 -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.tsv
 
-                # QUAL>=20: Filters variants to include only those with a quality score (QUAL) greater than or equal to 20. A higher quality score indicates a higher confidence in the variant call.
-                # FORMAT/DP>=10: Filters variants to include only those with a depth of coverage (DP) of 10 or more. Depth of coverage refers to how many reads support the variant at that position.
+                # QUAL>=30: Filters variants to include only those with a quality score (QUAL) greater than or equal to 30. A higher quality score indicates a higher confidence in the variant call.
+                # FORMAT/DP>=20: Filters variants to include only those with a depth of coverage (DP) of 20 or more. Depth of coverage refers to how many reads support the variant at that position.
                 # INFO/NUMALT<=2: To filter out sites with more than one alternate allele (which are more likely to be complex), you can use the INFO/NUMALT field to exclude these multi-allelic calls:
-                # AF>=0.00001: frequency of 1 in 100,000 alleles. Filters variants where the allele frequency (AF) is at least 0.00001. Allele frequency represents the proportion of reads supporting the alternate allele versus the total number of reads.
+                # AF>=0.01: frequency of 1 in 100 alleles. Filters variants where the allele frequency (AF) is at least 0.01. Allele frequency represents the proportion of reads supporting the alternate allele versus the total number of reads.
 
                 # 2025-02-12 13:13:25 @Swapnil "for Wallapat P1L1 and P2L1 I have used  -i 'QUAL>=20 && FORMAT/DP>=1 && INFO/NUMALT<=2 && AF>=0.00001'"
                 log "STARTED : filtering freebayes variants for $assembly_id.$fastq_id" 
                 /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools filter \
-                    -i 'QUAL>=20 && FORMAT/DP>=1 && INFO/NUMALT<=2 && AF>=0.00001' \
+                    -i 'QUAL>=30 && FORMAT/DP>=20 && INFO/NUMALT<=2 && AF>=0.01' \
                     $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf \
                     -Oz -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
 
@@ -312,11 +313,9 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 -o $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.tsv.split.vcf
 
                 deactivate
-                
 
-
-                rm $raw_files/vcf/*.gz
-                rm $raw_files/vcf/*.gz.tbi
+                rm $raw_files/vcf/$assembly_id.$fastq_id*.gz
+                rm $raw_files/vcf/$assembly_id.$fastq_id*.gz.tbi
             fi
 
             ## snpEff 
