@@ -11,7 +11,7 @@
     if [  "$input_file_type" == "f" ] ; then 
         ls $data_path/ | sed 's/\.fasta//g' > list.$pipeline.txt
     elif [ "$input_file_type" == "r" ] ; then
-        ls $data_path/ | sed 's/_R1.fastq.gz//g' | sed 's/_R2.fastq.gz//g' | sort -u > list.$pipeline.txt
+        ls $data_path/ | sed 's/_R1.fastq.gz//g' | sed 's/_R2.fastq.gz//g' | sed 's/.fastq.gz//g' | sort -u > list.$pipeline.txt
     fi
 
     list=list.$pipeline.txt

@@ -1,11 +1,11 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0062_identification_by_kraken2
-#SBATCH --partition=standard
+#SBATCH --partition=gpu-veo,fat,gpu-test,gpu
 #SBATCH --output=results/0062_identification_by_kraken2/tmp/slurm/%j.out
 #SBATCH --error=results/0062_identification_by_kraken2/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=25
-#SBATCH --mem=100G
+#SBATCH --mem=200G
 ###############################################################################
 pipeline=0062_identification_by_kraken2
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
@@ -60,11 +60,60 @@ log "database: $database"
 
             done
 
+        elif [ "$input_file_type" == "n" ] ; then
+            echo -e "IDs\ttotal_reads\tmicrobe_reads\teukaryote_reads" > $wd/report.nanopore.tsv
+
+            for F1 in $(cat $sublist ); do
+                if [ ! -f $raw_files/$F1/report.txt ]; then
+                    log "running kraken2 (nanopore raw_reads) for $F1"
+                    ( mkdir $raw_files/$F1 ) > /dev/null 2>&1  
+
+                        # --confidence 0.1          reduces false positives from ONT errors
+                        # --minimum-hit-groups 3    stronger evidence required              
+                        # --classified-out          reads assigned to taxa                  
+                        # --unclassified-out        useful microbial leftovers / unknowns   
+                        # --use-names               readable output                         
+
+                    $tools/kraken2/v2.1.2/kraken2 \
+                    --db $database \
+                    --threads $SLURM_CPUS_PER_TASK \
+                    --use-names \
+                    --gzip-compressed \
+                    --confidence 0.1 \
+                    --minimum-hit-groups 3 \
+                    --report $raw_files/$F1/"$F1".report.txt \
+                    --output $raw_files/$F1/"$F1".out.txt \
+                    --classified-out $raw_files/$F1/"$F1"_"classified".fastq.gz \
+                    --unclassified-out $raw_files/$F1/"$F1"_"unclassified".fastq.gz \
+                    $data_dir/"$F1".fastq.gz
+
+
+                        # -t 2759 = removing taxids Eukaryota + descendants
+                    python3 /home/groups/VEO/tools/krakentools/v1.2/KrakenTools/extract_kraken_reads.py \
+                    -k $raw_files/$F1/"$F1".out.txt \
+                    -s $data_dir/"$F1".fastq.gz \
+                    -o $raw_files/$F1/"$F1"_microbes.fastq \
+                    -t 2759 \
+                    -r $raw_files/$F1/"$F1".report.txt \
+                    --include-children \
+                    --exclude \
+                    --fastq-output
+
+                    gzip $raw_files/$F1/"$F1"_microbes.fastq
+
+                    total_reads=$(count_reads_from_fastq $data_dir/"$F1".fastq.gz)
+                    microbe_reads=$( count_reads_from_fastq $raw_files/$F1/"$F1"_microbes.fastq.gz )
+                    eukaryote_reads=$(( total_reads - microbe_reads ))
+                    echo -e "$F1\t$total_reads\t$microbe_reads\t$eukaryote_reads" >> $wd/report.nanopore.tsv
+                fi
+
+            done
+
         A1=$(awk -F'\t' ' $4=="S" {print $0}' $raw_files/$F1/report.txt | head -1 | sed 's/                  //g' | sed 's/ /_/g' )
         echo -e "$F1\t$A1" >> $wd/report.csv
 
     fi
-%               Name
+
 ###############################################################################
     log "FINISHED: $pipeline : $sublist" && clean
 ###############################################################################

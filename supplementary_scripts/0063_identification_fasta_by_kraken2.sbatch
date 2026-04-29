@@ -7,7 +7,10 @@
 #SBATCH --cpus-per-task=80
 ###############################################################################
 ## header
+    pipeline=0061_identification_by_gtdbtk
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     start_time=$(date +"%Y%m%d_%H%M%S")
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate perl_v5.32.1
 ###############################################################################
     sublist=results/0063_identification_fasta_by_kraken2/tmp/lists/ABC
     fasta_file_path=XYZ
@@ -15,7 +18,7 @@
     echo "kraken2 $sublist:: running"
 
     for F1 in $(cat $sublist ); do
-        if [ ! -f results/0063_identification_fasta_by_kraken2/raw_files/$F1.report.txt ] ; then 
+        if [ ! -f $raw_files/$F1.report.txt ] ; then 
             current_line_number=$(grep -n -w "$F1" $sublist | awk -F':' '{print $1}')
             echo "kraken2 for $F1 ($current_line_number/$number_of_lines): running"
 

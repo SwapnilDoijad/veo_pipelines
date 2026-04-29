@@ -1,14 +1,16 @@
 ## This is a parameter file for 0062_identification_by_kraken2 pipeline
-## please give a path of a single folder in which all fasta (or fastq) files are stored
-## note that all files should end with .fasta
+## please give a path of a single folder in which all fasta or fastq files are stored
+## note that all files should end with .fasta or .fastq.gz
 ## example path is given below (change the path according to your data):
 my_data_dir	results/0041_genome_assembly_by_shovill/all_fasta
 
-## Classification based on fasta (f) or raw reads (r), type f or r
+## Classification based on fasta (f) or raw reads (r), nanopore reads (n) type f or r or n
 my_input_file_type	r
 
 ## database
 ## kraken2 database: /veodata/03/databases/kraken2/v20250204
 ## refseq: /veodata/03/databases/kraken2/kraken2_Bracken_RefSeq_indexex_v202401
 ## core_nt: /veodata/03/databases/kraken2/v20250204_core_nt
-my_database /veodata/03/databases/kraken2/v20250204_core_nt
+## Standard plus Refseq protozoa, fungi & plant: /veodata/03/databases/kraken2/20251015_k2_pluspfp
+my_database	/veodata/03/databases/kraken2/v20250204_core_nt
+
