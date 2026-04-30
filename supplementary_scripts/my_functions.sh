@@ -268,6 +268,15 @@ create_directories_structure_1() {
     cp tmp/parameters/$pipeline.* "$wd"/tmp/ > /dev/null 2>&1
 }
 
+create_directories_structure_snakemake() {
+    mkdir -p "$1"/raw_files > /dev/null 2>&1
+    mkdir -p "$1"/tmp/resource_log > /dev/null 2>&1
+    cp $suppl_scripts/configs/$pipeline.nf.config "$1"/tmp/ > /dev/null 2>&1
+    # cp tmp/parameters/$pipeline.* "$wd"/tmp/ > /dev/null 2>&1
+    cp $suppl_scripts/$pipeline.nf "$1"/tmp/ > /dev/null 2>&1
+    cp $suppl_scripts/parameter_files/${pipeline}.nf.params.yaml "$1"/tmp/ > /dev/null 2>&1
+}
+
 ## submit jobs 
 ## submit_jobs "/your/working/directory" "your_pipeline"
 submit_jobs() {
