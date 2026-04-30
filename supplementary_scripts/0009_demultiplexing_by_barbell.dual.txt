@@ -1,0 +1,2 @@
+Ftag[fw, *, @left(0..250), >>]__Rtag[<<, rc, *, @right(0..250)]
+Rtag[fw, *, @left(0..250), >>]__Ftag[<<, rc, *, @right(0..250)]

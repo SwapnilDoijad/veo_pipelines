@@ -1,0 +1,9 @@
+## This is a parameter file for 0230_mlst_by_MLST pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_dir	data/ncbi_datasets/fasta
+
+## scheme? give the name of the scheme. 
+## if you dont know then can find by source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh && conda activate mlst_v2 && mlst --list 
+my_mlst_scheme	listeria_2

@@ -5,7 +5,7 @@
 #SBATCH --output=results/0062_identification_by_kraken2/tmp/slurm/%j.out
 #SBATCH --error=results/0062_identification_by_kraken2/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=25
-#SBATCH --mem=200G
+#SBATCH --mem=500G
 ###############################################################################
 pipeline=0062_identification_by_kraken2
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh

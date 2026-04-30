@@ -1,0 +1,4 @@
+## This is a parameter file for 0048_genome_assembly_by_flye pipeline
+## please give a path of a single folder in which all fastq.gz files are stored
+## example path (change the path according to your data):
+my_fastq_path	/vast/xa73pav/projects/p_swapnil_rhizobium_paper_250101/results_arranged_genomes/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/raw_files/02_pod5_to_demultiplex/Y2_6_fastq
