@@ -294,6 +294,7 @@
     ## this step the barcodes and adapters will be trimmed and its important for the genome sequencing
     
     if [[ $type_of_sequencing == "genome" ]] ; then 
+    if [[ $duplex == "No" ]] ; then
         ## basecalling + in line demultiplexing
         # if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ] ; then
             log "STARTED: 02_pod5_to_demux : basecalling + in line demultiplexing"
@@ -350,6 +351,7 @@
             log "ALREADY FINISHED: 02_pod5_to_demux : basecalling + in line demultiplexing"
         # fi 
     fi 
+    fi
 
 ###############################################################################  
 ## step-03: 03_pod5_to_demux_DUPLEX duplex
@@ -366,8 +368,8 @@
 
                 if [ ! -f $raw_files/03_pod5_to_demux_DUPLEX/raw_reads.bam ]; then 
                     $dorado \
-                    duplex sup \
-                    $data_directory_pod5_path/ 
+                    duplex /home/groups/VEO/tools/dorado/v0.9.1/models/dna_r10.4.1_e8.2_400bps_sup@v4.3.0 \
+                    $data_directory_pod5_path/ \
                     > $raw_files/03_pod5_to_demux_DUPLEX/raw_reads.bam
                 fi 
 
