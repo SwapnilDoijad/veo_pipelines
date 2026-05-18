@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0009_demultiplexing_by_barbell
-#SBATCH --partition=short,standard,long,interactive,gpu-veo,gpu
+#SBATCH --partition=short,standard,long,interactive,gpu-veo,gpu,gpu-test
 #SBATCH --output=results/0009_demultiplexing_by_barbell/tmp/slurm/%j.out
 #SBATCH --error=results/0009_demultiplexing_by_barbell/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
@@ -14,7 +14,6 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
     cpus=$SLURM_CPUS_PER_TASK
     list=list.${pipeline}.txt
 
-
     export CARGO_HOME=/home/groups/VEO/tools/cargo 
     export RUSTUP_HOME=/home/groups/VEO/tools/rust 
     barbell="/home/groups/VEO/tools/barbell/v0.3.0/barbell/target/release/barbell"
@@ -26,6 +25,7 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
     R_primer=$(grep my_R_primer $parameters | awk '{print $2}')
     primer_sequences=$(grep my_primer_sequences $parameters | awk '{print $2}')
     fastq=$( grep my_fastq_path $parameters | awk '{print $2}' )
+    data_type=$( grep my_data_type $parameters | awk '{print $2}' )
 
     if [ $primer_sequences == "Single" ] ; then
         filters="/home/groups/VEO/scripts_for_users/supplementary_scripts/0009_demultiplexing_by_barbell.single_end_FR_RC.txt"
@@ -46,15 +46,20 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 ## kit-based demultiplexing
     if [ $custom_primers == "No" ] ; then
 
-            mkdir -p $raw_files
-            # Annotate
+        mkdir -p $raw_files
+        # Annotate
+
+        if [ $data_type == "genome" ] ; then
             $barbell kit -k $kit -i $fastq -o $raw_files/$i --maximize
-            
-            # Trim
-            $barbell trim \
-                -i $raw_files/$i/filtered.tsv \
-                -r "$raw_fastq" \
-                -o $raw_files/trimmed
+        elif [ $data_type == "amplicon" ] ; then
+            $barbell kit -k $kit -i $fastq -o $raw_files
+        fi  
+        
+        # Trim
+        $barbell trim \
+            -i $raw_files/$i/filtered.tsv \
+            -r "$raw_fastq" \
+            -o $raw_files/trimmed
 
     fi
 ############################################################################### 
@@ -116,6 +121,10 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
             # 3 mut1_4_R        # wrong reads due to * in filter
             # 9 mut1_5_F        # wrong reads due to * in filter
             # 10 mut1_5_R       # wrong reads due to * in filter
+
+        ## * = match any sample label
+        ## If there are no groups then use * (Sample_1A1_F, Sample_2A1_F, etc.)
+        ## uses ~substring matching. That is mainly for mixed experiments ( for example: group1_Sample_01, group1_Sample_02, group2_Sample_01, group2_Sample_02)
     ############################################################################### 
         for primer_id in $( cat $list ); do
             sed "s/\*/~$primer_id/g" ${suppl_scripts}/$pipeline.${suffix}.txt \
@@ -163,8 +172,6 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                     >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
             fi
 
-
-
         ## combine files and reverse complement as needed
             mkdir -p $raw_files/${primer_id}/fastq2
             for i in $( ls $fastq/raw_files/${primer_id}/fastq | awk -F'_' '{print $1"_"$2}' | sort | uniq ); do 
@@ -197,6 +204,7 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                 reads=$( count_reads_from_fastq	$wd/fastq/${i}.fastq )
         	    echo -e "${primer_id}\t${i}\t${reads}" >> $wd/summary.reads_per_primer.${suffix}.txt
             done
+        done
     fi
 
 ###############################################################################

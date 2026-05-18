@@ -10,9 +10,9 @@
     grep ">" $primer_file | sed 's/>//g' | awk -F'_' '{print $1}' | sort | uniq  > list.$pipeline.txt
     list=list.$pipeline.txt
 
-    cut -f 1,3 $primer_file | sed 's/\t/\n/g' > $wd/tmp/list.primers.txt
-	
     create_directories_structure_1 $wd
+    cut -f 1,3 $primer_file | sed 's/\t/\n/g' > $wd/tmp/list.primers.txt	
+
     cp ${suppl_scripts}/0009_demultiplexing_by_barbell.sbatch \
         $wd/tmp/sbatch/0009_demultiplexing_by_barbell.sbatch
     sbatch ${wd}/tmp/sbatch/0009_demultiplexing_by_barbell.sbatch
