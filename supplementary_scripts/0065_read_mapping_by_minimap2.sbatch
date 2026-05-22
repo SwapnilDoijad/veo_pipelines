@@ -184,24 +184,24 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
             fi
         fi
 
-                                ## Generate Pileup File (required for the variant calling and consesus calling) 
-                                    # mpileup -Ou: The -O option outputs uncompressed binary (BCF) format, and -u ensures the output is uncompressed, which allows for piping.
-                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools mpileup -Ou -f \
-                                        # $assembly_id_path/"$assembly_id".fasta \
-                                        # $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
-                                        # -o $raw_files/mpileup/$assembly_id.$fastq_id.bcf
+            ## Generate Pileup File (required for the variant calling and consesus calling) 
+                # mpileup -Ou: The -O option outputs uncompressed binary (BCF) format, and -u ensures the output is uncompressed, which allows for piping.
+                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools mpileup -Ou -f \
+                    $assembly_id_path/"$assembly_id".fasta \
+                    $raw_files/sam_files_sorted/$assembly_id.$fastq_id.sam.sorted.bam \
+                    -o $raw_files/mpileup/$assembly_id.$fastq_id.bcf
 
-                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools call -mv -Oz -o \
-                                        # $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
-                                        # $raw_files/mpileup/$assembly_id.$fastq_id.bcf
+                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools call -mv -Oz -o \
+                    $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
+                    $raw_files/mpileup/$assembly_id.$fastq_id.bcf
 
-                                        # ## Generate Consensus Sequence
-                                        # /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz
+                    ## Generate Consensus Sequence
+                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz
 
-                                        # cat $assembly_id_path/"$assembly_id".fasta | /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
-                                        # -p $assembly_id \
-                                        # $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
-                                        # > $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta
+                    cat $assembly_id_path/"$assembly_id".fasta | /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
+                    -p $assembly_id \
+                    $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
+                    > $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta
 
 
                                         # ## Generate Insertion and Deletion File
