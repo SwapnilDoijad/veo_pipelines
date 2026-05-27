@@ -47,19 +47,34 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
     if [ $custom_primers == "No" ] ; then
 
         mkdir -p $raw_files
-        # Annotate
 
         if [ $data_type == "genome" ] ; then
-            $barbell kit -k $kit -i $fastq -o $raw_files/$i --maximize
+            $barbell kit \
+            -k $kit \
+            -i $fastq \
+            -t $SLURM_CPUS_PER_TASK \
+            -o $raw_files
+
         elif [ $data_type == "amplicon" ] ; then
-            $barbell kit -k $kit -i $fastq -o $raw_files
+            $barbell kit \
+            -k $kit \
+            -i $fastq \
+            -t $SLURM_CPUS_PER_TASK \
+            -o $raw_files
         fi  
         
-        # Trim
-        $barbell trim \
-            -i $raw_files/$i/filtered.tsv \
-            -r "$raw_fastq" \
-            -o $raw_files/trimmed
+        # $barbell annotate \
+        #     -i $fastq \
+        #     -o $raw_files/annotations.tsv \
+        #     -t $SLURM_CPUS_PER_TASK \
+
+
+
+        # # Trim
+        # $barbell trim \
+        #     -i $raw_files/$i/filtered.tsv \
+        #     -r "$raw_fastq" \
+        #     -o $raw_files/trimmed
 
     fi
 ############################################################################### 
