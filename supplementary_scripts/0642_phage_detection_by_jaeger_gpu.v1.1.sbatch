@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0642_phage_detection_by_jaeger_gpu
-#SBATCH --partition=gpu
+#SBATCH --partition=gpu,gpu-test,gpu-veo
 #SBATCH --output=results/0642_phage_detection_by_jaeger_gpu/tmp/slurm/%j.out
 #SBATCH --error=results/0642_phage_detection_by_jaeger_gpu/tmp/slurm/%j.err
 #SBATCH --gres=gpu:1

@@ -25,6 +25,7 @@ data/my_fasta/S3.fasta	/home/xa73pav/projects/p_amruta_230912/data/1_HQ_Data/3_R
 ## for single end sequencing 
 #assembly_or_fasta_ids	single_fastq_filepath
 data/my_fasta/canu.barcode01.fasta	data/my_fasta/barcode01.fastq.gz
+data/my_fasta/canu.barcode01.fasta	data/my_fasta/barcode02.fastq.gz
 data/my_fasta/canu.barcode04.fasta	data/my_fasta/barcode04.fastq.gz
 data/my_fasta/canu.barcode07.fasta	data/my_fasta/barcode07.fastq.gz
 
