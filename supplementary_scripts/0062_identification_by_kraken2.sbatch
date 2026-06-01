@@ -1,11 +1,11 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0062_identification_by_kraken2
-#SBATCH --partition=gpu-veo,fat,gpu-test,gpu
+#SBATCH --partition=standard
 #SBATCH --output=results/0062_identification_by_kraken2/tmp/slurm/%j.out
 #SBATCH --error=results/0062_identification_by_kraken2/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=25
-#SBATCH --mem=500G
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=50G
 ###############################################################################
 pipeline=0062_identification_by_kraken2
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
@@ -28,17 +28,25 @@ log "database: $database"
             log "running kraken2 (fasta) for $F1"
             ( mkdir $raw_files/$F1 ) > /dev/null 2>&1  
 
-            ( /usr/bin/perl $tools/kraken2/v2.1.2/kraken2 \
+		    setsid \
+            $tools/kraken2/v2.1.2/kraken2 \
             --db $database \
             --threads $SLURM_CPUS_PER_TASK \
             --report $raw_files/$F1/report.txt \
-            --use-names $data_dir/$F1.fasta ) > /dev/null 2>&1 
+            --use-names $data_dir/$F1.fasta \
+            & my_pid=$!
+            pgid=$(ps -o pgid= -p $my_pid | tr -d ' ')
+            accurate_log_usage_by_pgid "$pgid" $resource_log/$F1.kraken2.tsv
+            echo "my_pid: $my_pid"
+            echo "pgid: $pgid"
+            # summarize_log $resource_log/$F1.kraken2.tsv
 
-            python3 $suppl_scripts/$pipeline.summarise.py \
-            -i $raw_files/$F1/report.txt \
-            -o $raw_files/$F1/report.sp.tsv \
-            -r S \
-            -n 3
+            ## -n Number of top taxa to keep (default: 10)
+            # python3 $suppl_scripts/$pipeline.summarise.py \
+            # -i $raw_files/$F1/report.txt \
+            # -o $raw_files/$F1/report.sp.tsv \
+            # -r S \
+            # -n 3
 
         done
         
@@ -114,6 +122,23 @@ log "database: $database"
 
     fi
 
+###############################################################################
+## count reads for each taxa 
+    if [ $database == "/veodata/03/databases/kraken2/silva_16s_138.2_species" ] ; then
+    for F1 in $(cat $sublist ); do
+        log "running report2readCount for $F1"
+
+        ## --collapse-special  will collapse "uncultured" "metagenome" "environmental sample" etc. \
+            ## into a single category, which is more informative for 16S data
+        python3 $suppl_scripts/$pipeline.report2readCount.py \
+        -i $raw_files/$F1/report.txt \
+        -o $raw_files/$F1/report.txt.tsv \
+        --min-reads 1 \
+        --collapse-special \
+        -l S
+    
+    done
+    fi
 ###############################################################################
     log "FINISHED: $pipeline : $sublist" && clean
 ###############################################################################
