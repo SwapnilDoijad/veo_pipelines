@@ -16,7 +16,7 @@
 	log "SBATCH STARTED : $pipeline : $sublist : $mode"
 ###############################################################################
 ## 01: run pharokka
-    source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
     conda activate pharokka_v1.7.2
 
     for i in $(cat $sublist); do
