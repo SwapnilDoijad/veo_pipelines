@@ -2,3 +2,6 @@
 ## please give a path of a fasta folder containing fasta files (ending with .fasta)
 ## example path
 my_fasta_dir	/vast/xa73pav/projects/p_swapnil_bechmarking_viralTaxonomy/data/comabined_fasta
+
+## k-mer size for sourmash 21, 24, 27 and 31
+my_kmer	21

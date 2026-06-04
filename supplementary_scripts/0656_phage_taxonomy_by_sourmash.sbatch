@@ -13,7 +13,7 @@
 	fasta_directory=$( grep my_fasta_dir $parameters | awk '{print $2}' )
 	task=$(grep my_task $parameters | awk '{print $2}')
 	sublist=$wd/tmp/lists/ABC
-
+	kmer=$(grep my_kmer $parameters | awk '{print $2}')
 ###############################################################################
 	log "STARTED: $pipeline -----------------------------"
 ###############################################################################
@@ -31,7 +31,7 @@
 	scripts \
 	manysketch \
 	$raw_files/dataset_challenge.fromfile.csv \
-	-p skipm2n3,k=24,scaled=50,abund \
+	-p skipm2n3,k=${kmer},scaled=50,abund \
 	-o $raw_files/ictv-challenge.zip \
 	& my_pid=$!
 	get_resource_stat $my_pid $resource_log/sourmash.scripts.manysketch.tsv
@@ -42,7 +42,7 @@
 	$raw_files/ictv-challenge.zip \
 	/veodata/03/databases/sourmash/vmr_MSL39_v4 \
 	-m skipm2n3 \
-	-k 24 \
+	-k ${kmer} \
 	--scaled 50 \
 	--threshold-bp 200 \
 	-o $raw_files/ictv-challenge.fmg.csv \
