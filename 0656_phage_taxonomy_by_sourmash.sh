@@ -14,7 +14,7 @@
     cp /home/groups/VEO/scripts_for_users/supplementary_scripts/$pipeline.sbatch \
     $wd/tmp/sbatch/$pipeline.sbatch
 
-	sbatch $wd/tmp/sbatch/$pipeline.sbatch
+	# sbatch $wd/tmp/sbatch/$pipeline.sbatch
 ###############################################################################
     echo "STARTED : $pipeline ---------------------------------"
 ###############################################################################
