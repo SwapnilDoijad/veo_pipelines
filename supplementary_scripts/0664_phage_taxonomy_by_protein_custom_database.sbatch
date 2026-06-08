@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=0664_phage_taxonomy_by_protein_custom_database
-#SBATCH --partition=short,long,standard
+#SBATCH --partition=long,standard
 #SBATCH --output=results/0664_phage_taxonomy_by_protein_custom_database/tmp/slurm/%j.out
 #SBATCH --error=results/0664_phage_taxonomy_by_protein_custom_database/tmp/slurm/%j.err
-#SBATCH --mem=240G
+#SBATCH --mem=125G
 #SBATCH --cpus-per-task=40
 ###############################################################################
 ## header
@@ -36,8 +36,8 @@
 
 	mv ictv.xlsx /veodata/03/databases/ictv/0664_ictv.xlsx 
 
-	setsid \
 	log "DOWNLOADING: assembly_summary_genbank.tsv"
+	setsid \
 	aria2c \
 	-x 4 \
 	-o assembly_summary_genbank.tsv \
@@ -64,7 +64,7 @@
 
 	log "CONVERTING: ictv.xlsx to ictv.tsv"
 	setsid \
-	csvtk xlsx2csv /veodata/03/databases/ictv/0664_ictv.xlsx \
+	csvtk xlsx2csv -i 2 /veodata/03/databases/ictv/0664_ictv.xlsx \
     | csvtk csv2tab \
     | sed 's/\xc2\xa0/ /g' \
     | csvtk replace -t -F -f "*" -p "^\s+|\s+$" \
