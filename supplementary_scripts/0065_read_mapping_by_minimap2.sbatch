@@ -198,10 +198,12 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                     ## Generate Consensus Sequence
                     /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools index $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz
 
-                    cat $assembly_id_path/"$assembly_id".fasta | /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
+                    /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
+                    -f $assembly_id_path/"$assembly_id".fasta \
                     -p $assembly_id \
-                    $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz \
-                    > $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta
+                    -o $raw_files/consensus_sequences/$assembly_id.$fastq_id.nonFilteredSNPs.consensus.fasta \
+                    $raw_files/vcf/$assembly_id.$fastq_id.vcf.gz 
+
 
 
                                         # ## Generate Insertion and Deletion File
@@ -293,7 +295,8 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 log "STARTED : generating consensus sequence for $assembly_id.$fastq_id"
                 /home/groups/VEO/tools/bcftools/v1.17/bin/bcftools consensus \
                 -f $assembly_id_path/"$assembly_id".fasta \
-                -o $raw_files/consensus_sequences/$assembly_id.$fastq_id.consensus.fasta \
+                -p $assembly_id \
+                -o $raw_files/consensus_sequences/$assembly_id.$fastq_id.FilteredReadsSNPs.consensus.fasta \
                 $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz
 
                 gunzip -k $raw_files/vcf/$assembly_id.$fastq_id.freebayes_variants.vcf.simple.vcf.decomposed.vcf.output_left_aligned.vcf.filtered.vcf.gz

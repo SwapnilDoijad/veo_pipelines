@@ -9,7 +9,7 @@ my_fastq_path	data/raw_reads.no_trim.fastq
 ## alternatives: SQK-LSK114=SQK-NBD114-96
 my_kit	SQK-NBD114-96
 
-## Sequencing data type: genome or amplicon
+## Sequencing data type: genome or amplicon 
 my_data_type	amplicon
 
 ###############################################################################

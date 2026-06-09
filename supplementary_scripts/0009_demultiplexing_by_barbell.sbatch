@@ -99,7 +99,7 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
             -q "${F_LIST},${R_LIST}" -b "${TAGS}" \
             -i $fastq \
             -o $raw_files/annotations.tsv \
-            -t $SLURM_CPUS_PER_TASK 
+            -t ${SLURM_CPUS_PER_TASK} 
 
             awk -F'\t' '{print $13}' $raw_files/annotations.tsv | sort | uniq -c | awk '{print $2, $1}' > $raw_files/annotations.summary.tsv
 

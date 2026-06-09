@@ -61,12 +61,15 @@
                     $samtools \
                     view -@10 -O fastq \
                     $raw_files/01_pod5_to_fastq/raw_reads.no_trim.bam \
-                    | pigz -9 > $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz
+                    > $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq
+
+                    pigz -9 -k -c $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq \
+                    > $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz
                 fi
 
                 ## count reads in raw_reads.no_trim.fastq.gz.read_count
                 if [ ! -f $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz.read_count ] ; then
-                    log "STARTED: counting reads in raw_reads.no_trim.fastq.gz"
+                    log "STARTED: counting reads in raw_reads.no_trim.fastq"
 
                     count_reads_from_fastq \
                     $raw_files/01_pod5_to_fastq/raw_reads.no_trim.fastq.gz \

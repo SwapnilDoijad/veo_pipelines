@@ -89,13 +89,22 @@ def build_submission(
     # Read minimal columns, tolerate ragged lines
     tax = pl.read_csv(
         taxonomy_tsv,
-        separator="	",
+        separator="\t",
         has_header=False,
-        new_columns=tax_cols,
         ignore_errors=True,
         truncate_ragged_lines=True,
-        columns=["qseqid", "rank", "taxon_name", "protein_fragments_in_agreement_with_lca"],
-    ).rename(
+        # file has no header: select columns by index instead of by name
+        columns=[0, 2, 3, 7],
+    )
+
+    # Rename the four columns we read (polars will name them generically).
+    col_map = {
+        tax.columns[0]: "qseqid",
+        tax.columns[1]: "rank",
+        tax.columns[2]: "taxon_name",
+        tax.columns[3]: "protein_fragments_in_agreement_with_lca",
+    }
+    tax = tax.rename(col_map).rename(
         {
             "qseqid": "SequenceID",
             "rank": "Rank",
@@ -195,8 +204,7 @@ def main(argv: List[str]) -> int:
 
     for path in [args.taxonomy_result, args.fasta]:
         if not path.exists():
-            sys.stderr.write(f"ERROR: Missing input file: {path}
-")
+            sys.stderr.write(f"ERROR: Missing input file: {path}\n")
             return 2
 
     df = build_submission(

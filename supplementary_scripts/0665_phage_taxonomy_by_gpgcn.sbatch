@@ -6,6 +6,8 @@
 #SBATCH --mem=300G
 #SBATCH --cpus-per-task=40
 #SBATCH --gres=gpu:1
+#SBATCH --email-type=END,FAIL
+#SBATCH --mail-user=wphongtang.veo@gmail.com 
 ###############################################################################
 ## header
 	pipeline=0665_phage_taxonomy_by_gpgcn

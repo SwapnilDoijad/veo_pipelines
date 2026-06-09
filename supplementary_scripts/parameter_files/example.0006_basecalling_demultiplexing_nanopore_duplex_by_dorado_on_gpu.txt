@@ -113,6 +113,7 @@ my_kit	SQK-NBD114-96
 my_flowcell	FLO-MIN114
 
 ## type of seperated	#options: genome or amplicon
+## use amplicon if you are using barbell latter
 my_type_of_sequencing	amplicon
 
 ## if type_of_sequencing is amplicon, then need to demultiplex? Yes or No (recommended : No)
