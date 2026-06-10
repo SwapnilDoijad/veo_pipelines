@@ -1,0 +1,6 @@
+## This is a parameter file for 0776_amplicon_sequence_analysis_for_nanopore_by_savont pipeline
+## please give a path of a single folder containing all fastq 
+## note that all files should end with .fastq
+## example path is given below (change the path according to your data):
+my_fastq_dir	/vast/xa73pav/projects/p_sandra_SpikeIn/results/0009_demultiplexing_by_barbell_reverse/fastq
+

@@ -1,0 +1,16 @@
+## This is a parameter file for 0774_amplicon_sequence_analysis_for_nanopore_by_EMU pipeline
+## please give a path of a single folder containing all fasta 
+## note that all files should end with .fasta
+## example path is given below (change the path according to your data):
+my_fasta_dir	data/fasta_folder
+
+## which database you want to use? provide path
+## emu = /veodata/03/databases/emu/v260328/emu
+## rdp = /veodata/03/databases/emu/v260328/rdp
+## silva =  /veodata/03/databases/emu/v260328/silva
+## silva-138.2 = /veodata/03/databases/emu/v260328/silva-138.2
+## unite-all = /veodata/03/databases/emu/v260328/unite-all
+## unite-fungi = /veodata/03/databases/emu/v260328/unite-fungi
+## example is given below (change as per your need)
+
+my_database_path	/veodata/03/databases/emu/v260328/emu

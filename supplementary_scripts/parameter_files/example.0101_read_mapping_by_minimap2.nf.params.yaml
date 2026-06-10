@@ -1,0 +1,5 @@
+## Example params for the minimap2 mapping pipeline
+fastq_dir: "data/fastq_subsample"
+reference: "data/reference/GCF_000499845.2_P._vulgaris_v2.0_genomic.fna"
+out_dir: "results/0101_read_mapping_by_minimap2"
+threads: 4
