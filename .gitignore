@@ -2,6 +2,8 @@
 supplementary_scripts/user_email.csv
 supplementary_scripts/emails
 .vscode
+.gitignore
+supplementary_scripts/utilities/send_email.py
 
 # Ignore TSV data files to avoid accidental large commits
 *.tsv
