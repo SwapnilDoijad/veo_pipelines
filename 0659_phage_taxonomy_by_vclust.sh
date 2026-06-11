@@ -12,8 +12,12 @@
     list=list.$pipeline.txt
 
     create_directories_structure_1 $wd
-    split_list $wd $list
-    submit_jobs $wd $pipeline
+    # split_list $wd $list
+    # submit_jobs $wd $pipeline
+    cp ${suppl_scripts}/${pipeline}.sbatch \
+    $wd/tmp/sbatch/
+    sbatch $wd/tmp/sbatch/${pipeline}.sbatch
+
 ###############################################################################
     echo "FINISHED : $pipeline ---------------------------------"
 ###############################################################################

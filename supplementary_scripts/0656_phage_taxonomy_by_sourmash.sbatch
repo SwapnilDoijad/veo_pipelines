@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0656_phage_taxonomy_by_sourmash
-#SBATCH --partition=standard,long
+#SBATCH --partition=standard,long,short,gpu,gpu-veo,gpu-test,long,interactive
 #SBATCH --output=results/0656_phage_taxonomy_by_sourmash/tmp/slurm/%j.out
 #SBATCH --error=results/0656_phage_taxonomy_by_sourmash/tmp/slurm/%j.err
 #SBATCH --mem=100G

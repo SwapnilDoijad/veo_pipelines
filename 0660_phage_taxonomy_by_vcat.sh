@@ -13,7 +13,14 @@
 
     create_directories_structure_1 $wd
     split_list $wd $list
-    submit_jobs $wd $pipeline
+    # submit_jobs $wd $pipeline
+    ## snakemake pipeline, don't parallalelise
+    cp ${suppl_scripts}/${pipeline}.sbatch \
+    $wd/tmp/sbatch/
+    sbatch $wd/tmp/sbatch/${pipeline}.sbatch
+
+    echo -e "ID\tSequenceID\tSeqlen\tScore\tMethod\tRealm (-viria)\tRealm_score\tSubrealm (-vira)\tSubrealm_score\tKingdom (-virae)\tKingdom_score\tSubkingdom (-virites)\tSubkingdom_score\tPhylum (-viricota)\tPhylum_score\tSubphylum (-viricotina)\tSubphylum_score\tClass (-viricetes)\tClass_score\tSubclass (-viricetidae)\tSubclass_score\tOrder (-virales)\tOrder_score\tSuborder (-virineae)\tSuborder_score\tFamily (-viridae)\tFamily_score\tSubfamily (-virinae)\tSubfamily_score\tGenus (-virus)\tGenus_score\tSubgenus (-virus)\tSubgenus_score\tSpecies (binomial)\tSpecies_score" \
+    > ${wd}/summary.csv
 ###############################################################################
     echo "FINISHED : $pipeline ---------------------------------"
 ###############################################################################

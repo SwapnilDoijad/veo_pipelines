@@ -53,6 +53,7 @@
 	--input-ani $raw_files/ani.tsv \
 	--input-taxonomy /veodata/03/databases/ictv/VMR_MSL39.v4_20241106.tsv \
 	--output-tsv $raw_files/vclust_results.tsv \
+	--input-list list.${pipeline}.txt \
 	& my_pid=$!
 	get_resource_stat $my_pid $resource_log/create_results.tsv
 

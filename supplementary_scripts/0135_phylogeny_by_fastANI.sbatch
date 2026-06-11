@@ -5,8 +5,6 @@
 #SBATCH --error  results/0135_phylogeny_by_fastANI/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
 #SBATCH --mem=100G
-#SBATCH --mail-type=END
-#SBATCH --mail-user=your_email@example.com
 ###############################################################################
 ## step-01: preparation
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh

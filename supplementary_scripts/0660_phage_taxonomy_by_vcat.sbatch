@@ -10,7 +10,8 @@
 	pipeline=0660_phage_taxonomy_by_vcat
 	source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 	fasta_directory=$( grep my_fasta_dir $parameters | awk '{print $2}' )
-	sublist=$wd/tmp/lists/ABC
+	# sublist=$wd/tmp/lists/ABC
+	list=list.${pipeline}.txt
 	databases_path=/veodata/03/databases/vcat/v250811/msl40v1
 
 	source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
@@ -19,7 +20,10 @@
 	log "STARTED: $pipeline -----------------------------"
 ###############################################################################
 ## step-01: file and directory preparation
-	for i in $(cat $sublist); do
+
+	## snakemake pipeline, don't parallalelise 
+
+	for i in $(cat $list); do
 		log "STARTED: $i"
 
 		vcat \
@@ -34,6 +38,13 @@
 		-n \
 		& my_pid=$!
 		get_resource_stat $my_pid $wd/tmp/resource_log/$i.vcat.contigs.tsv
+
+		if [ ! -f ${raw_files}/${i}/results/${i}.csv ]; then
+			cat ${raw_files}/${i}/results/*.csv \
+			| grep -v "SequenceID" \
+			| sed "s/^/${i}\t/" \
+			>> ${wd}/summary.csv
+		fi
 
 	done
 ###############################################################################
