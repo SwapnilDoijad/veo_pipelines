@@ -7,26 +7,24 @@
 #SBATCH --mem=100G
 ###############################################################################
 ## step-01: preparation
-    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
     pipeline=0135_phylogeny_by_fastANI
-    wd=results/$pipeline
+    source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
     parameter_file=tmp/parameters/$pipeline.*
     fasta_path=$(grep my_fasta_path $parameter_file | awk '{print $2}')
-    ls $fasta_path/*.fasta > $wd/tmp/list.fastANI.txt
-
+    ls $fasta_path/*.fasta > results/$pipeline/tmp/list.fastANI.txt
 ###############################################################################
 ## step-02: run fastANI
-    if [ ! -f $wd/raw_files/output.csv ] ; then 
+    if [ ! -f results/$pipeline/raw_files/output.csv ] ; then 
         log "STARTED : $pipeline : fastANI run"
 
         /home/groups/VEO/tools/fastANI/v1.33/fastANI \
-        --ql $wd/tmp/list.fastANI.txt \
-        --rl $wd/tmp/list.fastANI.txt \
-        -o $wd/raw_files/output.csv \
-        --fragLen 1000 \
+        --ql results/$pipeline/tmp/list.fastANI.txt \
+        --rl results/$pipeline/tmp/list.fastANI.txt \
+        -o results/$pipeline/raw_files/output.csv \
+        --fragLen 200 \
         --matrix \
-        -t $SLURM_CPUS_PER_TASK 
+        -t 40
 
         log "FINISHED : $pipeline : fastANI run"
         else 
@@ -38,23 +36,43 @@
 
     log "fastANI finished, will create matrix and tree"
 
-    cp $wd/tmp/output.csv.matrix $wd/tmp/output.csv.matrix.backup
-    sed -i "s/NA/0/g" $wd/tmp/output.csv.matrix
-    sed -i -e "s|$fasta_path/||g" $wd/tmp/output.csv.matrix
-    sed -i "s/\.fasta//g" $wd/tmp/output.csv.matrix
-
-    cp $wd/tmp/output.csv $wd/tmp/output.csv.backup
-    sed -i "s/NA/0/g" $wd/tmp/output.csv
-    sed -i "s|$fasta_path/||g" $wd/tmp/output.csv
-    sed -i "s/\.fasta//g" $wd/tmp/output.csv
+    cp ${raw_files}/output.csv.matrix ${wd}/tmp/output.csv.matrix.backup
+    sed -i "s/NA/0/g" ${raw_files}/output.csv.matrix
+    sed -i -e "s|$fasta_path/||g" ${raw_files}/output.csv.matrix
+    sed -i "s/\.fasta//g" ${raw_files}/output.csv.matrix
+    cp ${raw_files}/output.csv ${wd}/tmp/output.csv.backup
+    sed -i "s/NA/0/g" ${raw_files}/output.csv
+    sed -i "s|$fasta_path/||g" ${raw_files}/output.csv
+    sed -i "s/\.fasta//g" ${raw_files}/output.csv
 
 #------------------------------------------------------------------------------
 ## matrix-creation step
-    cat $wd/tmp/output.csv.matrix | sed '1d' > $wd/tmp/all.distance.for_R.out.2.tab
+    cat ${raw_files}/output.csv.matrix | sed '1d' > $wd/tmp/all.distance.for_R.out.2.tab
     cp $wd/tmp/all.distance.for_R.out.2.tab results/$pipeline/out.tab
-    bash /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/transpose.mash.sh
-    mv results/out.t.tab $wd/tmp/all.distance.for_R.out.t.tab
-    awk 'NR==FNR{ a[NR+1]=$0 FS 0; next }{ sub(/^ +/,""); print (FNR==1)? 0:a[FNR],$0 } END{ print a[FNR+1] }' $wd/tmp/all.distance.for_R.out.2.tab $wd/tmp/all.distance.for_R.out.t.tab > $wd/tmp/all.distance.for_R.matrix.tab
+
+    awk '
+    { 
+        for (i=1; i<=NF; i++)  {
+            a[NR,i] = $i
+        }
+    }
+    NF>p { p = NF }
+    END {    
+        for(j=1; j<=p; j++) {
+            str=a[1,j]
+            for(i=2; i<=NR; i++){
+                str=str" "a[i,j];
+            }
+            print str
+        }
+    }' ${wd}/out.tab > ${wd}/out.t.tab
+
+
+    mv ${wd}/out.t.tab $wd/tmp/all.distance.for_R.out.t.tab
+    
+    awk 'NR==FNR{ a[NR+1]=$0 FS 100; next }{ sub(/^ +/,""); print (FNR==1)? 0:a[FNR],$0 } END{ print a[FNR+1] }' \
+    $wd/tmp/all.distance.for_R.out.2.tab $wd/tmp/all.distance.for_R.out.t.tab > $wd/tmp/all.distance.for_R.matrix.tab
+    
     sed -i 's/ /\t/g' $wd/tmp/all.distance.for_R.matrix.tab
     sed -e "1,/0/s/0//" $wd/tmp/all.distance.for_R.matrix.tab > $wd/all.ANI.tab
 
@@ -63,8 +81,8 @@
     Rscript /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/plot_and_tree.fastANI-distance.r \
     -i $wd/all.ANI.tab \
     -o $wd/fastANI_tree \
-    mv "Rplots.pdf" $wd/
-    mv tree.nwk $wd/
+    # mv "Rplots.pdf" $wd/
+    # mv tree.nwk $wd/
 ###############################################################################
 echo "completed.... step-41 pyANI --------------------------------------------"
 ###############################################################################

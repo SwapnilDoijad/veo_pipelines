@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0072_QC_of_contigs_by_checkV
-#SBATCH --partition=standard
+#SBATCH --partition=standard,long,interactive,gpu,gpu-test,gpu-veo,fat
 #SBATCH --output=results/0072_QC_of_contigs_by_checkV/tmp/slurm/%j.out
 #SBATCH --error=results/0072_QC_of_contigs_by_checkV/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=25
