@@ -59,6 +59,13 @@
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.cluster.tsv
 	## -t is not available
 
+	if [ "$figure" == "Yes" ]; then
+		python3 ${suppl_scripts}/0654_phage_clustering_by_vclust.represetative.py \
+		 -i ${raw_files}/all.fna \
+		 -c ${raw_files}/clusters.tsv \
+		 -o ${raw_files}/clusters.tsv.representative.fasta
+	fi
+
 	## Create a heatmap
 	if [ "$figure" == "Yes" ]; then
 		log "Creating heatmap..."
@@ -76,3 +83,4 @@
 ###############################################################################
 	log "FINISHED : $pipeline" && clean
 ###############################################################################
+

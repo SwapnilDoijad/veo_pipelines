@@ -1,56 +1,44 @@
 #!/bin/bash
 
-## 20240203: worked with multifasta file with 25M fasta sequences
-
 mkdir -p "$PWD/parallel_tmp"
 export TMPDIR="$PWD/parallel_tmp"
-
-# Check if correct number of arguments is provided
-if [ "$#" -ne 4 ]; then
-    echo "Usage: $0 -i input_fasta_file -o output_folder"
-    exit 1
-fi
 
 while getopts "i:o:" opt; do
     case $opt in
         i) input_file="$OPTARG" ;;
         o) output_folder="$OPTARG" ;;
-        \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
+        *) echo "Usage: $0 -i input.fasta -o output_folder"; exit 1 ;;
     esac
 done
 
-# Create the output directory if it doesn't exist
+if [ -z "$input_file" ] || [ -z "$output_folder" ]; then
+    echo "Usage: $0 -i input.fasta -o output_folder"
+    exit 1
+fi
+
 mkdir -p "$output_folder"
 
-# Function to write an individual fasta file
-write_fasta_file() {
-    local header="$1"
-    local sequence="$2"
-    local filename="$output_folder/${header}.fasta"
-    echo -e ">$header\n$sequence" > "$filename"
+awk -v outdir="$output_folder" '
+BEGIN {
+    RS=">"
+    ORS=""
 }
 
-# Function to process a chunk of the multifasta file
-process_chunk() {
-    local chunk="$1"
-    local temp_file="$(mktemp)"
-    awk -v RS='>' 'NR>1{print ">"$0}' "$chunk" | 
-    while IFS= read -r line; do
-        local header=$(echo "$line" | awk '{print $1}')
-        local sequence=$(echo "$line" | awk '{print substr($0,length($1)+2)}')
-        write_fasta_file "$header" "$sequence"
-    done
-    rm -f "$temp_file"
+NR > 1 {
+    n = split($0, lines, "\n")
+
+    header = lines[1]
+    sub(/ .*/, "", header)
+
+    outfile = outdir "/" header ".fasta"
+
+    print ">" lines[1] "\n" > outfile
+
+    for(i=2;i<=n;i++) {
+        if(lines[i] != "")
+            print lines[i] "\n" > outfile
+    }
+
+    close(outfile)
 }
-
-# Export the functions to make them available to parallel
-export -f write_fasta_file
-export -f process_chunk
-
-# Split the input file into chunks and process them in parallel
-split --numeric-suffixes=1 -n l/40 -a 4 "$input_file" temp_chunk_
-ls temp_chunk_* | /home/groups/VEO/tools/parallel/v20230822/src/parallel -j 40 process_chunk {}
-
-# Remove temporary files
-rm -f temp_chunk_*
-
+' "$input_file"

@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name 0083_annotation_prophage_by_pharokka
-#SBATCH --partition=standard,long,gpu
+#SBATCH --partition=standard,long,gpu,gpu-veo,gpu-test,interactive
 #SBATCH --output results/0083_annotation_prophage_by_pharokka/tmp/slurm/%j.out
 #SBATCH --error results/0083_annotation_prophage_by_pharokka/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=40
-#SBATCH --mem=200G
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=50G
 ###############################################################################
 ## 00: preparations
     pipeline=0083_annotation_prophage_by_pharokka
