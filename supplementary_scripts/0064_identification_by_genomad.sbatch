@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0064_identification_by_genomad
-#SBATCH --partition=standard
+#SBATCH --partition=standard,short,long,interactive
 #SBATCH --output results/0064_identification_by_genomad/tmp/slurm/%j.0064_identification_by_genomad.out
 #SBATCH --error results/0064_identification_by_genomad/tmp/slurm/%j.0064_identification_by_genomad.err
 #SBATCH --mem=100G
@@ -14,8 +14,11 @@
     task=$(grep "my_task" tmp/parameters/$pipeline.* | awk '{print $2}')
 ###############################################################################
 ## 02: run genomad
-    source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
-    conda activate genNomad_v20230721
+    # source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
+    # conda activate genNomad_v20230721
+    
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+    conda activate genNomad_v1.8.0 
 
     for i in $(cat $sublist); do
         if [ ! -f $wd/raw_files/$i/"$i"_summary.log ]; then 

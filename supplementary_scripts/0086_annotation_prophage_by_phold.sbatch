@@ -19,8 +19,11 @@
 
     source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh 
     # conda activate pholdENV_v0.2.0_gpu
-    conda activate pholdENV_240607 
-    export PHOLD_DB_DIR=/veodata/03/databases/phold/v250331
+    # conda activate pholdENV_240607 
+    # export PHOLD_DB_DIR=/veodata/03/databases/phold/v250331
+
+    conda activate pholdENV
+    export PHOLD_DB_DIR=/veodata/03/databases/phold/260407_v1.0.0/phold_db_3M16_v_1_0_0
 
     for i in $(cat $sublist); do
         if [ ! -f $wd/raw_files/$i/$i.gbk ]; then
@@ -32,7 +35,7 @@
             -o $raw_files/$i \
             -t $SLURM_CPUS_PER_TASK \
             -p $i \
-            -d /veodata/03/databases/phold/v240724/ \
+            -d $PHOLD_DB_DIR \
 			& my_pid=$!
 			get_resource_stat $my_pid $wd/tmp/resource_log/$i.phold.gpu.tsv 
 
@@ -42,7 +45,7 @@
                 # -o $raw_files/$i \
                 # -t $SLURM_CPUS_PER_TASK \
                 # -p $i \
-                # -d /veodata/03/databases/phold/v240724/ \
+                # -d $PHOLD_DB_DIR \
                 # & my_pid=$!
                 # get_resource_stat $my_pid $wd/tmp/resource_log/$i.phold.cpu.tsv 
 

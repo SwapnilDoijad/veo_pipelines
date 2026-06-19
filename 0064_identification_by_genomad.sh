@@ -7,16 +7,9 @@
     pipeline=0064_identification_by_genomad
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
 
-    fasta_path=$(grep "fasta_path" $parameters | awk '{print $2}')
+    fasta_path=$(grep "my_fasta_path" $parameters | awk '{print $2}')
     ls $fasta_path/ | sed 's/\.fasta//g' > list.$pipeline.txt
     list=list.$pipeline.txt
-
-    if [ -f result_summary.read_me.txt ]; then
-        fasta_file_path=$(grep fasta result_summary.read_me.txt | awk '{print $NF}')
-        else
-        echo "provide fasta_file_path"
-        read fasta_file_path
-    fi
 
     create_directories_structure_1 $wd
     split_list $wd $list
