@@ -13,6 +13,7 @@
 	fasta_directory=$( grep my_fasta_path $parameters | awk '{print $2}' )
 	ani=$( grep my_ani $parameters | awk '{print $2}' )
 	cov=$( grep my_cov $parameters | awk '{print $2}' )
+	UPGMA_Tree=$( grep my_UPGMA_Tree $parameters | awk '{print $2}' )
 	figure=$( grep my_figure $parameters | awk '{print $2}' )
     list=list.$pipeline.txt
 ###############################################################################
@@ -59,13 +60,6 @@
 	get_resource_stat $my_pid $wd/tmp/resource_log/vclust.cluster.tsv
 	## -t is not available
 
-	if [ "$figure" == "Yes" ]; then
-		python3 ${suppl_scripts}/0654_phage_clustering_by_vclust.represetative.py \
-		 -i ${raw_files}/all.fna \
-		 -c ${raw_files}/clusters.tsv \
-		 -o ${raw_files}/clusters.tsv.representative.fasta
-	fi
-
 	## Create a heatmap
 	if [ "$figure" == "Yes" ]; then
 		log "Creating heatmap..."
@@ -78,6 +72,31 @@
 		# --color-by-checkv results/0072_QC_of_contigs_by_checkV/summary.tsv
 
 		deactivate
+	fi
+
+	## need a ANI/distance matrix + UPGMA tree (Yes or No)
+	if [ "$UPGMA_Tree" == "Yes" ]; then
+
+		python3 ${suppl_scripts}/${pipeline}.representative.py \
+		-i ${raw_files}/all.fna \
+		-c ${raw_files}/clusters.tsv \
+		-o ${raw_files}/clusters.tsv.representative.fasta
+
+		# ANI: The number of identical nucleotides across local alignments divided by the total length of the alignments.
+		# Global ANI (gANI): The number of identical nucleotides across local alignments divided by the length of the query/reference genome.
+		# Total ANI (tANI): The number of identical nucleotides between query-reference and reference-query genomes divided by the sum length of both genomes. tANI is equivalent to the VIRIDIC's intergenomic similarity.
+		## use tANI  
+		mkdir -p ${raw_files}/tANI > /dev/null 2>&1
+		source /home/groups/VEO/tools/biopython/myenv/bin/activate
+		python ${suppl_scripts}/${pipeline}.matrix.py \
+			-i ${raw_files}/ani.tsv \
+			--ids ${raw_files}/clusters.tsv.representative.fasta.ids \
+			--metric tani \
+			-o ${raw_files}/tANI
+
+		python ${suppl_scripts}/${pipeline}.UPGMA.py \
+			-i ${raw_files}/tANI/tani_distance_matrix.tsv \
+			-o ${raw_files}/tANI/tani_distance_matrix 
 	fi
 
 ###############################################################################

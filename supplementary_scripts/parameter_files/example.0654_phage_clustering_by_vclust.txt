@@ -8,6 +8,9 @@ my_fasta_path	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complet
 ## Keep No for metagenomes, as image generation will take long time
 my_figure	No
 
+## need a ANI/distance matrix + UPGMA tree (Yes or No)
+my_UPGMA_Tree	Yes
+
 ## ani
 my_ani	0.95
 
