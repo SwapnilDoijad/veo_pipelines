@@ -189,11 +189,14 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 
         ## combine files and reverse complement as needed
             mkdir -p $raw_files/${primer_id}/fastq2
-            for i in $( ls $fastq/raw_files/${primer_id}/fastq | awk -F'_' '{print $1"_"$2}' | sort | uniq ); do 
+            for i in $( ls ${raw_files}/${primer_id}/fastq | awk -F'_' '{print $1"_"$2}' | sort | uniq ); do 
                 echo $primer_id $i
 
-                cp $raw_files/${primer_id}/fastq/${i}_F_fw.trimmed.fastq \
-                $raw_files/${primer_id}/fastq2/${i}_F_fw.trimmed.fastq
+                # cp $raw_files/${primer_id}/fastq/${i}_F_fw.trimmed.fastq \
+                # $raw_files/${primer_id}/fastq2/${i}_F_fw.trimmed.fastq
+
+                # cp $raw_files/${primer_id}/fastq/${i}_R_fw.trimmed.fastq \
+                # $raw_files/${primer_id}/fastq2/${i}_R_fw.trimmed.fastq
 
                 if [ -f $raw_files/${primer_id}/fastq/${i}_R_fw.trimmed.fastq ]; then
                     python3 $suppl_scripts/$pipeline.RC_fastq.py \
@@ -213,7 +216,7 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                     -o $raw_files/${primer_id}/fastq2/${i}_R_fw__${i}_F_rc.trimmed.rc.fastq
                 fi
 
-                cat $raw_files/${primer_id}/fastq2/${i}_*.fastq \
+                cat $raw_files/${primer_id}/fastq2/${i}_*.fastq \``
                 > $wd/fastq/${i}.fastq
 
                 reads=$( count_reads_from_fastq	$wd/fastq/${i}.fastq )

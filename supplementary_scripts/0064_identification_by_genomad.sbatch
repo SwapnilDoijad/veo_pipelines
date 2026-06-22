@@ -14,11 +14,14 @@
     task=$(grep "my_task" tmp/parameters/$pipeline.* | awk '{print $2}')
 ###############################################################################
 ## 02: run genomad
+    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+    conda activate geNomad_v1.3.0
+
     # source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
     # conda activate genNomad_v20230721
     
-    source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
-    conda activate genNomad_v1.8.0 
+    # source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
+    # conda activate genNomad_v1.8.0 
 
     for i in $(cat $sublist); do
         if [ ! -f $wd/raw_files/$i/"$i"_summary.log ]; then 
