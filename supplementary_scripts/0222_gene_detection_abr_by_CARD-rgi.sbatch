@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0222_gene_detection_abr_by_CARD-rgi
-#SBATCH --partition=standard,long
+#SBATCH --partition=standard,long,short,interactive,gpu,gpu-test,gpu-veo
 #SBATCH --output=results/0222_gene_detection_abr_by_CARD-rgi/tmp/slurm/%j.out
 #SBATCH --error=results/0222_gene_detection_abr_by_CARD-rgi/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=10

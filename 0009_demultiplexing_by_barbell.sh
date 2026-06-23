@@ -28,6 +28,8 @@
         cat ${R_primer} | awk '/^>/ {header = substr($1, 2);split(header,a,"_"); file = a[1] "_R.txt"} {print >> file}'
         mv *_F.txt $wd/tmp/primers
         mv *_R.txt $wd/tmp/primers
+
+        touch ${wd}/summary.reads_per_primer.txt
     fi
     
     cp ${suppl_scripts}/0009_demultiplexing_by_barbell.sbatch \

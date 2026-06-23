@@ -106,7 +106,7 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
             else
             log "Annotation file already exists. Skipping annotation step."
         fi
-    ############################################################################### 
+        ############################################################################### 
                 ## Optional : inspect patterns per read and manually create filters
                     ## genereally
                             ## Single-end left Ftag
@@ -121,54 +121,54 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                             ## Dual-end: R on left, F on right
                             ## Rtag[fw, *, @left(0..250), >>]__Ftag[<<, rc, *, @right(0..250)]
 
-                    #     $barbell  inspect \
-                    #     -i $raw_files/${primer_id}/annotations.tsv \
-                    #     -o $raw_files/${primer_id}/pattern_per_read.tsv \
-                    #     >> $raw_files/${primer_id}/log.txt 2>&1
+                        #     $barbell  inspect \
+                        #     -i $raw_files/${primer_id}/annotations.tsv \
+                        #     -o $raw_files/${primer_id}/pattern_per_read.tsv \
+                        #     >> $raw_files/${primer_id}/log.txt 2>&1
 
-        ## create filters file by replacing * with the primer sequence id in the template filters file 
-        ## This is important to ensure that only the reads with the specific primer ids are retained
-        ## else reads with other primer ids will also be retained
-        ## for e.g 
-            # 79278 mut1_1_F
-            # 79279 mut1_1_R
-            # 5 mut1_4_F        # wrong reads due to * in filter
-            # 3 mut1_4_R        # wrong reads due to * in filter
-            # 9 mut1_5_F        # wrong reads due to * in filter
-            # 10 mut1_5_R       # wrong reads due to * in filter
+                        ## create filters file by replacing * with the primer sequence id in the template filters file 
+                        ## This is important to ensure that only the reads with the specific primer ids are retained
+                        ## else reads with other primer ids will also be retained
+                        ## for e.g 
+                            # 79278 mut1_1_F
+                            # 79279 mut1_1_R
+                            # 5 mut1_4_F        # wrong reads due to * in filter
+                            # 3 mut1_4_R        # wrong reads due to * in filter
+                            # 9 mut1_5_F        # wrong reads due to * in filter
+                            # 10 mut1_5_R       # wrong reads due to * in filter
 
-        ## * = match any sample label
-        ## If there are no groups then use * (Sample_1A1_F, Sample_2A1_F, etc.)
-        ## uses ~substring matching. That is mainly for mixed experiments ( for example: group1_Sample_01, group1_Sample_02, group2_Sample_01, group2_Sample_02)
-    ############################################################################### 
-        for primer_id in $( cat $list ); do
-            sed "s/\*/~$primer_id/g" ${suppl_scripts}/$pipeline.${suffix}.txt \
-            > $wd/tmp/filters/filters.${primer_id}.txt
-        done
-    ############################################################################### 
-    ## Filter
-        for primer_id in $( cat $list ); do
-                mkdir -p $raw_files/${primer_id}/fastq
+                        ## * = match any sample label
+                        ## If there are no groups then use * (Sample_1A1_F, Sample_2A1_F, etc.)
+                        ## uses ~substring matching. That is mainly for mixed experiments ( for example: group1_Sample_01, group1_Sample_02, group2_Sample_01, group2_Sample_02)
+        ############################################################################### 
+            for primer_id in $( cat $list ); do
+                sed "s/\*/~$primer_id/g" ${suppl_scripts}/$pipeline.${suffix}.txt \
+                > $wd/tmp/filters/filters.${primer_id}.txt
+            done
+        ############################################################################### 
+        ## Filter
+            for primer_id in $( cat $list ); do
+                    mkdir -p $raw_files/${primer_id}/fastq
 
-                $barbell filter \
-                -i $raw_files/annotations.tsv \
-                -f $wd/tmp/filters/filters.${primer_id}.txt \
-                -o $raw_files/${primer_id}/filtered.txt \
-                > $raw_files/${primer_id}/log.filter.txt 2>&1
+                    $barbell filter \
+                    -i $raw_files/annotations.tsv \
+                    -f $wd/tmp/filters/filters.${primer_id}.txt \
+                    -o $raw_files/${primer_id}/filtered.txt \
+                    > $raw_files/${primer_id}/log.filter.txt 2>&1
 
-            ## aditional step for extra barcode cost
-            ## retain only reads with up to X mismatches in flanking ($11) and barcode ($12) cost 
-            ## Nanopore fank should be loose 10 (as its a flank and will have low QC)
-                awk -F'\t' 'NR==1 || ($11 <= 10 && $12 <= 2)' \
-                "$raw_files/${primer_id}/filtered.txt" \
-                > "$raw_files/${primer_id}/filtered.lowcost.txt"
+                ## additional step for extra barcode cost
+                ## retain only reads with up to X mismatches in flanking ($11) and barcode ($12) cost 
+                ## Nanopore fank should be loose 10 (as its a flank and will have low QC)
+                    awk -F'\t' 'NR==1 || ($11 <= 10 && $12 <= 2)' \
+                    "$raw_files/${primer_id}/filtered.txt" \
+                    > "$raw_files/${primer_id}/filtered.lowcost.txt"
 
-                python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0009_demultiplexing_by_barbell.count.py \
-                -p results/0009_demultiplexing_by_barbell/tmp/list.primers.txt \
-                -i results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv \
-                -o results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv.F10B2.tsv \
-                -f 10 \
-                -b 2
+                    python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0009_demultiplexing_by_barbell.count.py \
+                    -p results/0009_demultiplexing_by_barbell/tmp/list.primers.txt \
+                    -i results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv \
+                    -o results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv.F10B2.tsv \
+                    -f 10 \
+                    -b 2
 
             if [ $primer_sequences == "Single" ] ; then
                 ## single-end trimming
@@ -187,44 +187,42 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                     >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
             fi
 
-        ## combine files and reverse complement as needed
-            mkdir -p $raw_files/${primer_id}/fastq2
-            for i in $( ls ${raw_files}/${primer_id}/fastq | awk -F'_' '{print $1"_"$2}' | sort | uniq ); do 
-                echo $primer_id $i
+        ## combine files
+            if [ $primer_sequences == "Single" ] ; then
 
-                # cp $raw_files/${primer_id}/fastq/${i}_F_fw.trimmed.fastq \
-                # $raw_files/${primer_id}/fastq2/${i}_F_fw.trimmed.fastq
-
-                # cp $raw_files/${primer_id}/fastq/${i}_R_fw.trimmed.fastq \
-                # $raw_files/${primer_id}/fastq2/${i}_R_fw.trimmed.fastq
-
-                if [ -f $raw_files/${primer_id}/fastq/${i}_R_fw.trimmed.fastq ]; then
-                    python3 $suppl_scripts/$pipeline.RC_fastq.py \
-                    -i $raw_files/${primer_id}/fastq/${i}_R_fw.trimmed.fastq \
-                    -o $raw_files/${primer_id}/fastq2/${i}_R_fw.trimmed.rc.fastq
-                fi
-
-                if [ -f $raw_files/${primer_id}/fastq/${i}_F_fw__${i}_R_rc.trimmed.fastq ]; then
-                    cp $raw_files/${primer_id}/fastq/${i}_F_fw__${i}_R_rc.trimmed.fastq \
-                    $raw_files/${primer_id}/fastq2/${i}_F_fw__${i}_R_rc.trimmed.rc.fastq
-                fi
+                ## only single primer present
+                cat \
+                ${raw_files}/${primer_id}/fastq/${F_primer}_F_fw.trimmed.fastq \
+                ${raw_files}/${primer_id}/fastq/${R_primer}_R_fw.trimmed.fastq \
+                | pigz -p 10 > ${wd}/fastq/${i}.fastq.gz
 
 
-                if [ -f $raw_files/${primer_id}/fastq/${i}_R_fw__${i}_F_rc.trimmed.fastq ]; then
-                    python3 $suppl_scripts/$pipeline.RC_fastq.py \
-                    -i $raw_files/${primer_id}/fastq/${i}_R_fw__${i}_F_rc.trimmed.fastq \
-                    -o $raw_files/${primer_id}/fastq2/${i}_R_fw__${i}_F_rc.trimmed.rc.fastq
-                fi
+            elif [ $primer_sequences == "Dual" ] ; then
+                echo "Processing $F_primer and $R_primer for sample $sample and $id"
 
-                cat $raw_files/${primer_id}/fastq2/${i}_*.fastq \``
-                > $wd/fastq/${i}.fastq
+                ## primer present on both ends
+                cat \
+                ${raw_files}/${primer_id}/fastq/${F_primer}_fw__${R_primer}_rc.trimmed.fastq \
+                ${raw_files}/${primer_id}/fastq/${R_primer}_fw__${F_primer}_rc.trimmed.fastq \
+                | pigz -p 10 > ${wd}/fastq/${i}.fastq.gz
 
-                reads=$( count_reads_from_fastq	$wd/fastq/${i}.fastq )
-        	    echo -e "${primer_id}\t${i}\t${reads}" >> $wd/summary.reads_per_primer.${suffix}.txt
-            done
+
+                ## primer present on both ends and also single primer present
+            elif [ $primer_sequences == "Both" ] ; then
+                echo "Processing $F_primer and $R_primer for sample $sample and $id"
+                cat \
+                ${raw_files}/${primer_id}/fastq/${F_primer}_F_fw.trimmed.fastq \
+                ${raw_files}/${primer_id}/fastq/${R_primer}_R_fw.trimmed.fastq \
+                ${raw_files}/${primer_id}/fastq/${F_primer}_fw__${R_primer}_rc.trimmed.fastq \
+                ${raw_files}/${primer_id}/fastq/${R_primer}_fw__${F_primer}_rc.trimmed.fastq \
+                | pigz -p 10 > ${wd}/fastq/${i}.fastq.gz
+            fi
+            
+            reads=$( count_reads_from_fastq	 ${wd}/fastq/${i}.fastq.gz )
+            echo -e "${primer_id}\t${i}\t${reads}" >> ${wd}/summary.reads_per_primer.txt
+
         done
     fi
-
 ###############################################################################
 ## just trimp adapters. 
     # barbell annotate -q adapters.fasta -b Fflank -i reads.fastq -o anno.tsv -t 10
