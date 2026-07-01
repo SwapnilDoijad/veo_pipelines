@@ -12,10 +12,10 @@ my_figure	No
 my_UPGMA_Tree	Yes
 
 ## ani
-my_ani	0.95
+my_ani	0.85
 
 ## cov
-my_cov	0.95
+my_cov	0.75
 
 
 # ANI = identical nucleotides ÷ total aligned length. Only the regions that actually align between two contigs are considered.
