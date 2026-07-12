@@ -12,7 +12,7 @@
 
     create_directories_structure_1 $wd
     cut -f 1,3 $primer_file | sed 's/\t/\n/g' > $wd/tmp/list.primers.txt	
-
+    grep ">" ${wd}/tmp/list.primers.txt | sed 's/>//g' | sed 's/_F//g' | sed 's/_R//g' | sort | uniq > $wd/tmp/list.primers.unique.txt	
 
     mkdir -p $wd/tmp/filters
     mkdir -p $wd/tmp/primers
@@ -35,6 +35,7 @@
     cp ${suppl_scripts}/0009_demultiplexing_by_barbell.sbatch \
         $wd/tmp/sbatch/0009_demultiplexing_by_barbell.sbatch
     sbatch ${wd}/tmp/sbatch/0009_demultiplexing_by_barbell.sbatch
+
 
 
 ###############################################################################

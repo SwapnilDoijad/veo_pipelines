@@ -61,17 +61,3 @@
 	# dev.off()
 ###############################################################################
 
-Rhizobium mongolense subsp. loessense CGMCC 1.3401 GCF 900099775.1
-rhizo 158890.5 bvbrc
-rhizo 57676.5 bvbrc
-rhizo 1079460.13 bvbrc
-rhizo 57676.3 bvbrc
-Rhizobium mongolense USDA 1844 GCF 000419765.1
-rhizo 1079460.3 bvbrc
-rhizo 2785056.3 bvbrc
-rhizo 56730.16 bvbrc
-rhizo 3039160.9 bvbrc
-rhizo 3039160.8 bvbrc
-rhizo 3039160.6 bvbrc
-rhizo 3039160.4 bvbrc
-rhizo 3039160.10 bvbrc

@@ -121,7 +121,7 @@
         > $raw_files/tmp/all.distance.for_R.matrix.tab
 
         sed -i 's/ /\t/g' $raw_files/tmp/all.distance.for_R.matrix.tab
-        # sed -e "1,/0/s/0//" $raw_files/tmp/all.distance.for_R.matrix.tab > $raw_files/tmp/all.distance.for_R.matrix.tab
+        sed -i '1s/^0\t/\t/' $raw_files/tmp/all.distance.for_R.matrix.tab 
     fi
         R1_rows=$(wc -l $raw_files/tmp/all.distance.for_R.matrix.tab | awk '{print $1}' )
         R2_columns=$(head -1 $raw_files/tmp/all.distance.for_R.matrix.tab |  sed 's/\t/\n/g' | wc -l ) 
@@ -129,19 +129,21 @@
     #------------------------------------------------------------------------------
     # for_R
     if [ ! "$R1_rows" == "$R2_columns" ] ; then
-        log "rows and cloumns numbers are not OK for R, could not run plot_and_tree.mash-distance.r"
+        log "rows and cloumns numbers are not OK for R, could not run plot_and_tree.fastANI-distance.r"
         else
         log "running R"
         source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate R
         cp $raw_files/tmp/all.distance.for_R.matrix.tab $raw_files/matrix.tab
-        Rscript /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/plot_and_tree.mash-distance.r
+        Rscript ${suppl_scripts}/utilities/plot_and_tree.fastANI-distance.r \
+        -i $raw_files/matrix.tab \
+        -o $raw_files/matrix.tab.phangorn.nwk 
     fi
 
     source /home/groups/VEO/tools/biopython/myenv/bin/activate 
-        if [ ! -f $wd/matrix.tab.tree.phangorn.nwk.tip_labels ] ; then 
-            python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/export_phylogenomic_tip_labels.py \
-            -i $wd/matrix.tab.tree.phangorn.nwk \
-            -o $wd/matrix.tab.tree.phangorn.nwk.tip_labels
+        if [ ! -f $raw_files/matrix.tab.phangorn.nwk.tip_labels ] ; then 
+            python3 ${suppl_scripts}/utilities/export_phylogenomic_tip_labels.py \
+            -i $raw_files/matrix.tab.phangorn.nwk \
+            -o $raw_files/matrix.tab.phangorn.nwk.tip_labels 
         fi
     deactivate
 
@@ -181,10 +183,10 @@ exit
 ###############################################################################
 ## 2025-05-27 16:30:40 @Swapnil Optional
     ## this will give you genomospecies
-    python /home/groups/VEO/scripts_for_users/supplementary_scripts/0137_phylogeny_ANI_by_mash.py \
-    -i $raw_files/representatives/representative_of_a_clusters_at_95.0000_250000nucl-5Mb-genome_ANI.table.txt \
-    -o $raw_files/representatives/representative_of_a_clusters_at_95.0000_250000nucl-5Mb-genome_ANI.table.txt \
-    -n Rhizobium 
+    # python /home/groups/VEO/scripts_for_users/supplementary_scripts/0137_phylogeny_ANI_by_mash.py \
+    # -i $raw_files/representatives/representative_of_a_clusters_at_95.0000_250000nucl-5Mb-genome_ANI.table.txt \
+    # -o $raw_files/representatives/representative_of_a_clusters_at_95.0000_250000nucl-5Mb-genome_ANI.table.txt \
+    # -n Rhizobium 
 
 ###############################################################################
 # screening for the closest strain (time consuming process)

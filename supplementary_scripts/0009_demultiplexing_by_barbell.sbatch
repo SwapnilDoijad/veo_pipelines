@@ -163,65 +163,67 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                     "$raw_files/${primer_id}/filtered.txt" \
                     > "$raw_files/${primer_id}/filtered.lowcost.txt"
 
-                    python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/0009_demultiplexing_by_barbell.count.py \
-                    -p results/0009_demultiplexing_by_barbell/tmp/list.primers.txt \
-                    -i results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv \
-                    -o results/0009_demultiplexing_by_barbell/raw_files/annotations.tsv.F10B2.tsv \
+                    python3 ${suppl_scripts}/0009_demultiplexing_by_barbell.count.py \
+                    -p ${wd}/tmp/list.primers.txt \
+                    -i ${raw_files}/annotations.tsv \
+                    -o ${raw_files}/annotations.tsv.F10B2.tsv \
                     -f 10 \
                     -b 2
 
-            if [ $primer_sequences == "Single" ] ; then
-                ## single-end trimming
-                    $barbell trim \
-                    -i $raw_files/${primer_id}/filtered.lowcost.txt \
-                    -r $fastq \
-                    -o $wd/fastq \
-                    >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
+                if [ $primer_sequences == "Single" ] ; then
+                    ## single-end trimming
+                        $barbell trim \
+                        -i $raw_files/${primer_id}/filtered.lowcost.txt \
+                        -r $fastq \
+                        -o $wd/fastq \
+                        >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
 
-            elif [ $primer_sequences == "Dual" ] || [ $primer_sequences == "Both" ] ; then
-                ## dual-end or both trimming
-                    $barbell trim \
-                    -i $raw_files/${primer_id}/filtered.lowcost.txt \
-                    -r $fastq \
-                    -o $raw_files/${primer_id}/fastq \
-                    >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
-            fi
+                elif [ $primer_sequences == "Dual" ] || [ $primer_sequences == "Both" ] ; then
+                    ## dual-end or both trimming
+                        $barbell trim \
+                        -i $raw_files/${primer_id}/filtered.lowcost.txt \
+                        -r $fastq \
+                        -o $raw_files/${primer_id}/fastq \
+                        >> $raw_files/${primer_id}/log.trim.${suffix}.txt 2>&1
+                fi
+            done
+############################################################################### 
+            ## combine files
 
-        ## combine files
-            if [ $primer_sequences == "Single" ] ; then
+            for unique_primer_id in $(cat ${wd}/tmp/list.primers.unique.txt ); do
+                primer_id=$(echo $unique_primer_id | awk -F'_' '{print $1}' )
 
-                ## only single primer present
-                cat \
-                ${raw_files}/${primer_id}/fastq/${F_primer}_F_fw.trimmed.fastq \
-                ${raw_files}/${primer_id}/fastq/${R_primer}_R_fw.trimmed.fastq \
-                | pigz -p 10 > ${wd}/fastq/${i}.fastq.gz
+                if [ $primer_sequences == "Single" ] ; then
+                    echo "Processing $primer_id for unique_primer_id $unique_primer_id"
+                    ## only single primer present
+                    cat \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_F_fw.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_R_fw.trimmed.fastq \
+                    | pigz -p 10 > ${wd}/fastq/${unique_primer_id}.fastq.gz
 
+                elif [ $primer_sequences == "Dual" ] ; then
+                    echo "Processing $primer_id for unique_primer_id $unique_primer_id"
 
-            elif [ $primer_sequences == "Dual" ] ; then
-                echo "Processing $F_primer and $R_primer for sample $sample and $id"
+                    ## primer present on both ends
+                    cat \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
+                    | pigz -p 10 > ${wd}/fastq/${unique_primer_id}.fastq.gz
 
-                ## primer present on both ends
-                cat \
-                ${raw_files}/${primer_id}/fastq/${F_primer}_fw__${R_primer}_rc.trimmed.fastq \
-                ${raw_files}/${primer_id}/fastq/${R_primer}_fw__${F_primer}_rc.trimmed.fastq \
-                | pigz -p 10 > ${wd}/fastq/${i}.fastq.gz
-
-
-                ## primer present on both ends and also single primer present
-            elif [ $primer_sequences == "Both" ] ; then
-                echo "Processing $F_primer and $R_primer for sample $sample and $id"
-                cat \
-                ${raw_files}/${primer_id}/fastq/${F_primer}_F_fw.trimmed.fastq \
-                ${raw_files}/${primer_id}/fastq/${R_primer}_R_fw.trimmed.fastq \
-                ${raw_files}/${primer_id}/fastq/${F_primer}_fw__${R_primer}_rc.trimmed.fastq \
-                ${raw_files}/${primer_id}/fastq/${R_primer}_fw__${F_primer}_rc.trimmed.fastq \
-                | pigz -p 10 > ${wd}/fastq/${i}.fastq.gz
-            fi
-            
-            reads=$( count_reads_from_fastq	 ${wd}/fastq/${i}.fastq.gz )
-            echo -e "${primer_id}\t${i}\t${reads}" >> ${wd}/summary.reads_per_primer.txt
-
-        done
+                    ## primer present on both ends and also single primer present
+                elif [ $primer_sequences == "Both" ] ; then
+                    echo "Processing $primer_id for unique_primer_id $unique_primer_id"
+                    cat \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_F_fw.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_R_fw.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
+                    | pigz -p 10 > ${wd}/fastq/${unique_primer_id}.fastq.gz
+                fi
+                
+                reads=$( count_reads_from_fastq	 ${wd}/fastq/${unique_primer_id}.fastq.gz )
+                echo -e "${unique_primer_id}\t${reads}" >> ${wd}/summary.reads_per_primer.txt
+            done
     fi
 ###############################################################################
 ## just trimp adapters. 
