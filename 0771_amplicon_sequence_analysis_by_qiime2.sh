@@ -8,7 +8,12 @@
 ## preparation
 
     create_directories_structure_1 $wd
-    submit_jobs $wd $pipeline
+    cp ${suppl_scripts}/${pipeline}.sbatch \
+    ${wd}/tmp/sbatch/${pipeline}.sbatch
+
+    sbatch ${wd}/tmp/sbatch/${pipeline}.sbatch
+    
+    # submit_jobs $wd $pipeline
     
     echo "ENDED : $pipeline --------------------------------------"
 ###############################################################################

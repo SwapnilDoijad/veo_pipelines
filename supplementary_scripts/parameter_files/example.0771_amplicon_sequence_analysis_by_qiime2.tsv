@@ -34,10 +34,10 @@ my_p-trunc-len-f	240	# will trim everything at $ and onwards
 my_p-trunc-len-r	240	# will trim everything at $ and onwards # will not consider for single end 
 
 ## database for taxonomic classification, choose (remove ##) one of the following 
-## Greengenes /veodata/02/databases/qiime2/v2024.5/2022.10.backbone.full-length.nb.sklearn-1.4.2.qza
-## GTDB /veodata/02/databases/qiime2/v2024.5/gtdb_classifier_r220.qza
-## silva ## NOT RECOMMENDED DUE TO OLD classification SYSTEM /veodata/02/databases/qiime2/v2024.5/silva-138-99-nb-classifier.qza
-my_database	/veodata/02/databases/qiime2/v2024.5/2022.10.backbone.full-length.nb.sklearn-1.4.2.qza
+## Greengenes not avilable 
+## GTDB not avilable
+## silva /veodata/03/databases/qiime2/silva-138-99-nb-classifier.qza
+my_database	/veodata/03/databases/qiime2/silva-138-99-nb-classifier.qza
 
 ##### FOR ADVANCED USERS ##### DONT CHANGE IF YOU DONT KNOW HAVE IDEA ABOUT THESE PARAMETERS ####
 ## parameters for filtering taxonomic features

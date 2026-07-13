@@ -206,8 +206,8 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 
                     ## primer present on both ends
                     cat \
-                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
-                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_F_fw__${unique_primer_id}_R_rc.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_R_fw__${unique_primer_id}_F_rc.trimmed.fastq \
                     | pigz -p 10 > ${wd}/fastq/${unique_primer_id}.fastq.gz
 
                     ## primer present on both ends and also single primer present
@@ -216,8 +216,8 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
                     cat \
                     ${raw_files}/${primer_id}/fastq/${unique_primer_id}_F_fw.trimmed.fastq \
                     ${raw_files}/${primer_id}/fastq/${unique_primer_id}_R_fw.trimmed.fastq \
-                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
-                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_fw__${unique_primer_id}_rc.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_F_fw__${unique_primer_id}_R_rc.trimmed.fastq \
+                    ${raw_files}/${primer_id}/fastq/${unique_primer_id}_R_fw__${unique_primer_id}_F_rc.trimmed.fastq \
                     | pigz -p 10 > ${wd}/fastq/${unique_primer_id}.fastq.gz
                 fi
                 

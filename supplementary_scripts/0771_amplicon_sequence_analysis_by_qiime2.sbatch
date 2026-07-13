@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name 0771_amplicon_sequence_analysis_by_qiime2
+#SBATCH --job-name=0771_amplicon_sequence_analysis_by_qiime2
 #SBATCH --partition=short,interactive,standard,long,gpu
-#SBATCH --output $tmp/slurm/%J.out
-#SBATCH --error $tmp/slurm/%j.err
-#SBATCH --mem=200G
-#SBATCH --cpus-per-task=20
+#SBATCH --output=results/0771_amplicon_sequence_analysis_by_qiime2/tmp/slurm/%J.out
+#SBATCH --error=results/0771_amplicon_sequence_analysis_by_qiime2/tmp/slurm/%j.err
+#SBATCH --mem=100G
+#SBATCH --cpus-per-task=40
 #SBATCH --mail-type=END
 #SBATCH --mail-user=your_email@example.com
 ###############################################################################
@@ -194,7 +194,7 @@
 			log "ALREADY FINISHED : step-02a : Quality control and denoising by qiime2"
 		fi
 	fi
-
+	# exit
 ###############################################################################
 ## 2024-12-20 10:02:26 @Swapnil, need to integrate this in the pipeline add data
 	## To ensure comparability across samples and minimize bias in diversity measurements, \
@@ -219,8 +219,8 @@
 		--output-path $raw_files/03_core-metrics-results/exported_feature
 
 	biom convert \
-		-i $raw_files/03_core-metrics-results/feature-table.biom \
-		-o $raw_files/03_core-metrics-results/feature-table.tsv \
+		-i $raw_files/03_core-metrics-results/exported_feature/feature-table.biom \
+		-o $raw_files/03_core-metrics-results/exported_feature/feature-table.tsv \
 		--to-tsv
 
 	qiime metadata tabulate \
