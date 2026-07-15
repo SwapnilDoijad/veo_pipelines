@@ -9,7 +9,7 @@
 ## step-01: preparation
     pipeline=0222_gene_detection_abr_by_CARD-rgi
     source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
-	sublist=results/$pipeline/tmp/lists/ABC
+	sublist=${wd}/tmp/lists/ABC
     fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
     alignment_tool=$(echo DIAMOND) #{DIAMOND,BLAST}
 	echo $raw_files
