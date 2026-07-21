@@ -116,7 +116,7 @@
 		else
 		log "ALREADY FINISHED : step-01b : Checking the quality of the reads by qiime2"
 	fi 
-	## Visuliase $raw_files/demux.qzv on https://view.qiime2.org/
+	## Visualise $raw_files/demux.qzv on https://view.qiime2.org/
 	## and then decide the cutoff for next step. 
 	## There should be atleast 10K reads per sample. 
 	## Distribution of eqvivalent number of reads across the samples are good. 
@@ -130,11 +130,10 @@
 
 	# Perform quality control and denoising using the DADA2 or Deblur plugin. 
 	# This step involves filtering out low-quality reads, removing chimeric sequences, \
-	# and dereplicating sequences to generate amplicon sequence variants (ASVs). = count abundance
+	# and dereplicating sequences to generate amplicon sequence variants (ASVs) = count abundance
 
 	## note the --p-trunc-len-f and --p-trunc-len-f values should not be lower (otherwise there will not be overalps)
 	## below step for filtering reads (and its parameter values ) is important, as it results in the final number of reads
-
 
 	if [ -n "$paired" ]; then
 		if [ ! -f $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza ]; then 
@@ -169,20 +168,20 @@
 			log "STARTED : step-02a : Quality control and denoising by qiime2"
 
 			qiime dada2 denoise-single \
-			--i-demultiplexed-seqs $raw_files/01_imported_data/demux.qza \
-			--p-trim-left $my_p_trim_left_f \
-			--p-trunc-len $my_p_trim_left_f \
-			--o-representative-sequences $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
-			--o-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
-			--o-denoising-stats $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza
+				--i-demultiplexed-seqs $raw_files/01_imported_data/demux.qza \
+				--p-trim-left $my_p_trim_left_f \
+				--p-trunc-len $my_p_trim_left_f \
+				--o-representative-sequences $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
+				--o-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
+				--o-denoising-stats $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza
 
 			qiime metadata tabulate \
-			--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
-			--o-visualization $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv
+				--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
+				--o-visualization $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv
 
 			qiime tools export \
-			--input-path $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv \
-			--output-path $raw_files/02_QC_denoising/stats
+				--input-path $raw_files/02_QC_denoising/demux.qza.stats-dada2.qzv \
+				--output-path $raw_files/02_QC_denoising/stats
 
 			awk 'NR!=2' $raw_files/02_QC_denoising/stats/metadata.tsv > $raw_files/02_QC_denoising/stats/metadata.tsv.tmp
 			truncate -s -1 $raw_files/02_QC_denoising/stats/metadata.tsv.tmp 
@@ -228,8 +227,8 @@
 		--o-visualization $raw_files/03_core-metrics-results/shannon_vector.qzv
 		
 	qiime tools export \
-	--input-path $raw_files/03_core-metrics-results/shannon_vector.qza \
-	--output-path $raw_files/03_core-metrics-results/exported_alpha
+		--input-path $raw_files/03_core-metrics-results/shannon_vector.qza \
+		--output-path $raw_files/03_core-metrics-results/exported_alpha
 
 	qiime emperor plot \
 		--i-pcoa $raw_files/03_core-metrics-results/bray_curtis_pcoa_results.qza \
@@ -285,28 +284,30 @@
 ###############################################################################
 ## step-03 : FeatureTable and FeatureData summarize
 	mkdir $raw_files/03_FeatureTable > /dev/null 2>&1
+
 	if [ ! -f $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv ] ; then 
 		log "STARTED : step-03 : FeatureTable and FeatureData summarize by qiime2"
+
 		qiime feature-table summarize \
-		--i-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
-		--o-visualization $raw_files/03_FeatureTable/demux.qza.table-dada2.qza.qzv \
-		--m-sample-metadata-file $metadata
+			--i-table $raw_files/02_QC_denoising/demux.qza.table-dada2.qza \
+			--o-visualization $raw_files/03_FeatureTable/demux.qza.table-dada2.qza.qzv \
+			--m-sample-metadata-file $metadata
 
 		qiime feature-table tabulate-seqs \
-		--i-data $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
-		--o-visualization $raw_files/03_FeatureTable/demux.qza.rep-seqs-dada2.qza.qzv
+			--i-data $raw_files/02_QC_denoising/demux.qza.rep-seqs-dada2.qza \
+			--o-visualization $raw_files/03_FeatureTable/demux.qza.rep-seqs-dada2.qza.qzv
 
 		qiime tools export \
-		--input-path $raw_files/03_FeatureTable/demux.qza.rep-seqs-dada2.qza.qzv \
-		--output-path $raw_files/03_FeatureTable/stats
+			--input-path $raw_files/03_FeatureTable/demux.qza.rep-seqs-dada2.qza.qzv \
+			--output-path $raw_files/03_FeatureTable/stats
 
 		qiime metadata tabulate \
-		--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
-		--o-visualization $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv ## important statistics to view
+			--m-input-file $raw_files/02_QC_denoising/demux.qza.stats-dada2.qza \
+			--o-visualization $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv ## important statistics to view
 
 		qiime tools export \
-		--input-path $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv \
-		--output-path $raw_files/03_FeatureTable/stats
+			--input-path $raw_files/03_FeatureTable/demux.qza.stats-dada2.qza.qzv \
+			--output-path $raw_files/03_FeatureTable/stats
 
 		log "FINISHED : step-03 : FeatureTable and FeatureData summarize by qiime2"
 		else
@@ -517,9 +518,9 @@
 
 		## alpha diversity
 		qiime diversity alpha \
-		--i-table $raw_files/05_Filt_NonBacterial_Singletons/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza \
-		--p-metric shannon \
-		--o-alpha-diversity $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.shannon-alpha.qza
+			--i-table $raw_files/05_Filt_NonBacterial_Singletons/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza \
+			--p-metric shannon \
+			--o-alpha-diversity $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.shannon-alpha.qza
 
 		qiime diversity alpha-group-significance \
 		--i-alpha-diversity $raw_files/08_Alpha_Beta_Diversity/demux.qza.table-dada2.qza.bacteria_only.qza.singleton_filtered-table.qza.shannon-alpha.qza \
