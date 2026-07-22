@@ -3,7 +3,7 @@
 echo "script 0002 download assemblies from NCBI started ------------------------------" 
 ###############################################################################
 # step-01:  
-    echo "provide list of accession (for e.g. all)"
+    echo "provide list of accession (for e.g. all)"https://servicedesk.uni-jena.de/plugins/servlet/desk/
     echo "---------------------------------------------------------------------"
     ls list.*.txt | awk -F'.' '{print $2}'
     echo "---------------------------------------------------------------------"
