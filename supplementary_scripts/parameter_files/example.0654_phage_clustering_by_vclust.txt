@@ -17,6 +17,8 @@ my_ani	0.85
 ## cov
 my_cov	0.75
 
+## version available (1.2.7 or 1.3.1)
+my_vclust_version	1.3.1
 
 # ANI = identical nucleotides ÷ total aligned length. Only the regions that actually align between two contigs are considered.
 # gANI = identical nucleotides ÷ length of the query (or reference) genome. Same matches as ANI, but normalized by entire genome length, not just aligned parts.
