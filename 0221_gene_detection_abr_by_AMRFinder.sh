@@ -8,6 +8,7 @@
 ## step-01: file and directory preparation
     fasta_directory=$( grep my_fasta_directory $parameters | awk '{print $2}' )
     input_file_type=$(ls $fasta_directory | head -1 |  awk -F'.' '{print $NF}')
+    echo "Input file type detected as .$input_file_type"
 
     if [ "$input_file_type" = "faa" ] ; then
         basename -a $fasta_directory/*.faa > list.$pipeline.txt
@@ -19,9 +20,7 @@
 
     create_directories_structure_1 $wd
     split_list $wd $list
-    submit_jobs $wd $pipeline
-
-    mkdir -p $raw_files/tmp > /dev/null 2>&1
+    # submit_jobs $wd $pipeline
 
 ###############################################################################
 ## footer

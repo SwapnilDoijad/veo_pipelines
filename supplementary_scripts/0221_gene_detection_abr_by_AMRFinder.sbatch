@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=0221_gene_detection_abr_by_AMRFinder
-#SBATCH --partition=short,gpu-veo,gpu,gpu-test,standard,long
+#SBATCH --partition=gpu-veo,gpu,gpu-test,standard,long
 #SBATCH --output=results/0221_gene_detection_abr_by_AMRFinder/tmp/slurm/%j.out
 #SBATCH --error=results/0221_gene_detection_abr_by_AMRFinder/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=40
 ###############################################################################
 ## step-01: preparation
     pipeline=0221_gene_detection_abr_by_AMRFinder
@@ -28,30 +28,33 @@
                     (amrfinder \
                     -p $fasta_directory/$fasta \
                     -o $raw_files/$fasta.csv \
+                    -i 0.9 -c 0.9 \
                     --threads $SLURM_CPUS_PER_TASK )> /dev/null 2>&1
 
                     elif [ "$input_file_type" = "fasta" ] || [ "$input_file_type" = "fa" ] || [ "$input_file_type" = "fna" ]; then
                     log "Input file type detected as .fasta/.fa/.fna"
-			        (amrfinder \
+			        amrfinder \
                     -n $fasta_directory/$fasta \
                     -o $raw_files/$fasta.csv \
-                    --threads $SLURM_CPUS_PER_TASK )> /dev/null 2>&1
+                    -i 0.9 -c 0.9 \
+                    --threads $SLURM_CPUS_PER_TASK
 
                 fi
 
-            awk 'FNR>1' $raw_files/$fasta.csv >> $raw_files/tmp/all.txt
+            ## filter for 95% Coverage ($17) of reference	95% Identity ($18) to reference
+            awk -F'\t' 'FNR>1 && $17>=95 && $18>=95' \
+            $raw_files/$fasta.csv \
+            >> $raw_files/$fasta.filtered.tsv
             
-            sed "s/^/$i\t/g"  $raw_files/$i.fasta.csv \
-            | sed "0,/$i/s/$i/id/" \
-            > $raw_files/$i.fasta.tsv
+            # sed "s/^/$fasta\t/g"  $raw_files/$fasta.csv \
+            # | sed "0,/$fasta/s/$fasta/id/" \
+            # > $raw_files/$fasta.tsv
 
             else
             log "ALREADY FINISHED : $pipeline : $fasta"
         fi
     done
 
-    sed '/Method/d' $raw_files/*.fasta.tsv \
-    >> $raw_files/tmp/combined.fasta.tsv
 
     log "ENDED : $pipeline : sbatch for $sublist"
 ###############################################################################

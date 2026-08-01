@@ -3,7 +3,8 @@
 #SBATCH --partition=standard,long,interactive,gpu,gpu-test,gpu-veo,fat
 #SBATCH --output=results/0072_QC_of_contigs_by_checkV/tmp/slurm/%j.out
 #SBATCH --error=results/0072_QC_of_contigs_by_checkV/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=25
+#SBATCH --mem=100G
+#SBATCH --cpus-per-task=40
 #-- Command section ------------------------
 pipeline=0072_QC_of_contigs_by_checkV
 source /home/groups/VEO/scripts_for_users/supplementary_scripts/my_functions.sh
