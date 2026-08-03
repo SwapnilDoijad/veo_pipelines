@@ -144,6 +144,20 @@
 			-f ${raw_files}/all.fna \
 			-o ${raw_files}/representative \
 			--extension fasta
+
+		if [ "$UPGMA_Tree" == "Yes" ]; then
+			mkdir -p ${raw_files}/tANI > /dev/null 2>&1
+			source /home/groups/VEO/tools/biopython/myenv/bin/activate
+			python ${suppl_scripts}/${pipeline}.matrix.v1.3.3.py \
+				-i ${raw_files}/ani.tsv \
+				--ids ${raw_files}/clusters.tsv.representative.fasta.ids \
+				--metric tani \
+				-o ${raw_files}/tANI
+
+			python ${suppl_scripts}/${pipeline}.UPGMA.py \
+				-i ${raw_files}/tANI/tani_distance_matrix.tsv \
+				-o ${raw_files}/tANI/tani_distance_matrix 
+		fi 
 	fi
 
 ###############################################################################
