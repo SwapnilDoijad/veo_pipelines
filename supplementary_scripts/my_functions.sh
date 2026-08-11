@@ -463,6 +463,17 @@ clean() {
         rm -rf tmp/$user.$SLURM_JOB_ID.general_log.py
 }
 
+conclude() {
+    local jobid="$1"
+
+    user=$(whoami)
+    user_email=$(grep $user $suppl_scripts/user_email.csv | awk -F'\t' '{print $3}')
+
+    sbatch \
+        --dependency=afterok:"$jobid" \
+        --mail-type=END,FAIL \
+        --mail-user="$user_email"
+}
 ## old (20251125) log_usage
     # log_usage() {
     #     local pid="$1"

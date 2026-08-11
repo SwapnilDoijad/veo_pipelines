@@ -3,8 +3,8 @@
 #SBATCH --partition=standard,long,gpu,gpu-veo,gpu-test,interactive
 #SBATCH --output results/0083_annotation_prophage_by_pharokka/tmp/slurm/%j.out
 #SBATCH --error results/0083_annotation_prophage_by_pharokka/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=24
-#SBATCH --mem=50G
+#SBATCH --cpus-per-task=40
+#SBATCH --mem=10G
 ###############################################################################
 ## 00: preparations
     pipeline=0083_annotation_prophage_by_pharokka
@@ -20,7 +20,7 @@
     conda activate pharokka_v1.7.2
 
     for i in $(cat $sublist); do
-        if [ ! -f $wd/raw_files/$i/$i.gbk ]; then
+        if [ ! -f ${raw_files}/$i/$i.gbk ]; then
 			log "STARTED : $pipeline : $mode : $i "
 
             # id=$(echo $i | cut -f 1 -d '_')
@@ -32,7 +32,7 @@
 
                 pharokka.py \
                 -i $fasta_directory/$i.fasta \
-                -o $raw_files/$i \
+                -o ${raw_files}/$i \
                 -d /veodata/03/databases/pharokka/v1.7.1 \
                 -t $SLURM_CPUS_PER_TASK \
                 -f -p $i -l $i \
@@ -42,7 +42,7 @@
             elif [ $mode == "fast" ]; then
                 pharokka.py \
                 -i $fasta_directory/$i.fasta \
-                -o $wd/raw_files/$i \
+                -o ${raw_files}/$i \
                 -d /veodata/03/databases/pharokka/v1.7.1 \
                 -t $SLURM_CPUS_PER_TASK \
                 -g prodigal \

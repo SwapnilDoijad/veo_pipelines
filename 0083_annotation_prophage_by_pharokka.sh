@@ -13,6 +13,13 @@
     create_directories_structure_1 $wd
     split_list $wd $list
     submit_jobs $wd $pipeline
+
+    # number_of_genomes=$(wc -l < $list)
+	# create_directories_structure_1 $wd
+    # cp ${suppl_scripts}/${pipeline}.sbatch \
+    # $wd/tmp/sbatch/${pipeline}.sbatch
+    # jobid=$(sbatch --parsable --array=1-${number_of_genomes}%20 ${wd}/tmp/sbatch/${pipeline}.sbatch)
+    # conclude ${jobid}
 ###############################################################################
 ## step-02: running pharokka
 

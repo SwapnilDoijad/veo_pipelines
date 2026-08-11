@@ -14,14 +14,12 @@
 	create_directories_structure_1 $wd
     # split_list $wd $list
     # submit_jobs $wd $pipeline
-    cp ${suppl_scripts}/0229_IS_detection_by_isescan.sbatch \
-    $wd/tmp/sbatch/0229_IS_detection_by_isescan.sbatch\
+    cp ${suppl_scripts}/${pipeline}.sbatch \
+    $wd/tmp/sbatch/${pipeline}.sbatch
 
-    jobid=$(sbatch --parsable --array=1-${number_of_genomes}%20 $wd/tmp/sbatch/0229_IS_detection_by_isescan.sbatch)
+    jobid=$(sbatch --parsable --array=1-${number_of_genomes}%20 $wd/tmp/sbatch/${pipeline}.sbatch)
 
-    sbatch \
-    --dependency=afterok:$jobid \
-    --wrap='echo "everything is done"'
 ###############################################################################
+    conclude ${jobid}
     log "SUBMITTED: $pipeline"
 ###############################################################################
