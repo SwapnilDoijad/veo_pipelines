@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name 0224_plasmid_detection_by_platon
-#SBATCH --partition=standard,long
+#SBATCH --job-name=0224_plasmid_detection_by_platon
+#SBATCH --partition=standard,long,gpu,gpu-test,gpu-veo,interactive
 #SBATCH --output results/0224_plasmid_detection_by_platon/tmp/slurm/%j.out
 #SBATCH --error results/0224_plasmid_detection_by_platon/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=40
-#SBATCH --mem=100G
+#SBATCH --cpus-per-task=10
+#SBATCH --mem=20G
 ###############################################################################
 ## 00: preparation
     pipeline=0224_plasmid_detection_by_platon
