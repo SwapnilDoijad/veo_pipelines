@@ -3,7 +3,7 @@
 #SBATCH --partition=short,long,standard,gpu-veo,gpu,gpu-test
 #SBATCH --output=results/0673_identifying_close_relative_in_userSpecified_database_by_blast/tmp/slurm/%j.out
 #SBATCH --error=results/0673_identifying_close_relative_in_userSpecified_database_by_blast/tmp/slurm/%j.out
-#SBATCH --mem=200G
+#SBATCH --mem=20G
 #SBATCH --cpus-per-task=20
 ###############################################################################
 ## preparation
@@ -28,14 +28,14 @@
 			-query $query_fasta_dir/$i.fasta \
 			-db $wd/blastdb/$db_name \
 			-out $raw_files/$i.blastn \
-			-outfmt "6 qseqid sseqid qlen slen qstart qend sstart send length mismatch pident evalue bitscore" \
+			-outfmt "6 qseqid sseqid qlen slen qstart qend sstart send length mismatch pident evalue bitscore sseq" \
 			-num_threads $SLURM_CPUS_PER_TASK -max_target_seqs 100 -max_hsps 1
 
-			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore" $raw_files/$i.blastn
+			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore\tsseq" $raw_files/$i.blastn
 
 			# filter results
 			awk -v id="$identity" -v cov="$query_coverage" 'NR>1 && ($11 >= id) && (($9*100)/$3 >= cov)' $raw_files/$i.blastn > $raw_files/$i.blastn.filtered_"${query_coverage}pcov_${identity}pid"
-			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid
+			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore\tsseq" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid
 
 			## get_fasta if the hits ($query_coverage"pcov"_"$identity"pid) are found 
 			source /home/groups/VEO/tools/python/biopython/bin/activate
@@ -90,39 +90,39 @@
 	# done 
 ###############################################################################
 ## annotate MBPD results
-	for i in $(cat $sublist); do
-		# get all query ids
-		awk '{print $1}' $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
-		> $raw_files/$i.query.ids
+	# for i in $(cat $sublist); do
+	# 	# get all query ids
+	# 	awk '{print $1}' $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
+	# 	> $raw_files/$i.query.ids
 
-		awk '{print $2}' $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
-		> $raw_files/$i.blastn.ids
+	# 	awk '{print $2}' $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
+	# 	> $raw_files/$i.blastn.ids
 
-		rm -rf $raw_files/$i.blastn.ids.hits > /dev/null 2>&1
-		for query_id in $(cat $raw_files/$i.query.ids ); do 
-			subject_id=$(grep -w "$query_id" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid | awk '{print $2}' | head -1 )
-			lineage=$(grep $subject_id /veodata/03/databases/MBPD/v251021/pathogen.tax)
+	# 	rm -rf $raw_files/$i.blastn.ids.hits > /dev/null 2>&1
+	# 	for query_id in $(cat $raw_files/$i.query.ids ); do 
+	# 		subject_id=$(grep -w "$query_id" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid | awk '{print $2}' | head -1 )
+	# 		lineage=$(grep $subject_id /veodata/03/databases/MBPD/v251021/pathogen.tax)
 
-			if [ -z $subject_id ]; then 
-				lineage="not_a_pathogen"
-			fi
+	# 		if [ -z $subject_id ]; then 
+	# 			lineage="not_a_pathogen"
+	# 		fi
 
-			echo $lineage | tee -a $raw_files/$i.blastn.ids.hits
-		done 
+	# 		echo $lineage | tee -a $raw_files/$i.blastn.ids.hits
+	# 	done 
 
-		paste $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
-		$raw_files/$i.blastn.ids.hits \
-		> $raw_files/$i.blastn.ids.hits.out 
+	# 	paste $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid \
+	# 	$raw_files/$i.blastn.ids.hits \
+	# 	> $raw_files/$i.blastn.ids.hits.out 
 
-		awk '!seen[$1]++' $raw_files/$i.blastn.ids.hits.out \
-		> $raw_files/$i.blastn.ids.hits.out.best
+	# 	awk '!seen[$1]++' $raw_files/$i.blastn.ids.hits.out \
+	# 	> $raw_files/$i.blastn.ids.hits.out.best
 
-		awk -F';' '{print $NF}' $raw_files/$i.blastn.ids.hits.out.best \
-		| sed 's/ /_/g' | sed 's/s1__//' \
-		| sort  | uniq -c | grep -v qseqid \
-		| awk '{print $2"\t"$1}' \
-		> $raw_files/$i.blastn.ids.hits.out.best.counts
-	done
+	# 	awk -F';' '{print $NF}' $raw_files/$i.blastn.ids.hits.out.best \
+	# 	| sed 's/ /_/g' | sed 's/s1__//' \
+	# 	| sort  | uniq -c | grep -v qseqid \
+	# 	| awk '{print $2"\t"$1}' \
+	# 	> $raw_files/$i.blastn.ids.hits.out.best.counts
+	# done
 ###############################################################################
 log "FINISHED : $pipeline for $sublist" # && clean
 ###############################################################################

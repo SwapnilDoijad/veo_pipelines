@@ -12,7 +12,7 @@
 
     (mkdir -p $raw_files/tmp)> /dev/null 2>&1
     (mkdir -p $raw_files/msh/distance)> /dev/null 2>&1
- 
+ exit
     # Specify the number of CPU cores you want to use
     num_cores=80 
 ###############################################################################
