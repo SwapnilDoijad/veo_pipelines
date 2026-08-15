@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0083_annotation_prophage_by_pharokka
-#SBATCH --partition=standard,long,gpu,gpu-veo,gpu-test,interactive
+#SBATCH --partition=standard,long,gpu,gpu-veo,gpu-test
 #SBATCH --output results/0083_annotation_prophage_by_pharokka/tmp/slurm/%j.out
 #SBATCH --error results/0083_annotation_prophage_by_pharokka/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
