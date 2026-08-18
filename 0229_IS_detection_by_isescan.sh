@@ -12,12 +12,16 @@
     number_of_genomes=$(wc -l < $list)
 
 	create_directories_structure_1 $wd
-    # split_list $wd $list
-    # submit_jobs $wd $pipeline
-    cp ${suppl_scripts}/${pipeline}.sbatch \
-    $wd/tmp/sbatch/${pipeline}.sbatch
 
-    jobid=$(sbatch --parsable --array=1-${number_of_genomes}%20 $wd/tmp/sbatch/${pipeline}.sbatch)
+    if [ $number_of_genomes -gt 1000 ]; then
+        split_list $wd $list
+        submit_jobs $wd $pipeline
+    else
+        cp ${suppl_scripts}/${pipeline}.array.sbatch \
+        $wd/tmp/sbatch/${pipeline}.array.sbatch
+
+        jobid=$(sbatch --parsable --array=1-${number_of_genomes}%20 $wd/tmp/sbatch/${pipeline}.array.sbatch)
+    fi
 
 ###############################################################################
     conclude ${jobid}
