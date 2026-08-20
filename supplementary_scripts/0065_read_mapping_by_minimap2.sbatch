@@ -159,7 +159,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
 
                 total_bases=$(python3 $suppl_scripts/utilities/fastq_get_reads_bases.py $fastq_id_path/$fastq_id.fastq.gz | awk '{print $2}')
                 mapped_bases=$(awk '{sum+=$3} END {print sum}' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt )
-                awk -v total_bases="$total_bases" -v mapped_bases="$mapped_bases" '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig], 10000*(sum[contig]/mapped_bases), 10000*sum[contig]/total_bases}' \
+                awk -v total_bases="$total_bases" -v mapped_bases="$mapped_bases" '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig], (10000*(sum[contig]/count[contig])/mapped_bases), (10000*sum[contig]/count[contig]/total_bases)}' \
                 $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt \
                 > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage_perBase.txt 
 
