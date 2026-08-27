@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name 0064_identification_by_genomad
-#SBATCH --partition=standard,short,long,interactive
+#SBATCH --partition=standard,long,interactive,gpu,gpu-veo,gpu-test
 #SBATCH --output results/0064_identification_by_genomad/tmp/slurm/%j.0064_identification_by_genomad.out
 #SBATCH --error results/0064_identification_by_genomad/tmp/slurm/%j.0064_identification_by_genomad.err
 #SBATCH --mem=100G
