@@ -28,14 +28,14 @@
 			-query $query_fasta_dir/$i.fasta \
 			-db $wd/blastdb/$db_name \
 			-out $raw_files/$i.blastn \
-			-outfmt "6 qseqid sseqid qlen slen qstart qend sstart send length mismatch pident evalue bitscore sseq" \
+			-outfmt "6 qseqid sseqid qlen slen qstart qend sstart send length mismatch pident evalue bitscore qseq sseq" \
 			-num_threads $SLURM_CPUS_PER_TASK -max_target_seqs 100 -max_hsps 1
 
-			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore\tsseq" $raw_files/$i.blastn
+			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore\tqseq\tsseq" $raw_files/$i.blastn
 
 			# filter results
 			awk -v id="$identity" -v cov="$query_coverage" 'NR>1 && ($11 >= id) && (($9*100)/$3 >= cov)' $raw_files/$i.blastn > $raw_files/$i.blastn.filtered_"${query_coverage}pcov_${identity}pid"
-			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore\tsseq" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid
+			sed -i -e "1i qseqid\tsseqid\tqlen\tslen\tqstart\tqend\tsstart\tsend\tlength\tmismatch\tpident\tevalue\tbitscore\tqseq\tsseq" $raw_files/$i.blastn.filtered_$query_coverage"pcov"_"$identity"pid
 
 			## get_fasta if the hits ($query_coverage"pcov"_"$identity"pid) are found 
 			source /home/groups/VEO/tools/python/biopython/bin/activate
