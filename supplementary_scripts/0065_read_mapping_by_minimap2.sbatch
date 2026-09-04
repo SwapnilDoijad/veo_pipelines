@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0065_read_mapping_by_minimap2
-#SBATCH --partition=standard,long,gpu,gpu-veo,gpu-test,fat
+#SBATCH --partition=standard,long,gpu,gpu-test,fat
 #SBATCH --output=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.out.txt
 #SBATCH --error=results/0065_read_mapping_by_minimap2/tmp/slurm/%j.err.txt
 #SBATCH --mem=200G

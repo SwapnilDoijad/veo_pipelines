@@ -29,6 +29,10 @@
                 sed "s|ABC|$sublist|g" $suppl_scripts/$pipeline.v1.1.sbatch \
                 > "$wd"/tmp/sbatch/"$pipeline.$sublist.v1.1.sbatch"
                 sbatch "$wd"/tmp/sbatch/"$pipeline.$sublist.v1.1.sbatch"
+            elif [ $jaeger_version == "v1.26.5" ]; then
+                sed "s|ABC|$sublist|g" $suppl_scripts/$pipeline.v1.26.5.sbatch \
+                > "$wd"/tmp/sbatch/"$pipeline.$sublist.v1.26.5.sbatch"
+                sbatch "$wd"/tmp/sbatch/"$pipeline.$sublist.v1.26.5.sbatch"
             else
                 echo "Please check the Jaeger version in the parameter file: $parameters"
         fi

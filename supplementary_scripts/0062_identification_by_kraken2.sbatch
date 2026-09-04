@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #SBATCH --job-name=0062_identification_by_kraken2
-#SBATCH --partition=standard
+#SBATCH --partition=short,long,standard,gpu,gpu-veo,gpu-test
 #SBATCH --output=results/0062_identification_by_kraken2/tmp/slurm/%j.out
 #SBATCH --error=results/0062_identification_by_kraken2/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
