@@ -33,6 +33,8 @@
                 sed "s|ABC|$sublist|g" $suppl_scripts/$pipeline.v1.26.5.sbatch \
                 > "$wd"/tmp/sbatch/"$pipeline.$sublist.v1.26.5.sbatch"
                 sbatch "$wd"/tmp/sbatch/"$pipeline.$sublist.v1.26.5.sbatch"
+                rm -rf $raw_files/phage
+                rm -rf $raw_files/prophage
             else
                 echo "Please check the Jaeger version in the parameter file: $parameters"
         fi
