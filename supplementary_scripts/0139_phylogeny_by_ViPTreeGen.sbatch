@@ -22,7 +22,7 @@
 ## run ViPTreeGen
 
     $tools/ViPTreeGen/v1.1.3/ViPTreeGen/ViPTreeGen \
-    $fasta_file \/h 
+    $fasta_file \
     $raw_files/ViPTreeGen \
     & my_pid=$!
     get_resource_stat $my_pid $wd/tmp/resource_log/ViPTreeGen.tsv 
