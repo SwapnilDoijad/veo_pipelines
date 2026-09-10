@@ -155,14 +155,20 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
 
             if [ -f $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt ]; then 
                 ## average_coverage=sum of depth at every base/ number of bases in the contig or con
-
-
+                
+                ## $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage_perBase.txt will report 
+                ## count[contig] = covered_contig_length
+                ## sum[contig] = bases_mapped_to_covered_contig_length
+                ## sum[contig]/count[contig] = avg_depth_covered_position
+                ## "contig_id	avg_depth_covered_position	avg_depth_covered_position_per_10K_mapped_bases	avg_depth_covered_position_per_10K_total_bases covered_contig_length bases_mapped_to_covered_contig_length"
                 total_bases=$(python3 $suppl_scripts/utilities/fastq_get_reads_bases.py $fastq_id_path/$fastq_id.fastq.gz | awk '{print $2}')
                 mapped_bases=$(awk '{sum+=$3} END {print sum}' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt )
-                awk -v total_bases="$total_bases" -v mapped_bases="$mapped_bases" '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig], (10000*(sum[contig]/count[contig])/mapped_bases), (10000*sum[contig]/count[contig]/total_bases)}' \
+                awk -v total_bases="$total_bases" -v mapped_bases="$mapped_bases" '{sum[$1]+=$3; count[$1]++} END {for (contig in sum) print contig, sum[contig]/count[contig], ((10000*((sum[contig]/count[contig])))/mapped_bases), ((10000*(sum[contig]/count[contig]))/total_bases), count[contig], sum[contig]}' \
                 $raw_files/depth_and_coverage/$assembly_id.$fastq_id.depth.txt \
                 > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.avg_coverage_perBase.txt 
 
+                ## $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv will report 
+                ## "assembly_id contig_id avg_depth_covered_position	avg_depth_covered_position_per_10K_mapped_bases	avg_depth_covered_position_per_10K_total_bases contig_length covered_contig_length  bases_mapped_to_covered_contig_length reads_mapped %reads_mappedMapped %reads_mappedTotalReads"
                 total_reads=$(python3 $suppl_scripts/utilities/fastq_get_reads_bases.py $fastq_id_path/$fastq_id.fastq.gz | awk '{print $1}')
                 mapped_reads=$(awk '{sum+=$3} END {print sum}' $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt | awk '{print $1}')
                 awk -v total_reads="$total_reads" -v mapped_reads="$mapped_reads" 'NR==FNR {a[$1]=$0; next} ($1 in a) {print a[$1] "\t" $2, $3, 100*$3/mapped_reads, 100*$3/total_reads}' \
@@ -170,7 +176,7 @@ read_type=$( grep -w "my_read_type" $parameters | awk '{print $2}' )
                 $raw_files/sam_files_sorted/$assembly_id.$fastq_id.idxstats.txt \
                 | sed "s/^/$assembly_id\t/g" > $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv
 
-                sed -i '1i assembly_id contig_id avg_cov_perBase_mapped avg_cov_perBase_mapped(CP10K) avg_cov_perBase_TotalBases(CP10K) contig_length reads_mapped %reads_mappedMapped %reads_mappedTotalReads' \
+                sed -i '1i assembly_id contig_id avg_depth_covered_position	avg_depth_covered_position_per_10K_mapped_bases	avg_depth_covered_position_per_10K_total_bases contig_length bases_mapped_to_covered_contig_length covered_contig_length reads_mapped %reads_mappedMapped %reads_mappedTotalReads' \
                 $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv
 
                 sed -i 's/ /\t/g' $raw_files/depth_and_coverage/$assembly_id.$fastq_id.stats.tsv
