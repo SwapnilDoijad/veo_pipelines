@@ -25,7 +25,7 @@
         /home/groups/VEO/scripts_for_users/supplementary_scripts/parameter_files/variscan_conf.conf \
         > $raw_files/$core_gene.conf
 
-        /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_sequence_format.py \
+        python3 /home/groups/VEO/scripts_for_users/supplementary_scripts/utilities/convert_sequence_format.py \
         -i $aligned_gene_sequences/$core_gene.aln.fas \
         -o $raw_files/$core_gene.maf 
 

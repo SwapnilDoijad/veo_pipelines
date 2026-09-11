@@ -7,7 +7,7 @@ my_fasta_path	results/0055_metagenome_assembly_by_megahit_for_illumina/all_fasta
 
 
 ## which task? (end-to-end annotate find-proviruses marker-classification nn-classification aggregated-classification score-calibration summary)
-## see belwo for tasks details. use end-to-end for all tasks (recommended)
+## see below for tasks details. use end-to-end for all tasks (recommended)
 my_task	 end-to-end
 ###############################################################################
 	╭─End-to-end execution ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────-──╮
