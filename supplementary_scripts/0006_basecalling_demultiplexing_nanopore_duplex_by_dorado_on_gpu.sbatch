@@ -333,7 +333,6 @@
             $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam \
             > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq
 
-
             $dorado demux \
             --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
             --emit-fastq --kit-name $kit_name \
