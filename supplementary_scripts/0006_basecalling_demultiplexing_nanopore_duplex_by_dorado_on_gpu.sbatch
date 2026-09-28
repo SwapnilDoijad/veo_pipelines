@@ -5,6 +5,7 @@
 #SBATCH --output results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.out
 #SBATCH --error results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.err
 #SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=40
 ############################################################################### 
 ## header
     pipeline=0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu
@@ -23,6 +24,8 @@
     # dorado=/home/groups/VEO/tools/dorado/v0.6.0/bin/dorado
     samtools=/home/groups/VEO/tools/samtools/v1.17/bin/samtools
     models_directory=/home/groups/VEO/tools/dorado/v0.9.1/models/
+    PHRED_SCORE_filter=$( grep my_PHRED_SCORE_filter $parameters | awk '{print $2}' )
+    
     ## 2025-02-07 14:06:48 
     ## @Swapnil : pod5 inspect debug <file.pod5> | grep sequencing_kit     
 
@@ -333,6 +336,14 @@
             $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam \
             > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq
 
+            if [ "PHRED_SCORE_filter" != "No" ]; then 
+                source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate chopper_v0.5.0 
+                cat $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq \
+                | chopper -t ${SLURM_CPUS_PER_TASK} -q ${PHRED_SCORE_filter} \
+                > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq.${PHRED_SCORE_filter}.fastq
+                conda deactivate
+            fi
+
             $dorado demux \
             --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
             --emit-fastq --kit-name $kit_name \
@@ -343,13 +354,13 @@
             source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate chopper_v0.5.0 
             for i in $( ls $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq | sed 's/\.fastq//g' ); do
                 cat $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq/$i.fastq \
-                | chopper -t 100 -q 10 \
-                > $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/$i.fastq
-                # | pigz -9 -c > $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/$i.fastq.gz ## for rasusa subsampling need fastq and not fastq.gz
+                | chopper -t ${SLURM_CPUS_PER_TASK} -q ${PHRED_SCORE_filter}  \
+                > $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC${PHRED_SCORE_filter}/$i.fastq
+                # | pigz -9 -c > $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC${PHRED_SCORE_filter}/$i.fastq.gz ## for rasusa subsampling need fastq and not fastq.gz
             done 
 
             ## compress file (we need both uncompressed file for Rasusa subsampling and compressed file for storage)
-            for i in $( ls $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC10/*.fastq ) ; do
+            for i in $( ls $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq_QC${PHRED_SCORE_filter}/*.fastq ) ; do
                 log "COMPRESSING: $i"
                 pigz -9 -c "$i" > "$i".gz
             done

@@ -124,3 +124,6 @@ my_duplex_choise	No
 
 ## Need to trim the adapter, barcode and primer sequence : Yes or No
 my_trim_adapter_barcode_primer	No
+
+## PHRED SCORE filter (No or 10 or 20)
+my_PHRED_SCORE_filter	No

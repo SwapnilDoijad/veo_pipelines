@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0010_NanoporeReadProcessing_by_collapser
-#SBATCH --partition=long
+#SBATCH --partition=long,short,
 #SBATCH --output=results/0010_NanoporeReadProcessing_by_collapser/tmp/slurm/%j.out
 #SBATCH --error=results/0010_NanoporeReadProcessing_by_collapser/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=40
