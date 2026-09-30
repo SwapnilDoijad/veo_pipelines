@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=0085_annotation_bacteria_by_bakta
-#SBATCH --partition=short,long,standard
+#SBATCH --partition=gpu,gpu-veo,gpu-test,long,standard
 #SBATCH --output=results/0085_annotation_bacteria_by_bakta/tmp/slurm/%j.out
 #SBATCH --error=results/0085_annotation_bacteria_by_bakta/tmp/slurm/%j.err
 #SBATCH --cpus-per-task=24
