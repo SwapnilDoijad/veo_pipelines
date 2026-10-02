@@ -1,0 +1,5 @@
+## This is a parameter file for 0089_annotation_prokaryote_by_pharokkaPholdPhynteny pipeline
+## please give a path of a single folder in which all fasta files are stored
+## note that all files should end with .fasta
+## example path is given below (change the path accordingto your data):
+my_fasta_dir	results/0642_phage_detection_by_jaeger-gpu/extracted_fasta_complete_high
