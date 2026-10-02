@@ -5,7 +5,6 @@
 #SBATCH --output results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.out
 #SBATCH --error results/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu/tmp/slurm/%j.err
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=40
 ############################################################################### 
 ## header
     pipeline=0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu
@@ -323,31 +322,37 @@
             if [ ! -f $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam ]; then
                 log "BASECALLING: generating $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam"
 
-                $dorado \
-                basecaller sup \
-                $data_directory_pod5_path/ \
-                > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
 
-                log "FINISHED BASECALLING: generating $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam"
+                $dorado basecaller /home/groups/VEO/tools/dorado/v0.9.1/models/dna_r10.4.1_e8.2_400bps_sup@v4.3.0 \
+                --no-trim \
+                $data_directory_pod5_path/ \
+                > $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam
+
+                # $dorado \
+                # basecaller sup \
+                # $data_directory_pod5_path/ \
+                # > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+
+                log "FINISHED BASECALLING: generating $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam"
             fi
 
             $samtools \
             view -@10 -O fastq \
-            $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam \
-            > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq
+            $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam \
+            > $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam.fastq
 
             if [ "PHRED_SCORE_filter" != "No" ]; then 
                 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate chopper_v0.5.0 
-                cat $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq \
+                cat $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam.fastq \
                 | chopper -t ${SLURM_CPUS_PER_TASK} -q ${PHRED_SCORE_filter} \
-                > $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam.fastq.${PHRED_SCORE_filter}.fastq
+                > $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam.fastq.${PHRED_SCORE_filter}.fastq
                 conda deactivate
             fi
 
-            $dorado demux \
-            --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
-            --emit-fastq --kit-name $kit_name \
-            $raw_files/02_pod5_to_demultiplex/raw_reads.for_demux.bam
+            # $dorado demux \
+            # --output-dir $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq \
+            # --emit-fastq --kit-name $kit_name \
+            # $raw_files/02_pod5_to_demultiplex/raw_reads.no_trim.bam
 
             ## 240706 Swapnil: add stept to compress $raw_files/02_pod5_to_demultiplex/demultiplexed_fastq and change below steps accordinly 
             ## QC filtering
