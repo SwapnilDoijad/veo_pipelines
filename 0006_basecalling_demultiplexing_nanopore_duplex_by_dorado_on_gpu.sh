@@ -15,8 +15,10 @@
     
     awk '/# ----------/{flag=!flag; next} flag' $parameters > $wd/tmp/barcode_sample.txt
 
+    cp ${suppl_scripts}/${pipeline}.sbatch \
+    ${wd}/tmp/sbatch/
 
-    sbatch /home/groups/VEO/scripts_for_users/supplementary_scripts/0006_basecalling_demultiplexing_nanopore_duplex_by_dorado_on_gpu.sbatch
+    sbatch ${wd}/tmp/sbatch/${pipeline}.sbatch
 #######################################################################
 ## footer
     log "ENDED : $pipeline ----------------------"
