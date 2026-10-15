@@ -26,8 +26,8 @@
             log "STARTED : $pipeline for $i"
 
             megahit \
-            -1 $fastq_path/$i*R1*.fastq.gz \
-            -2 $fastq_path/$i*R2*.fastq.gz \
+            -1 $fastq_path/${i}_*R1*.fastq.gz \
+            -2 $fastq_path/${i}_*R2*.fastq.gz \
             -t $SLURM_CPUS_PER_TASK \
             -m 0.9 \
             --out-prefix $i \
