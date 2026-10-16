@@ -12,7 +12,7 @@
 
     create_directories_structure_1 $wd
     split_list $wd $list
-    # submit_jobs $wd $pipeline
+    submit_jobs $wd $pipeline
 
     ## @Swapnil: broken, DONT parallelise, tthere is a problem in parallelisaiton 
     ## need to fix the script to submit jobs for each split list
