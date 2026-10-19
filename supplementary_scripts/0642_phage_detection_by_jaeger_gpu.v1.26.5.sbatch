@@ -15,6 +15,7 @@
     module load nvidia/cuda/12.1.0
     source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh
     conda activate jaeger_v1.26.5
+    export LD_PRELOAD="$CONDA_PREFIX/lib/libstdc++.so.6${LD_PRELOAD:+:$LD_PRELOAD}"
 
     echo "pipeline: $pipeline"
     echo "sublist: $sublist"
@@ -35,10 +36,20 @@
 
             mv $fasta_path/$i.fasta.tmp $fasta_path/$i.fasta
 
+            # jaeger predict \
+            # -i $fasta_path/$i.fasta \
+            # -o $raw_files/$i \
+            # -m jaeger_91c5575c_1.3M_fragment \
+            # --batch 100 \
+            # & my_pid=$!
+            # get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.predict.tsv 
+
+            ## different model
             jaeger predict \
             -i $fasta_path/$i.fasta \
             -o $raw_files/$i \
-            -m jaeger_91c5575c_1.3M_fragment \
+            -m jaeger_448931d3_1.3M_fragment \
+            --xla --dynamic-stride --no-dustmask --taxonomy \
             --batch 100 \
             & my_pid=$!
             get_resource_stat $my_pid $wd/tmp/resource_log/$i.jaeger.predict.tsv 
