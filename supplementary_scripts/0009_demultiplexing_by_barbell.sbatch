@@ -16,9 +16,8 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 
     export CARGO_HOME=/home/groups/VEO/tools/cargo 
     export RUSTUP_HOME=/home/groups/VEO/tools/rust 
-    barbell="/home/groups/VEO/tools/barbell/v0.3.0/barbell/target/release/barbell"
+    # barbell="/home/groups/VEO/tools/barbell/v0.3.0/barbell/target/release/barbell"
     barbell="/home/groups/VEO/tools/cargo/bin/barbell" # v0.3.2
-
     kit=$( grep my_kit $parameters | awk '{print $2}' )
     custom_primers=$( grep my_custom_primers $parameters | awk '{print $2}' )
     F_primer=$(grep my_F_primer $parameters | awk '{print $2}')
@@ -81,8 +80,8 @@ echo "SBATCH STARTED : 0009_demultiplexing_by_barbell"
 ## for NON-kit based demultiplexing
     if [ $custom_primers == "Yes" ] ; then
 
-        mapfile -t F_FILES < <(printf '%s\n' "$wd"/tmp/primers/mut*_F.txt | sort -V)
-        mapfile -t R_FILES < <(printf '%s\n' "$wd"/tmp/primers/mut*_R.txt | sort -V)
+        mapfile -t F_FILES < <(printf '%s\n' "$wd"/tmp/primers/*_F.txt | sort -V)
+        mapfile -t R_FILES < <(printf '%s\n' "$wd"/tmp/primers/*_R.txt | sort -V)
 
         F_LIST=$(IFS=,; echo "${F_FILES[*]}")
         R_LIST=$(IFS=,; echo "${R_FILES[*]}")
