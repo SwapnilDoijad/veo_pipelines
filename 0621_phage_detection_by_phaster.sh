@@ -15,18 +15,38 @@
     # submit_jobs $wd $pipeline
 ###############################################################################
 for file in $(cat $list); do
-    if [ ! -d $raw_files/$file ] ; then 
+    if [ ! -f $raw_files/$file/$file.txt ] ; then 
         log "uploading $file.fasta"
         (mkdir $raw_files/$file) > /dev/null 2>&1
-        wget -q --post-file="$fasta_dir/$file.fasta" "http://phaster.ca/phaster_api?contigs=1" -O $raw_files/$file/$file.txt
+		wget -q --post-file="${fasta_dir}/${file}.fasta" "https://phastest.ca/phastest_api" -O $raw_files/$file/$file.txt
     fi
 done
 ###############################################################################
 for file in $(cat $list); do
-    if [ -d $raw_files/$file ] ; then 
+    if [ ! -f $raw_files/$file/finished.txt ] ; then 
         log "getting status for $file"
         link=$(cat $raw_files/$file/$file.txt | awk -F'"' '{print $4}')
-        wget -q "http://phaster.ca/phaster_api?acc=$link" -O $raw_files/$file/$file.txt
+        while true; do
+            wget -q "https://phastest.ca/phastest_api?acc=$link" -O $raw_files/$file/status.$file.txt
+            if grep -q '"status":"Complete"' $raw_files/$file/status.$file.txt; then
+                log "$file is complete" | tee -a $raw_files/$file/finished.txt
+                break
+            fi
+            log "$file not complete yet, waiting 2 min"
+            sleep 120
+        done
+    fi
+done
+##############################################################################
+for file in $(cat $list); do
+    link=$(awk -F'"' '{print $4}' $raw_files/$file/$file.txt)
+    if [ ! -f $raw_files/$file/$file.zip ] ; then 
+        log "downloading submission for $file"
+        wget -O $raw_files/$file/$file.zip "https://phastest.ca/submissions/$link.zip"
+        
+        mkdir -p $raw_files/$file/results
+        unzip $raw_files/$file/$file.zip -d $raw_files/$file/results
+
     fi
 done
 ##############################################################################
