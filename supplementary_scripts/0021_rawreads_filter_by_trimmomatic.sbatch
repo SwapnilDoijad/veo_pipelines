@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name 0021_rawreads_filter_by_trimmomatic
 #SBATCH --partition=short,standard,long,interactive,gpu-veo,gpu
-#SBATCH --output results/0021_rawreads_filter_by_trimmomatic/tmp/slurm/%j.out
-#SBATCH --error  results/0021_rawreads_filter_by_trimmomatic/tmp/slurm/%j.err
-#SBATCH --cpus-per-task=40
+#SBATCH --output=results/0021_rawreads_filter_by_trimmomatic/tmp/slurm/%j.out
+#SBATCH --error=results/0021_rawreads_filter_by_trimmomatic/tmp/slurm/%j.err
+#SBATCH --cpus-per-task=24
 ###############################################################################
 echo "SBATCH STARTED : 0021_rawreads_filter_by_trimmomatic"
 ###############################################################################  
@@ -72,7 +72,7 @@ echo "SBATCH STARTED : 0021_rawreads_filter_by_trimmomatic"
             -summary $wd/raw_files/$i/summary.txt \
             ILLUMINACLIP:/home/groups/VEO/tools/trimmomatic/v0.39/adapters/TruSeq2-PE.fa:2:30:10 LEADING:6 TRAILING:6 SLIDINGWINDOW:4:20 MINLEN:36
 
-            mv $wd/fastq_filtered/*.filtered_paired.fastq.gz $wd/fastq_filtered/
+            mv ${raw_files}/${i}/*.filtered_paired.fastq.gz ${wd}/fastq_filtered/
 
             log "Counting reads: $i"
             f_raw_reads=$( count_reads_from_fastq $fastq_file_path/"$i"_*R1*.fastq.gz )

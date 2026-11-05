@@ -27,3 +27,18 @@
 ###############################################################################
 echo "script 0003_download_SRA_from_NCBI has ended ---------------------------------"
 ###############################################################################
+## 261105: Swapnil, this is better approach and update your script nextime
+    # for SRA in $(cat data/metadata_NCBI/SraAccList.txt); do
+    #     echo $SRA
+    #     mkdir -p data/fastq_ncbi/${SRA} > /dev/null 2>&1
+
+    #     sbatch -p standard,short,interactive,long --cpus-per-task=2 --mem=4G \
+    #     --wrap="/home/groups/VEO/tools/sratoolkit/v3.0.1/bin/prefetch \
+    #     ${SRA} \
+    #     --transport http \
+    #     --type sra \
+    #     --max-size u \
+    #     --progress \
+    #     -O data/fastq_ncbi/${SRA}"
+    # done 
+
