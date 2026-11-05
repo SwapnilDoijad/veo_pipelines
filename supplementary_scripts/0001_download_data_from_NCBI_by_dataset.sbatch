@@ -15,18 +15,21 @@
   type_strains=$(grep my_type_strains $parameters | awk '{print $2}')
 
   source /vast/groups/VEO/tools/miniconda3_2024/etc/profile.d/conda.sh \
-  && conda activate ncbi_dataset_v17.0.0 
+  && conda activate ncbi_dataset_v17.0.0
 ############################################################################### 
 ## for Type Strains 
 
   if [ $type_strains == "Y" ]; then
     log "Downloading Type Strains for $name"
 
-    datasets summary genome taxon "$name" --from-type --report genome > data/ncbi_datasets/"$name"_type_strains.json
+    datasets summary genome taxon \
+    "$name" --from-type --report genome \
+    > data/ncbi_datasets/"$name"_type_strains.json
 
     ## for all strains
       if [ ! -f data/ncbi_datasets/"$name"_type_strains.json ]; then
-        datasets summary genome taxon "$name" --report genome \
+        datasets summary genome taxon \
+        "$name" --report genome \
         > data/ncbi_datasets/"$name"_type_strains.json
       fi
     
