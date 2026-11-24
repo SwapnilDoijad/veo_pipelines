@@ -1,0 +1,16 @@
+## This is a parameter file for 0801_mcfDNA_analysis_by_banz pipeline
+## please give a path of a single folder in which all fastq files are stored
+## note that all files should end with .fastq.gz
+## example path is given below (change the path according to your data):
+my_data_dir	results/0041_genome_assembly_by_shovill/all_fasta
+
+## database
+## kraken2 database: /veodata/03/databases/kraken2/v20250204
+## refseq: /veodata/03/databases/kraken2/kraken2_Bracken_RefSeq_indexex_v202401
+## core_nt: /veodata/03/databases/kraken2/v20250204_core_nt
+## Standard plus Refseq protozoa, fungi & plant: /veodata/03/databases/kraken2/20251015_k2_pluspfp
+## silva v138.1: /veodata/03/databases/kraken2/silva_16s_138	## kraken2 database and only genus level 
+## silva v138.2: /veodata/03/databases/kraken2/silva_16s_138.2_species	# custom database created for species level identification 
+
+my_database	/veodata/03/databases/kraken2/v20250204_core_nt
+
